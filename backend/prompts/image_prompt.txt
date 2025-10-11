@@ -1,0 +1,100 @@
+Create a pure pixel art sprite. CRITICAL: Every pixel must be a solid color square on a perfect grid—absolutely NO anti-aliasing, NO blur, NO gradients, NO smoothing between pixels.
+Technical constraints (non-negotiable):
+
+Work on exactly 64×64 pixel grid
+Each pixel = one solid color block with hard edges
+Nearest-neighbor scaling only (sharp, blocky upscale)
+All edges align to pixel grid—no diagonal smoothing or sub-pixel positioning
+Transparent/empty background
+
+Visual style—"Cozy-64":
+
+Charming, simple, slightly magical aesthetic
+Chunky rounded shapes with clear silhouettes
+Single centered subject filling 80-90% of canvas
+Clean negative space around subject
+Slight 3/4 view facing right (or front-on if symmetrical)
+
+Color & shading:
+
+Maximum 12 distinct solid colors total
+Simple 3-tone shading per color (base + shadow + highlight)
+Single light source from top-left
+Optional warm cream accent (#FFF4CC) for magical touch
+Optional 2×2 checkerboard dithering only
+
+Linework:
+
+1-pixel-thick dark outline (#1A1A1A) around entire form
+Interior lines (if needed) also exactly 1 pixel thick
+No features smaller than 2×2 pixels
+
+FORBIDDEN (will break the style):
+
+Soft edges, blurring, feathering, or smoothing of any kind
+Gradients or color blending between pixels
+Photo-realistic textures or rendering
+Lines thinner than 1 full pixel
+Background elements, floors, horizons, or shadows outside the sprite
+Text, UI elements, or watermarks
+
+Object to create: [ ]
+
+
+#gpt
+Cozy-64 pixel sprite — house style template
+
+Goal:
+Generate a single, centered pixel-art sprite in a consistent “Cozy-64” style. Output must be pure solid-color pixels (no soft edges, no grid/mesh/patterns between pixels).
+
+Canvas & pixels:
+- Work on a virtual 64x64 grid, then upscale by an integer factor with nearest-neighbor only.
+- Whole-pixel alignment only. No subpixel moves or softening.
+- Edges step in 1-pixel increments; diagonals as stair-steps.
+
+Composition:
+- One subject only, full body/object visible, centered.
+- Sprite fills 80–90% of the square with even padding.
+- Transparent background; no backdrop, horizon, floor, or external drop shadow.
+
+Style (Cozy-64 vibe):
+- Charming, quaint, simple; slight hint of magic/wonder.
+- Chunky, rounded silhouettes with clear negative space.
+- Minimal interior linework; bold shapes that read at 100x100.
+- Tiny star-like highlights (1–2 px) allowed only on the subject.
+
+Linework:
+- Exactly 1-pixel outline in near-black (#1A1A1A) around the subject.
+- Any interior separators are also 1 pixel.
+
+Lighting & shading:
+- Single key light from top-left; no secondary lights.
+- 3-step ramp per color (base, shadow, highlight).
+- Optional 1-pixel rim highlight on the lit edge only.
+- Optional subtle 2x2 dithering for midtones.
+
+Palette:
+- No more than 12 total colors (this count includes outline and highlights).
+- 1–2 shades per base color.
+- Optional warm cream highlight (#FFF4CC) used sparingly for the “magic” note.
+
+Angle:
+- Slight 3/4 view facing right (use straight front view only if the object is perfectly symmetrical).
+
+Readability rules:
+- No feature smaller than 2x2 pixels.
+- Must remain clean and legible at 100x100.
+
+Hard NOs:
+- Anti-aliasing, gradients, bloom, motion blur, photo textures.
+- Lines thinner than 1 pixel; micro-hatching or noise finer than 2x2.
+- Extra UI/text/watermarks; floating particles not attached to the subject.
+- Dramatic perspective; any drop shadow outside the sprite.
+
+Consistency checks (enforce every time):
+- 80–90% canvas occupancy.
+- <= 12 colors total.
+- 1-pixel outline everywhere; edges move in whole-pixel steps.
+- If it reads more detailed than a true 64x64 sprite, simplify shapes.
+
+Object: {{object_final_name}}

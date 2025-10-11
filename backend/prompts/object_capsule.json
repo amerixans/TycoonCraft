@@ -1,0 +1,66 @@
+{
+  "name": "input_capsule_minimal",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TycoonCraft Input Capsule (Minimal)",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "object_name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Display name of the input object."
+      },
+      "era_name": {
+        "type": "string",
+        "enum": [
+          "Hunter-Gatherer",
+          "Agriculture",
+          "Metallurgy",
+          "Steam & Industry",
+          "Electric Age",
+          "Computing",
+          "Futurism",
+          "Interstellar",
+          "Arcana",
+          "Beyond"
+        ],
+        "description": "Era this input object belongs to."
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "natural",
+          "structure",
+          "farm",
+          "mine",
+          "factory",
+          "power",
+          "logistics",
+          "research",
+          "cultural",
+          "housing",
+          "magic",
+          "wonder"
+        ],
+        "description": "Primary role of the input object."
+      },
+      "is_keystone": {
+        "type": "boolean",
+        "description": "True if this input is a keystone for its era."
+      },
+      "quality_tier": {
+        "type": "string",
+        "enum": ["common", "uncommon", "rare", "epic", "legendary"],
+        "description": "Optional prestige signal for the input."
+      },
+      "notes": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "Optional short guidance for the model."
+      }
+    },
+    "required": ["object_name", "era_name", "category", "is_keystone"]
+  },
+  "strict": true
+}

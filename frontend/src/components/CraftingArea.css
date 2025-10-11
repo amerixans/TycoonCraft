@@ -1,0 +1,167 @@
+.crafting-area {
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.crafting-header {
+  margin-bottom: 1.5rem;
+}
+
+.crafting-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #e94560;
+  font-size: 1.3rem;
+}
+
+.crafting-header p {
+  margin: 0;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.crafting-slots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.craft-slot {
+  width: 120px;
+  height: 120px;
+  background: #1a1a2e;
+  border: 3px dashed #0f3460;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.craft-slot:hover {
+  border-color: #00d4ff;
+  background: #1f1f3e;
+}
+
+.craft-slot.filled {
+  border-style: solid;
+  border-color: #00d4ff;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+}
+
+.slot-placeholder {
+  color: #555;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.slot-object {
+  color: #00d4ff;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.clear-slot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #e94560;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clear-slot:hover {
+  background: #ff5577;
+  transform: scale(1.1);
+}
+
+.craft-operator {
+  font-size: 2rem;
+  color: #00d4ff;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.craft-result {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #2a1a3e 0%, #1a1a2e 100%);
+  border: 3px solid #e94560;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+}
+
+.result-placeholder {
+  font-size: 3rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+.result-empty {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.craft-button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #e94560 0%, #ff5577 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 5px 15px rgba(233, 69, 96, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.craft-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(233, 69, 96, 0.5);
+}
+
+.craft-button:disabled {
+  background: #333;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+.craft-button:active:not(:disabled) {
+  transform: translateY(0);
+}

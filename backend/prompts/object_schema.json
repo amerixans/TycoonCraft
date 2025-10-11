@@ -1,0 +1,259 @@
+{
+  "name": "object_stats",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TycoonCraft Object",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "object_name": {
+        "type": "string",
+        "description": "Display name of the object."
+      },
+      "era_name": {
+        "type": "string",
+        "enum": [
+          "Hunter-Gatherer",
+          "Agriculture",
+          "Metallurgy",
+          "Steam & Industry",
+          "Electric Age",
+          "Computing",
+          "Futurism",
+          "Interstellar",
+          "Arcana",
+          "Beyond"
+        ],
+        "description": "Era this object belongs to."
+      },
+      "is_keystone": {
+        "type": "boolean",
+        "default": false,
+        "description": "If true, crafting this once helps unlock its era."
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "natural",
+          "structure",
+          "farm",
+          "mine",
+          "factory",
+          "power",
+          "logistics",
+          "research",
+          "cultural",
+          "housing",
+          "magic",
+          "wonder"
+        ],
+        "description": "Used by global modifiers and for UI grouping."
+      },
+      "quality_tier": {
+        "type": "string",
+        "enum": ["common", "uncommon", "rare", "epic", "legendary"],
+        "default": "common",
+        "description": "Quality tier used for lightweight scaling and drops."
+      },
+      "cost": {
+        "type": "number",
+        "minimum": 1,
+        "description": "Coin cost to place/build."
+      },
+      "time_crystal_cost": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0,
+        "description": "Crystals spent to place/promote this object. Very rare; usually 0."
+      },
+      "income_per_second": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Base coin income per second."
+      },
+      "time_crystal_generation": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0,
+        "description": "Time crystals generated per second while operational (rare; usually 0)."
+      },
+      "build_time_sec": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 86400,
+        "default": 0,
+        "description": "Build time in seconds."
+      },
+      "operation_duration_sec": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "How long it stays operational before retiring/decaying."
+      },
+      "retire_payout": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "coins_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.2,
+            "description": "Fraction of cost refunded automatically when the object retires at end of operation."
+          }
+        },
+        "required": ["coins_pct"],
+        "description": "Rewards/refund when the object naturally retires."
+      },
+      "sellback_pct": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.2,
+        "description": "Fraction of cost refunded if the player deletes the object early."
+      },
+      "cap_per_civ": {
+        "type": ["integer", "null"],
+        "minimum": 1,
+        "default": null,
+        "description": "Max copies allowed per civilization; null means unlimited."
+      },
+      "footprint": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "w": { "type": "integer", "minimum": 1, "maximum": 20 },
+          "h": { "type": "integer", "minimum": 1, "maximum": 20 }
+        },
+        "required": ["w", "h"],
+        "description": "Grid footprint in tiles: width × height. Note: 1 tile = 1 meter."
+      },
+      "size": {
+        "type": "number",
+        "minimum": 0.1,
+        "maximum": 20,
+        "description": "Approximate physical size in meters (visual metric)."
+      },
+      "global_modifiers": {
+        "type": "array",
+        "description": "Global auras this object provides while active (non-adjacent).",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "active_when": {
+              "type": "string",
+              "enum": ["placed", "operational"],
+              "default": "operational",
+              "description": "When the modifier is active."
+            },
+            "affected_categories": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "natural",
+                  "structure",
+                  "farm",
+                  "mine",
+                  "factory",
+                  "power",
+                  "logistics",
+                  "research",
+                  "cultural",
+                  "housing",
+                  "magic",
+                  "wonder"
+                ]
+              },
+              "minItems": 1,
+              "description": "Which categories are affected."
+            },
+            "affected_tags": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Optional fine-grain targeting by tag if you add tags later."
+            },
+            "income_multiplier": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 1,
+              "description": "Multiply income of affected objects (e.g., 1.1 = +10%)."
+            },
+            "cost_multiplier": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 1,
+              "description": "Multiply build cost of affected objects."
+            },
+            "build_time_multiplier": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 1,
+              "description": "Multiply build time of affected objects."
+            },
+            "operation_duration_multiplier": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 1,
+              "description": "Multiply operation duration of affected objects."
+            },
+            "stacking": {
+              "type": "string",
+              "enum": ["multiplicative", "additive"],
+              "default": "multiplicative",
+              "description": "How multiple copies stack."
+            },
+            "max_stacks": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "description": "Upper bound on stacking from this source."
+            }
+          },
+          "required": [
+            "active_when",
+            "affected_categories",
+            "affected_tags",
+            "income_multiplier",
+            "cost_multiplier",
+            "build_time_multiplier",
+            "operation_duration_multiplier",
+            "stacking",
+            "max_stacks"
+          ]
+        },
+        "default": []
+      },
+      "flavor_text": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "Short thematic blurb."
+      }
+    },
+    "required": [
+      "object_name",
+      "era_name",
+      "is_keystone",
+      "category",
+      "quality_tier",
+      "cost",
+      "time_crystal_cost",
+      "income_per_second",
+      "time_crystal_generation",
+      "build_time_sec",
+      "operation_duration_sec",
+      "retire_payout",
+      "sellback_pct",
+      "cap_per_civ",
+      "footprint",
+      "size",
+      "global_modifiers",
+      "flavor_text"
+    ]
+  },
+  "strict": true
+}
