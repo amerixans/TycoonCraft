@@ -236,18 +236,37 @@ RestartSec=5s
 WantedBy=multi-user.target
 SERVICEEOF
 
+# Fix permissions for www-data to execute venv
+echo "Fixing venv permissions..."
+chown -R www-data:www-data /var/www/tycooncraft/backend/.venv
+chmod +x /var/www/tycooncraft/backend/.venv/bin/gunicorn
+
+# Test gunicorn manually first
+echo "Testing gunicorn..."
+cd /var/www/tycooncraft/backend
+sudo -u www-data bash -c "source .venv/bin/activate && gunicorn --bind 127.0.0.1:8001 --timeout 30 --check-config tycooncraft.wsgi:application"
+
+# Create log files with proper permissions
+touch /var/log/tycooncraft-access.log /var/log/tycooncraft-error.log
+chown www-data:www-data /var/log/tycooncraft-*.log
+
 # Start the service
 echo "Starting TycoonCraft service..."
 systemctl daemon-reload
 systemctl enable tycooncraft
 systemctl start tycooncraft
 
-# Wait a moment for service to start
-sleep 3
+# Wait for service to initialize
+sleep 5
 
-# Check status
-echo "Checking service status..."
-systemctl status tycooncraft --no-pager || true
+# Check status and show errors if failed
+if ! systemctl is-active --quiet tycooncraft; then
+    echo "ERROR: Service failed to start. Checking logs..."
+    journalctl -u tycooncraft -n 50 --no-pager
+    exit 1
+fi
+
+systemctl status tycooncraft --no-pager
 
 # Verify deployment
 echo "Verifying deployment..."
