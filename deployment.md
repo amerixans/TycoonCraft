@@ -144,6 +144,11 @@ mkdir -p /var/log/tycooncraft
 chown -R www-data:www-data /var/www/tycooncraft
 chown -R www-data:www-data /var/log/tycooncraft
 
+cd /var/www/tycooncraft/backend
+source venv/bin/activate
+pip install gunicorn
+
+cd /var/www/tycooncraft/frontend
 systemctl daemon-reload
 systemctl enable tycooncraft
 systemctl start tycooncraft

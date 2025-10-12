@@ -253,11 +253,12 @@ def call_openai_crafting(object_a, object_b):
         "model": "gpt-5-mini",
         "input": prompt,
         "reasoning": {"effort": "medium"},
-        "response_format": {
-            "type": "json_schema",
-            "json_schema": {
+        "text": {
+            "format": {
+                "type": "json_schema",
                 "name": "crafting_object",
-                "schema": object_schema,
+                # ⬇️ Use the actual JSON Schema, not the wrapper
+                "schema": object_schema["schema"],
                 "strict": True
             }
         }
@@ -304,7 +305,7 @@ def call_openai_image(object_name):
     }
 
     resp = requests.post(
-        f"{OPENAI_BASE_URL}/v1/images",
+        f"{OPENAI_BASE_URL}/v1/images/generations",
         headers=_openai_headers(),
         json=payload,
         timeout=120,
