@@ -19,12 +19,24 @@ function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [crafting, setCrafting] = useState(false);
+  const [craftingOperations, setCraftingOperations] = useState([]); // Array of crafting ops
   const [notification, setNotification] = useState(null);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.body.className = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const showNotification = useCallback((message, type = 'info') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 5000);
+    setTimeout(() => setNotification(null), 4000);
   }, []);
 
   const loadGameState = useCallback(async () => {
@@ -62,7 +74,7 @@ function App() {
       
       setUser(response.data.user);
       await loadGameState();
-      showNotification('Welcome to TycoonCraft!', 'success');
+      showNotification('🎮 Welcome to TycoonCraft!', 'success');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed');
     }
@@ -79,13 +91,24 @@ function App() {
   };
 
   const handleCraft = async (objectA, objectB) => {
-    if (crafting) return;
+    // Create a unique ID for this crafting operation
+    const craftId = Date.now() + Math.random();
     
-    setCrafting(true);
-    setError(null);
+    // Add to crafting operations
+    setCraftingOperations(prev => [...prev, {
+      id: craftId,
+      objectA,
+      objectB,
+      status: 'crafting'
+    }]);
     
     try {
       const response = await game.craft(objectA.id, objectB.id);
+      
+      // Update the operation status
+      setCraftingOperations(prev => 
+        prev.map(op => op.id === craftId ? { ...op, status: 'success', result: response.data } : op)
+      );
       
       if (response.data.newly_created) {
         showNotification(
@@ -105,12 +128,27 @@ function App() {
       }
       
       await loadGameState();
+      
+      // Remove the operation after 2 seconds
+      setTimeout(() => {
+        setCraftingOperations(prev => prev.filter(op => op.id !== craftId));
+      }, 2000);
+      
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Crafting failed';
+      
+      // Update operation to failed
+      setCraftingOperations(prev => 
+        prev.map(op => op.id === craftId ? { ...op, status: 'failed', error: errorMsg } : op)
+      );
+      
       setError(errorMsg);
       showNotification(errorMsg, 'error');
-    } finally {
-      setCrafting(false);
+      
+      // Remove failed operation after 3 seconds
+      setTimeout(() => {
+        setCraftingOperations(prev => prev.filter(op => op.id !== craftId));
+      }, 3000);
     }
   };
 
@@ -118,7 +156,7 @@ function App() {
     try {
       await game.place(objectId, x, y);
       await loadGameState();
-      showNotification('Object placed!', 'success');
+      showNotification('✅ Object placed!', 'success');
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Placement failed';
       setError(errorMsg);
@@ -130,7 +168,7 @@ function App() {
     try {
       await game.remove(placedId);
       await loadGameState();
-      showNotification('Object removed!', 'info');
+      showNotification('🗑️ Object removed!', 'info');
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Removal failed';
       setError(errorMsg);
@@ -148,7 +186,7 @@ function App() {
       link.href = url;
       link.download = `tycooncraft-save-${Date.now()}.json`;
       link.click();
-      showNotification('Game exported!', 'success');
+      showNotification('💾 Game exported!', 'success');
     } catch (err) {
       showNotification('Export failed', 'error');
     }
@@ -163,7 +201,7 @@ function App() {
       const data = JSON.parse(text);
       await game.import(data);
       await loadGameState();
-      showNotification('Game imported!', 'success');
+      showNotification('📂 Game imported!', 'success');
     } catch (err) {
       showNotification('Import failed', 'error');
     }
@@ -182,8 +220,8 @@ function App() {
     return (
       <div className="auth-screen">
         <div className="auth-container">
-          <h1>TycoonCraft</h1>
-          <p className="tagline">Craft Your Civilization</p>
+          <h1>🏛️ TycoonCraft</h1>
+          <p className="tagline">Build Your Civilization Through Crafting</p>
           
           <form onSubmit={handleAuth}>
             <input
@@ -232,7 +270,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${theme}`}>
       {notification && (
         <div className={`notification notification-${notification.type}`}>
           {notification.message}
@@ -241,26 +279,31 @@ function App() {
       
       <div className="header">
         <div className="header-left">
-          <h1>TycoonCraft</h1>
+          <h1>🏛️ TycoonCraft</h1>
           <span className="era-badge">{gameState.profile.current_era}</span>
         </div>
         <div className="header-center">
           <div className="resource">
             <span className="resource-icon">💰</span>
             <span className="resource-value">{Math.floor(gameState.profile.coins)}</span>
+            <span className="resource-label">Coins</span>
           </div>
           <div className="resource">
             <span className="resource-icon">💎</span>
             <span className="resource-value">{Math.floor(gameState.profile.time_crystals)}</span>
+            <span className="resource-label">Crystals</span>
           </div>
         </div>
         <div className="header-right">
-          <button onClick={handleExport} className="btn-small">Export</button>
+          <button onClick={toggleTheme} className="btn-icon" title="Toggle Theme">
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+          <button onClick={handleExport} className="btn-small">💾 Export</button>
           <label className="btn-small">
-            Import
+            📂 Import
             <input type="file" accept=".json" onChange={handleImport} style={{display: 'none'}} />
           </label>
-          <button onClick={handleLogout} className="btn-small">Logout</button>
+          <button onClick={handleLogout} className="btn-small">🚪 Logout</button>
         </div>
       </div>
 
@@ -277,7 +320,7 @@ function App() {
           <CraftingArea 
             discoveries={gameState.discoveries}
             onCraft={handleCraft}
-            crafting={crafting}
+            craftingOperations={craftingOperations}
           />
           
           <Canvas 
