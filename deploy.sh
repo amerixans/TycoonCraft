@@ -2,7 +2,18 @@
 set -euo pipefail
 
 # TycoonCraft Deployment Script
-# Safe for GitHub - no hardcoded secrets
+
+# Prevent interactive prompts
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+export NEEDRESTART_SUSPEND=1
+
+# Configure needrestart to not prompt
+mkdir -p /etc/needrestart
+cat > /etc/needrestart/needrestart.conf << 'EOF'
+$nrconf{restart} = 'a';
+$nrconf{kernelhints} = 0;
+EOF
 
 # Check for required environment variables
 if [ -z "${DB_PASSWORD:-}" ]; then
