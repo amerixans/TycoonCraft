@@ -134,7 +134,7 @@ echo "Building React frontend..."
 cd /var/www/tycooncraft/frontend
 rm -rf node_modules package-lock.json
 npm install
-REACT_APP_API_URL=http://${DOMAIN}/api npm run build
+REACT_APP_API_URL=https://${DOMAIN}/api npm run build
 
 # Configure Nginx
 echo "Configuring Nginx..."
@@ -208,6 +208,29 @@ sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
+echo "=========================================="
+echo "Setting up SSL/HTTPS..."
+echo "=========================================="
+
+
+# Install certbot
+apt-get install -y certbot python3-certbot-nginx
+
+# Get SSL certificate (requires domain pointing to this server)
+certbot --nginx \
+  -d ${DOMAIN} \
+  -d www.${DOMAIN} \
+  --non-interactive \
+  --agree-tos \
+  --email ${ADMIN_EMAIL} \
+  --redirect
+
+# Test renewal
+certbot renew --dry-run
+
+echo "SSL setup complete! Site is now HTTPS"
+
+
 # Create systemd service for Gunicorn
 echo "Creating systemd service..."
 cat > /etc/systemd/system/tycooncraft.service << 'SERVICEEOF'
@@ -272,6 +295,8 @@ systemctl status tycooncraft --no-pager
 echo "Verifying deployment..."
 ls -lah /var/www/tycooncraft/frontend/build/index.html
 curl -I -H "Host: ${DOMAIN}" http://127.0.0.1/ || true
+
+
 
 echo "=========================================="
 echo "Deployment complete!"
