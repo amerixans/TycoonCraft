@@ -56,7 +56,7 @@ if [ -d "tycooncraft" ]; then
     echo "Directory exists, removing..."
     rm -rf tycooncraft
 fi
-git clone -b feature/big-refactor --single-branch --depth 1 https://github.com/amerixans/tycooncraft.git
+git clone -b production --single-branch --depth 1 https://github.com/amerixans/tycooncraft.git
 cd tycooncraft
 
 # Setup PostgreSQL
