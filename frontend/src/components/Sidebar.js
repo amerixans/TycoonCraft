@@ -78,7 +78,9 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
                 title={obj.flavor_text}
                 draggable={true}
                 onDragStart={(e) => {
-                  e.dataTransfer.setData('objectId', obj.id);
+                  e.dataTransfer.effectAllowed = 'copy';
+                  e.dataTransfer.setData('objectId', obj.id.toString());
+                  e.dataTransfer.setData('text/plain', obj.object_name);
                 }}
               >
                 <div className="object-name">

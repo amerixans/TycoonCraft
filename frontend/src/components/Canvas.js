@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import './Canvas.css';
 
@@ -8,11 +8,11 @@ const CANVAS_SIZE = 1000; // Logical canvas size in tiles
 function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
-  const [dragPosition, setDragPosition] = useState(null);
   const transformRef = useRef(null);
   
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
     
     const objectId = e.dataTransfer.getData('objectId');
     if (!objectId) return;
@@ -21,46 +21,94 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     if (!obj) return;
     
     // Get the transform component's current state
-    const transformState = transformRef.current?.state;
-    if (!transformState) return;
+    const transformState = transformRef.current?.instance?.transformState;
+    if (!transformState) {
+      console.log('No transform state in dragOver');
+      return;
+    }
     
     const rect = e.currentTarget.getBoundingClientRect();
     
-    // Calculate position accounting for zoom and pan
-    const x = (e.clientX - rect.left - transformState.positionX) / transformState.scale;
-    const y = (e.clientY - rect.top - transformState.positionY) / transformState.scale;
+    // Calculate position accounting for zoom
+    // getBoundingClientRect() already accounts for the pan (translate), so we only divide by scale
+    const x = (e.clientX - rect.left) / transformState.scale;
+    const y = (e.clientY - rect.top) / transformState.scale;
     
     // Convert to grid coordinates
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
     
+    console.log('DragOver - Client:', e.clientX, e.clientY, 'Rect:', rect.left, rect.top, 'Scale:', transformState.scale, 'Grid:', gridX, gridY);
+    
     setDraggedObject({ obj, x: gridX, y: gridY });
-    setDragPosition({ x: e.clientX, y: e.clientY });
   };
   
   const handleDrop = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     
-    if (!draggedObject) return;
+    const objectId = e.dataTransfer.getData('objectId');
+    console.log('Drop event - objectId:', objectId);
     
-    const { obj, x, y } = draggedObject;
-    
-    // Check bounds
-    if (x < 0 || y < 0 || x + obj.footprint_w > CANVAS_SIZE || y + obj.footprint_h > CANVAS_SIZE) {
-      alert('⚠️ Out of bounds! Place the object within the grid.');
+    if (!objectId) {
+      console.log('No objectId found in drop event');
       setDraggedObject(null);
-      setDragPosition(null);
       return;
     }
     
-    onPlace(obj.id, x, y);
+    const discovery = discoveries.find(d => d.game_object.id === parseInt(objectId));
+    console.log('Found discovery:', discovery);
+    
+    if (!discovery || !discovery.game_object) {
+      console.log('No discovery or game_object found');
+      setDraggedObject(null);
+      return;
+    }
+    
+    const obj = discovery.game_object;
+    
+    // Get the transform component's current state
+    const transformState = transformRef.current?.instance?.transformState;
+    if (!transformState) {
+      console.log('No transform state - ref:', transformRef.current);
+      setDraggedObject(null);
+      return;
+    }
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    
+    // Calculate position accounting for zoom
+    // getBoundingClientRect() already accounts for the pan (translate), so we only divide by scale
+    const x = (e.clientX - rect.left) / transformState.scale;
+    const y = (e.clientY - rect.top) / transformState.scale;
+    
+    // Convert to grid coordinates
+    const gridX = Math.floor(x / GRID_SIZE);
+    const gridY = Math.floor(y / GRID_SIZE);
+    
+    console.log('Drop at client:', e.clientX, e.clientY);
+    console.log('Rect position:', rect.left, rect.top);
+    console.log('Transform state:', { scale: transformState.scale, posX: transformState.positionX, posY: transformState.positionY });
+    console.log('Calculated position:', { x, y, gridX, gridY, footprint: [obj.footprint_w, obj.footprint_h] });
+    
+    // Check bounds
+    if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_SIZE || gridY + obj.footprint_h > CANVAS_SIZE) {
+      alert('⚠️ Out of bounds! Place the object within the grid.');
+      setDraggedObject(null);
+      return;
+    }
+    
+    console.log('Calling onPlace with:', obj.id, gridX, gridY);
+    onPlace(obj.id, gridX, gridY);
     setDraggedObject(null);
     setDragPosition(null);
   };
   
-  const handleDragLeave = () => {
-    setDraggedObject(null);
-    setDragPosition(null);
+  const handleDragLeave = (e) => {
+    // Only clear if we're leaving the canvas entirely
+    if (e.currentTarget === e.target) {
+      setDraggedObject(null);
+    }
   };
   
   const handlePlacedClick = (placed, e) => {
