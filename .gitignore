@@ -18,6 +18,7 @@ __pycache__/
 .python-version
 .venv/
 venv/
+backend/venv/
 ENV/
 env/
 .mypy_cache/
