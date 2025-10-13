@@ -101,7 +101,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     console.log('Calling onPlace with:', obj.id, gridX, gridY);
     onPlace(obj.id, gridX, gridY);
     setDraggedObject(null);
-    setDragPosition(null);
   };
   
   const handleDragLeave = (e) => {
