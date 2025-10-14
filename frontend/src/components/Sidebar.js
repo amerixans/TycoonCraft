@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
+function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -26,6 +26,12 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
         discoveredIds.has(obj.id)
       )
     : objectsByEra[selectedEra]?.filter(obj => discoveredIds.has(obj.id)) || [];
+  
+  const handleInfoClick = (obj, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onObjectInfo(obj);
+  };
   
   return (
     <div className="sidebar">
@@ -75,7 +81,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
               <div 
                 key={obj.id}
                 className={`object-item ${obj.is_keystone ? 'keystone' : ''}`}
-                title={obj.flavor_text}
+                title="Drag to craft or place"
                 draggable={true}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'copy';
@@ -83,12 +89,34 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
                   e.dataTransfer.setData('text/plain', obj.object_name);
                 }}
               >
-                <div className="object-name">
-                  {obj.object_name}
+                <div className="object-image-container">
+                  {obj.image_path ? (
+                    <img 
+                      src={obj.image_path} 
+                      alt={obj.object_name}
+                      className="object-item-image"
+                    />
+                  ) : (
+                    <div className="object-image-placeholder">
+                      {obj.object_name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                 </div>
-                <div className="object-stats">
-                  <div>💰 {obj.cost}</div>
-                  <div>📊 {obj.income_per_second}/s</div>
+                <div className="object-content">
+                  <div className="object-name">
+                    {obj.object_name}
+                  </div>
+                  <div className="object-stats">
+                    <div>💰 {obj.cost}</div>
+                    <div>📊 {obj.income_per_second}/s</div>
+                  </div>
+                </div>
+                <div 
+                  className="object-info-icon"
+                  onClick={(e) => handleInfoClick(obj, e)}
+                  title="View details"
+                >
+                  ℹ️
                 </div>
                 {obj.is_keystone && (
                   <div className="keystone-badge">🔑</div>

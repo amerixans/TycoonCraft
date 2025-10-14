@@ -1,14 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { auth, game } from './api';
 import Sidebar from './components/Sidebar';
 import CraftingArea from './components/CraftingArea';
+import CraftingQueue from './components/CraftingQueue';
 import Canvas from './components/Canvas';
+import { gameInfoContent } from './GameInfo';
 import './App.css';
 
 const ERAS = [
   'Hunter-Gatherer', 'Agriculture', 'Metallurgy', 'Steam & Industry',
   'Electric Age', 'Computing', 'Futurism', 'Interstellar', 'Arcana', 'Beyond'
 ];
+
+const COLOR_THEMES = {
+  light: { name: 'Light', primary: '#e67e22', secondary: '#3498db' },
+  dark: { name: 'Dark', primary: '#e94560', secondary: '#00d4ff' },
+  blue: { name: 'Ocean', primary: '#2980b9', secondary: '#3498db' },
+  pink: { name: 'Sunset', primary: '#e91e63', secondary: '#ff6b9d' },
+  green: { name: 'Forest', primary: '#27ae60', secondary: '#2ecc71' },
+  purple: { name: 'Twilight', primary: '#8e44ad', secondary: '#9b59b6' },
+  red: { name: 'Fire', primary: '#c0392b', secondary: '#e74c3c' },
+  gray: { name: 'Steel', primary: '#7f8c8d', secondary: '#95a5a6' },
+};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -24,14 +37,40 @@ function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
   });
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedObject, setSelectedObject] = useState(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  
+  const longPressTimer = useRef(null);
+  const [isLongPress, setIsLongPress] = useState(false);
 
   useEffect(() => {
     document.body.className = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const handleThemeClick = () => {
+    if (!isLongPress) {
+      setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    }
+  };
+  
+  const handleThemeMouseDown = () => {
+    setIsLongPress(false);
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPress(true);
+      setShowColorPicker(true);
+    }, 500);
+  };
+  
+  const handleThemeMouseUp = () => {
+    clearTimeout(longPressTimer.current);
+    setTimeout(() => setIsLongPress(false), 100);
+  };
+  
+  const handleColorSelect = (colorKey) => {
+    setTheme(colorKey);
+    setShowColorPicker(false);
   };
 
   const showNotification = useCallback((message, type = 'info') => {
@@ -295,8 +334,17 @@ function App() {
           </div>
         </div>
         <div className="header-right">
-          <button onClick={toggleTheme} className="btn-icon" title="Toggle Theme">
-            {theme === 'light' ? '🌙' : '☀️'}
+          <button 
+            onClick={handleThemeClick}
+            onMouseDown={handleThemeMouseDown}
+            onMouseUp={handleThemeMouseUp}
+            onMouseLeave={handleThemeMouseUp}
+            onTouchStart={handleThemeMouseDown}
+            onTouchEnd={handleThemeMouseUp}
+            className="btn-icon" 
+            title="Click to toggle, long-press for colors"
+          >
+            {theme === 'light' ? '🌙' : theme === 'dark' ? '☀️' : '🎨'}
           </button>
           <button onClick={handleExport} className="btn-small">💾 Export</button>
           <label className="btn-small">
@@ -304,6 +352,9 @@ function App() {
             <input type="file" accept=".json" onChange={handleImport} style={{display: 'none'}} />
           </label>
           <button onClick={handleLogout} className="btn-small">🚪 Logout</button>
+          <button onClick={() => setShowInfoModal(true)} className="btn-icon" title="Game Info">
+            ℹ️
+          </button>
         </div>
       </div>
 
@@ -314,23 +365,126 @@ function App() {
           eraUnlocks={gameState.era_unlocks}
           currentEra={gameState.profile.current_era}
           eras={ERAS}
+          onObjectInfo={setSelectedObject}
         />
         
         <div className="main-area">
-          <CraftingArea 
-            discoveries={gameState.discoveries}
-            onCraft={handleCraft}
-            craftingOperations={craftingOperations}
-          />
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <CraftingArea 
+              discoveries={gameState.discoveries}
+              onCraft={handleCraft}
+            />
+            
+            {craftingOperations.length > 0 && (
+              <CraftingQueue 
+                craftingOperations={craftingOperations}
+              />
+            )}
+          </div>
           
           <Canvas 
             placedObjects={gameState.placed_objects}
             discoveries={gameState.discoveries}
             onPlace={handlePlace}
             onRemove={handleRemove}
+            currentEra={gameState.profile.current_era}
           />
         </div>
       </div>
+
+      {/* Color Picker Modal */}
+      {showColorPicker && (
+        <div className="modal-overlay" onClick={() => setShowColorPicker(false)}>
+          <div className="color-picker-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>🎨 Choose Your Theme</h3>
+            <div className="color-presets">
+              {Object.entries(COLOR_THEMES).map(([key, theme]) => (
+                <div
+                  key={key}
+                  className={`color-preset ${key === theme ? 'active' : ''}`}
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
+                  }}
+                  onClick={() => handleColorSelect(key)}
+                >
+                  {theme.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Object Detail Modal */}
+      {selectedObject && (
+        <div className="modal-overlay" onClick={() => setSelectedObject(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedObject(null)}>✕</button>
+            <h2>{selectedObject.object_name}</h2>
+            
+            {selectedObject.image_path && (
+              <div className="modal-image-container">
+                <img 
+                  src={selectedObject.image_path} 
+                  alt={selectedObject.object_name}
+                  className="modal-image"
+                />
+              </div>
+            )}
+            
+            <p className="modal-flavor">{selectedObject.flavor_text}</p>
+            
+            <div className="modal-stats">
+              <div className="modal-stat">
+                <div className="modal-stat-label">💰 Cost</div>
+                <div className="modal-stat-value">{selectedObject.cost}</div>
+              </div>
+              <div className="modal-stat">
+                <div className="modal-stat-label">📊 Income/sec</div>
+                <div className="modal-stat-value">{selectedObject.income_per_second}</div>
+              </div>
+              {selectedObject.time_crystal_generation > 0 && (
+                <div className="modal-stat">
+                  <div className="modal-stat-label">💎 Crystals/sec</div>
+                  <div className="modal-stat-value">{selectedObject.time_crystal_generation}</div>
+                </div>
+              )}
+              <div className="modal-stat">
+                <div className="modal-stat-label">📏 Size</div>
+                <div className="modal-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</div>
+              </div>
+              <div className="modal-stat">
+                <div className="modal-stat-label">🏛️ Era</div>
+                <div className="modal-stat-value">{selectedObject.era_name}</div>
+              </div>
+              <div className="modal-stat">
+                <div className="modal-stat-label">📁 Category</div>
+                <div className="modal-stat-value">{selectedObject.category}</div>
+              </div>
+            </div>
+            
+            {selectedObject.is_keystone && (
+              <div className="modal-section">
+                <h3>🔑 Keystone Object</h3>
+                <p>This is a keystone object! Purchase it to unlock the next era of civilization.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Game Info Modal */}
+      {showInfoModal && (
+        <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <button className="modal-close" onClick={() => setShowInfoModal(false)}>✕</button>
+            <div 
+              className="info-modal-content"
+              dangerouslySetInnerHTML={{ __html: gameInfoContent }}
+            />
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="error-toast">

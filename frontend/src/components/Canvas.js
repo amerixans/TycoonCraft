@@ -2,13 +2,31 @@ import React, { useState, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import './Canvas.css';
 
-const GRID_SIZE = 50; // Pixels per grid tile (increased for better visibility)
-const CANVAS_SIZE = 1000; // Logical canvas size in tiles
+const GRID_SIZE = 50; // Pixels per grid tile
 
-function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
+// Era-based canvas sizes (height x width in tiles)
+const ERA_SIZES = {
+  'Hunter-Gatherer': { height: 8, width: 16 },
+  'Agriculture': { height: 16, width: 16 },
+  'Metallurgy': { height: 16, width: 32 },
+  'Steam & Industry': { height: 32, width: 32 },
+  'Electric Age': { height: 32, width: 64 },
+  'Computing': { height: 64, width: 64 },
+  'Futurism': { height: 64, width: 128 },
+  'Interstellar': { height: 128, width: 128 },
+  'Arcana': { height: 128, width: 256 },
+  'Beyond': { height: 256, width: 256 },
+};
+
+function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
+  
+  // Get canvas size for current era
+  const canvasSize = ERA_SIZES[currentEra] || ERA_SIZES['Hunter-Gatherer'];
+  const CANVAS_WIDTH = canvasSize.width;
+  const CANVAS_HEIGHT = canvasSize.height;
   
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -23,22 +41,18 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     // Get the transform component's current state
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
-      console.log('No transform state in dragOver');
       return;
     }
     
     const rect = e.currentTarget.getBoundingClientRect();
     
     // Calculate position accounting for zoom
-    // getBoundingClientRect() already accounts for the pan (translate), so we only divide by scale
     const x = (e.clientX - rect.left) / transformState.scale;
     const y = (e.clientY - rect.top) / transformState.scale;
     
     // Convert to grid coordinates
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
-    
-    console.log('DragOver - Client:', e.clientX, e.clientY, 'Rect:', rect.left, rect.top, 'Scale:', transformState.scale, 'Grid:', gridX, gridY);
     
     setDraggedObject({ obj, x: gridX, y: gridY });
   };
@@ -48,19 +62,15 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     e.stopPropagation();
     
     const objectId = e.dataTransfer.getData('objectId');
-    console.log('Drop event - objectId:', objectId);
     
     if (!objectId) {
-      console.log('No objectId found in drop event');
       setDraggedObject(null);
       return;
     }
     
     const discovery = discoveries.find(d => d.game_object.id === parseInt(objectId));
-    console.log('Found discovery:', discovery);
     
     if (!discovery || !discovery.game_object) {
-      console.log('No discovery or game_object found');
       setDraggedObject(null);
       return;
     }
@@ -70,7 +80,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     // Get the transform component's current state
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
-      console.log('No transform state - ref:', transformRef.current);
       setDraggedObject(null);
       return;
     }
@@ -78,7 +87,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     const rect = e.currentTarget.getBoundingClientRect();
     
     // Calculate position accounting for zoom
-    // getBoundingClientRect() already accounts for the pan (translate), so we only divide by scale
     const x = (e.clientX - rect.left) / transformState.scale;
     const y = (e.clientY - rect.top) / transformState.scale;
     
@@ -86,22 +94,15 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
     
-    console.log('Drop at client:', e.clientX, e.clientY);
-    console.log('Rect position:', rect.left, rect.top);
-    console.log('Transform state:', { scale: transformState.scale, posX: transformState.positionX, posY: transformState.positionY });
-    console.log('Calculated position:', { x, y, gridX, gridY, footprint: [obj.footprint_w, obj.footprint_h] });
-    
     // Check bounds
-    if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_SIZE || gridY + obj.footprint_h > CANVAS_SIZE) {
+    if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_WIDTH || gridY + obj.footprint_h > CANVAS_HEIGHT) {
       alert('⚠️ Out of bounds! Place the object within the grid.');
       setDraggedObject(null);
       return;
     }
     
-    console.log('Calling onPlace with:', obj.id, gridX, gridY);
     onPlace(obj.id, gridX, gridY);
     setDraggedObject(null);
-    setDragPosition(null);
   };
   
   const handleDragLeave = (e) => {
@@ -121,7 +122,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
   return (
     <div className="canvas-container">
       <div className="canvas-header">
-        <h3>🗺️ World Map</h3>
+        <h3>🗺️ World Map ({CANVAS_HEIGHT}×{CANVAS_WIDTH})</h3>
         <div className="canvas-controls">
           <span className="control-hint">🖱️ Drag to pan • 🔍 Scroll to zoom</span>
         </div>
@@ -153,8 +154,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
                   cursor: draggedObject ? 'crosshair' : 'grab'
                 }}
                 contentStyle={{
-                  width: CANVAS_SIZE * GRID_SIZE + 'px',
-                  height: CANVAS_SIZE * GRID_SIZE + 'px',
+                  width: CANVAS_WIDTH * GRID_SIZE + 'px',
+                  height: CANVAS_HEIGHT * GRID_SIZE + 'px',
                 }}
               >
                 <div
@@ -163,8 +164,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   style={{
-                    width: CANVAS_SIZE * GRID_SIZE + 'px',
-                    height: CANVAS_SIZE * GRID_SIZE + 'px',
+                    width: CANVAS_WIDTH * GRID_SIZE + 'px',
+                    height: CANVAS_HEIGHT * GRID_SIZE + 'px',
                     backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
                   }}
                 >
