@@ -28,6 +28,14 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const CANVAS_WIDTH = canvasSize.width;
   const CANVAS_HEIGHT = canvasSize.height;
   
+  // Calculate initial scale to fit canvas nicely (with small padding)
+  // Assuming wrapper is around 1200px wide and 600px tall on average
+  const wrapperWidth = 1200;
+  const wrapperHeight = 600;
+  const scaleToFitWidth = wrapperWidth / (CANVAS_WIDTH * GRID_SIZE);
+  const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
+  const initialScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95; // 95% to leave small margin
+  
   const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
@@ -131,8 +139,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
       <div className="canvas-wrapper">
         <TransformWrapper
           ref={transformRef}
-          initialScale={0.5}
-          minScale={0.2}
+          initialScale={initialScale}
+          minScale={0.1}
           maxScale={2}
           centerOnInit={true}
           wheel={{ step: 0.1 }}

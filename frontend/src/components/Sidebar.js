@@ -87,6 +87,46 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                   e.dataTransfer.effectAllowed = 'copy';
                   e.dataTransfer.setData('objectId', obj.id.toString());
                   e.dataTransfer.setData('text/plain', obj.object_name);
+                  
+                  // Create custom drag image with just the object image
+                  const dragImage = document.createElement('div');
+                  dragImage.style.width = '64px';
+                  dragImage.style.height = '64px';
+                  dragImage.style.background = 'var(--bg-secondary)';
+                  dragImage.style.border = '3px solid var(--accent-secondary)';
+                  dragImage.style.borderRadius = '12px';
+                  dragImage.style.display = 'flex';
+                  dragImage.style.alignItems = 'center';
+                  dragImage.style.justifyContent = 'center';
+                  dragImage.style.position = 'absolute';
+                  dragImage.style.top = '-1000px';
+                  dragImage.style.overflow = 'hidden';
+                  dragImage.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                  
+                  if (obj.image_path) {
+                    const img = document.createElement('img');
+                    img.src = obj.image_path;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'contain';
+                    img.style.imageRendering = 'pixelated';
+                    dragImage.appendChild(img);
+                  } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.textContent = obj.object_name.substring(0, 2).toUpperCase();
+                    placeholder.style.fontSize = '1.5rem';
+                    placeholder.style.fontWeight = '900';
+                    placeholder.style.color = 'var(--accent-primary)';
+                    dragImage.appendChild(placeholder);
+                  }
+                  
+                  document.body.appendChild(dragImage);
+                  e.dataTransfer.setDragImage(dragImage, 32, 32);
+                  
+                  // Clean up after drag starts
+                  setTimeout(() => {
+                    document.body.removeChild(dragImage);
+                  }, 0);
                 }}
               >
                 <div className="object-image-container">

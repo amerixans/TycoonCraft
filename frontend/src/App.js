@@ -369,17 +369,94 @@ function App() {
         />
         
         <div className="main-area">
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <CraftingArea 
-              discoveries={gameState.discoveries}
-              onCraft={handleCraft}
-            />
+          <div className="top-section-container">
+            {/* Object Info Panel */}
+            <div className="object-info-panel">
+              <h3>📋 Object Details</h3>
+              {selectedObject ? (
+                <>
+                  {selectedObject.image_path && (
+                    <div className="object-info-image-container">
+                      <img 
+                        src={selectedObject.image_path} 
+                        alt={selectedObject.object_name}
+                        className="object-info-image"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="object-info-name">{selectedObject.object_name}</div>
+                  <div className="object-info-flavor">{selectedObject.flavor_text}</div>
+                  
+                  <div className="object-info-stats">
+                    <div className="object-info-stat">
+                      <span className="object-info-stat-label">💰 Cost</span>
+                      <span className="object-info-stat-value">{selectedObject.cost}</span>
+                    </div>
+                    <div className="object-info-stat">
+                      <span className="object-info-stat-label">📊 Income/sec</span>
+                      <span className="object-info-stat-value">{selectedObject.income_per_second}</span>
+                    </div>
+                    {parseFloat(selectedObject.time_crystal_generation) > 0 && (
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">💎 Crystals/sec</span>
+                        <span className="object-info-stat-value">{selectedObject.time_crystal_generation}</span>
+                      </div>
+                    )}
+                    <div className="object-info-stat">
+                      <span className="object-info-stat-label">📏 Size</span>
+                      <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
+                    </div>
+                    {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">🔨 Build Time</span>
+                        <span className="object-info-stat-value">{selectedObject.build_time}s</span>
+                      </div>
+                    )}
+                    {selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">⏱️ Duration</span>
+                        <span className="object-info-stat-value">{selectedObject.operation_duration}s</span>
+                      </div>
+                    )}
+                    <div className="object-info-stat">
+                      <span className="object-info-stat-label">🏛️ Era</span>
+                      <span className="object-info-stat-value">{selectedObject.era_name}</span>
+                    </div>
+                    <div className="object-info-stat">
+                      <span className="object-info-stat-label">📁 Category</span>
+                      <span className="object-info-stat-value">{selectedObject.category}</span>
+                    </div>
+                  </div>
+                  
+                  {selectedObject.is_keystone && (
+                    <div className="object-info-keystone">
+                      🔑 Keystone Object - Purchase to unlock next era!
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="object-info-empty">
+                  Click the ℹ️ icon on any object in the sidebar to view its details here
+                </div>
+              )}
+            </div>
             
-            {craftingOperations.length > 0 && (
-              <CraftingQueue 
-                craftingOperations={craftingOperations}
-              />
-            )}
+            {/* Crafting and Queue */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <CraftingArea 
+                  discoveries={gameState.discoveries}
+                  onCraft={handleCraft}
+                />
+                
+                {craftingOperations.length > 0 && (
+                  <CraftingQueue 
+                    craftingOperations={craftingOperations}
+                  />
+                )}
+              </div>
+            </div>
           </div>
           
           <Canvas 
@@ -411,64 +488,6 @@ function App() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Object Detail Modal */}
-      {selectedObject && (
-        <div className="modal-overlay" onClick={() => setSelectedObject(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedObject(null)}>✕</button>
-            <h2>{selectedObject.object_name}</h2>
-            
-            {selectedObject.image_path && (
-              <div className="modal-image-container">
-                <img 
-                  src={selectedObject.image_path} 
-                  alt={selectedObject.object_name}
-                  className="modal-image"
-                />
-              </div>
-            )}
-            
-            <p className="modal-flavor">{selectedObject.flavor_text}</p>
-            
-            <div className="modal-stats">
-              <div className="modal-stat">
-                <div className="modal-stat-label">💰 Cost</div>
-                <div className="modal-stat-value">{selectedObject.cost}</div>
-              </div>
-              <div className="modal-stat">
-                <div className="modal-stat-label">📊 Income/sec</div>
-                <div className="modal-stat-value">{selectedObject.income_per_second}</div>
-              </div>
-              {selectedObject.time_crystal_generation > 0 && (
-                <div className="modal-stat">
-                  <div className="modal-stat-label">💎 Crystals/sec</div>
-                  <div className="modal-stat-value">{selectedObject.time_crystal_generation}</div>
-                </div>
-              )}
-              <div className="modal-stat">
-                <div className="modal-stat-label">📏 Size</div>
-                <div className="modal-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</div>
-              </div>
-              <div className="modal-stat">
-                <div className="modal-stat-label">🏛️ Era</div>
-                <div className="modal-stat-value">{selectedObject.era_name}</div>
-              </div>
-              <div className="modal-stat">
-                <div className="modal-stat-label">📁 Category</div>
-                <div className="modal-stat-value">{selectedObject.category}</div>
-              </div>
-            </div>
-            
-            {selectedObject.is_keystone && (
-              <div className="modal-section">
-                <h3>🔑 Keystone Object</h3>
-                <p>This is a keystone object! Purchase it to unlock the next era of civilization.</p>
-              </div>
-            )}
           </div>
         </div>
       )}
