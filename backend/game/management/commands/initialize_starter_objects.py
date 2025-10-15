@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'A simple rock. Hard and useful.',
-                'image_path': '/media/objects/rock.png'
+                'image_path': '/media/objects/starter-rock.png'
             },
             {
                 'object_name': 'Stick',
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'A sturdy stick. Nature\'s first tool.',
-                'image_path': '/media/objects/stick.png'
+                'image_path': '/media/objects/starter-stick.png'
             },
             {
                 'object_name': 'Water',
@@ -72,7 +72,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'Pure water. Essential for life.',
-                'image_path': '/media/objects/water.png'
+                'image_path': '/media/objects/starter-water.png'
             },
             {
                 'object_name': 'Dirt',
@@ -94,7 +94,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'Rich earth. The foundation of all.',
-                'image_path': '/media/objects/dirt.png'
+                'image_path': '/media/objects/starter-dirt.png'
             }
         ]
 
