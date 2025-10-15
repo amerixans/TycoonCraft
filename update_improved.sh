@@ -93,8 +93,8 @@ if [ ! -f "/var/www/tycooncraft/backend/.env" ]; then
     exit 1
 fi
 
-# Check if service exists
-if ! systemctl list-unit-files | grep -q tycooncraft.service; then
+# Check if service exists (check both systemctl and file system)
+if ! systemctl list-unit-files tycooncraft.service &>/dev/null && ! [ -f /etc/systemd/system/tycooncraft.service ]; then
     echo "ERROR: tycooncraft.service not found"
     echo "Have you run the initial deployment script?"
     exit 1
