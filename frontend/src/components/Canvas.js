@@ -66,11 +66,14 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const wrapperHeight = 600;
   const scaleToFitWidth = wrapperWidth / (CANVAS_WIDTH * GRID_SIZE);
   const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
-  const initialScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95; // 95% to leave small margin
+  const fitScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95;
+  
+  // Start zoomed in one level more (add one zoom step of 0.1)
+  const initialScale = fitScale + 0.1;
   
   // Calculate minimum scale to prevent empty space
-  // The canvas should always fill the viewport
-  const minScale = Math.max(scaleToFitWidth * 0.98, scaleToFitHeight * 0.98);
+  // Canvas must always fill the viewport completely
+  const minScale = Math.min(scaleToFitWidth, scaleToFitHeight);
   
   const handleDragOver = (e) => {
     e.preventDefault();

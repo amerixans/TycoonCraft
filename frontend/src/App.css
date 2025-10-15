@@ -17,19 +17,19 @@
 
 /* Dark Theme */
 body.dark {
-  --bg-primary: #0a0a14;
-  --bg-secondary: #0f1419;
-  --bg-tertiary: #1a1f2e;
-  --text-primary: #e8e8e8;
-  --text-secondary: #a0a0a0;
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --text-primary: #eee;
+  --text-secondary: #aaa;
   --accent-primary: #e94560;
   --accent-secondary: #00d4ff;
   --accent-success: #2ecc71;
   --accent-warning: #f39c12;
   --accent-error: #e74c3c;
-  --border-color: #1a1f2e;
-  --shadow: rgba(0, 0, 0, 0.5);
-  --shadow-heavy: rgba(0, 0, 0, 0.7);
+  --border-color: #0f3460;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-heavy: rgba(0, 0, 0, 0.5);
 }
 
 /* Blue/Ocean Theme */
