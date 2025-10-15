@@ -2,8 +2,11 @@
 set -euo pipefail
 
 # TycoonCraft Deployment Script
-# Usage: ./deploy.sh [branch]
-# Example: ./deploy.sh production
+# Usage: ./deploy.sh [branch] [ssl_option]
+# Examples: 
+#   ./deploy.sh production          # Deploy production with SSL
+#   ./deploy.sh dev no-ssl          # Deploy dev without SSL
+#   ./deploy.sh staging skip-ssl    # Deploy staging without SSL
 
 # Prevent interactive prompts
 export DEBIAN_FRONTEND=noninteractive
@@ -19,6 +22,13 @@ EOF
 
 # Get branch from argument or default to 'dev'
 BRANCH="${1:-dev}"
+
+# Get SSL option from second argument (default is to enable SSL)
+SSL_OPTION="${2:-ssl}"
+ENABLE_SSL=true
+if [[ "$SSL_OPTION" == "no-ssl" ]] || [[ "$SSL_OPTION" == "skip-ssl" ]]; then
+    ENABLE_SSL=false
+fi
 
 # Check for required environment variables
 if [ -z "${DB_PASSWORD:-}" ]; then
@@ -38,6 +48,11 @@ ADMIN_EMAIL="${ADMIN_EMAIL:-admin@tycooncraft.com}"
 
 echo "Starting TycoonCraft deployment..."
 echo "Target branch: $BRANCH"
+if [ "$ENABLE_SSL" = true ]; then
+    echo "SSL/HTTPS: Enabled"
+else
+    echo "SSL/HTTPS: Disabled (HTTP only)"
+fi
 
 # Configure apt for non-interactive use
 export DEBIAN_FRONTEND=noninteractive
@@ -214,27 +229,33 @@ sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
-echo "=========================================="
-echo "Setting up SSL/HTTPS..."
-echo "=========================================="
+if [ "$ENABLE_SSL" = true ]; then
+    echo "=========================================="
+    echo "Setting up SSL/HTTPS..."
+    echo "=========================================="
 
+    # Install certbot
+    apt-get install -y certbot python3-certbot-nginx
 
-# Install certbot
-apt-get install -y certbot python3-certbot-nginx
+    # Get SSL certificate (requires domain pointing to this server)
+    certbot --nginx \
+      -d ${DOMAIN} \
+      -d www.${DOMAIN} \
+      --non-interactive \
+      --agree-tos \
+      --email ${ADMIN_EMAIL} \
+      --redirect
 
-# Get SSL certificate (requires domain pointing to this server)
-certbot --nginx \
-  -d ${DOMAIN} \
-  -d www.${DOMAIN} \
-  --non-interactive \
-  --agree-tos \
-  --email ${ADMIN_EMAIL} \
-  --redirect
+    # Test renewal
+    certbot renew --dry-run
 
-# Test renewal
-certbot renew --dry-run
-
-echo "SSL setup complete! Site is now HTTPS"
+    echo "SSL setup complete! Site is now HTTPS"
+else
+    echo "=========================================="
+    echo "Skipping SSL/HTTPS setup"
+    echo "=========================================="
+    echo "Site will be available via HTTP only"
+fi
 
 
 # Create systemd service for Gunicorn
@@ -308,9 +329,15 @@ echo "=========================================="
 echo "Deployment complete!"
 echo "=========================================="
 echo "Branch deployed: $BRANCH"
-echo "Site: http://${DOMAIN}"
-echo "Admin: http://${DOMAIN}/admin"
-echo "API: http://${DOMAIN}/api"
+if [ "$ENABLE_SSL" = true ]; then
+    echo "Site: https://${DOMAIN}"
+    echo "Admin: https://${DOMAIN}/admin"
+    echo "API: https://${DOMAIN}/api"
+else
+    echo "Site: http://${DOMAIN}"
+    echo "Admin: http://${DOMAIN}/admin"
+    echo "API: http://${DOMAIN}/api"
+fi
 echo ""
 echo "Admin credentials:"
 echo "  Username: admin"
