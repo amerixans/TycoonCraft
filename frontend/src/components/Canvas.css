@@ -105,7 +105,7 @@
 
 .placed-object:hover {
   border-color: var(--accent-primary);
-  transform: scale(1.08);
+  transform: scale(1.03);
   box-shadow: 0 6px 20px rgba(230, 126, 34, 0.5);
   z-index: 10;
 }
@@ -224,6 +224,7 @@
   box-shadow: 0 8px 32px var(--shadow-heavy);
   z-index: 100;
   animation: fadeInUp 0.2s;
+  pointer-events: none; /* Prevent tooltip from blocking clicks */
 }
 
 @keyframes fadeInUp {
