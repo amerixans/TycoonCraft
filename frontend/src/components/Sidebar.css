@@ -211,9 +211,10 @@
 
 .keystone-badge {
   position: absolute;
-  top: 0.8rem;
-  right: 0.8rem;
+  top: 0.5rem;
+  left: 0.5rem;
   font-size: 1.3rem;
+  filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5));
 }
 
 /* Scrollbar styling for sidebar */

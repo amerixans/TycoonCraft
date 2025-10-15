@@ -15,10 +15,10 @@ const ERAS = [
 const COLOR_THEMES = {
   light: { name: 'Light', primary: '#e67e22', secondary: '#3498db' },
   dark: { name: 'Dark', primary: '#e94560', secondary: '#00d4ff' },
-  blue: { name: 'Ocean', primary: '#2980b9', secondary: '#3498db' },
-  pink: { name: 'Sunset', primary: '#e91e63', secondary: '#ff6b9d' },
-  green: { name: 'Forest', primary: '#27ae60', secondary: '#2ecc71' },
-  purple: { name: 'Twilight', primary: '#8e44ad', secondary: '#9b59b6' },
+  blue: { name: 'Ocean', primary: '#1976d2', secondary: '#42a5f5' },
+  pink: { name: 'Pink', primary: '#e91e63', secondary: '#ff6b9d' },
+  green: { name: 'Forest', primary: '#27ae60', secondary: '#4caf50' },
+  purple: { name: 'Twilight', primary: '#8e44ad', secondary: '#ab47bc' },
   red: { name: 'Fire', primary: '#c0392b', secondary: '#e74c3c' },
   gray: { name: 'Steel', primary: '#7f8c8d', secondary: '#95a5a6' },
 };

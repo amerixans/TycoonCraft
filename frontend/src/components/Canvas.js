@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import './Canvas.css';
 
@@ -6,22 +6,54 @@ const GRID_SIZE = 50; // Pixels per grid tile
 
 // Era-based canvas sizes (height x width in tiles)
 const ERA_SIZES = {
-  'Hunter-Gatherer': { height: 8, width: 16 },
-  'Agriculture': { height: 16, width: 16 },
-  'Metallurgy': { height: 16, width: 32 },
-  'Steam & Industry': { height: 32, width: 32 },
-  'Electric Age': { height: 32, width: 64 },
-  'Computing': { height: 64, width: 64 },
-  'Futurism': { height: 64, width: 128 },
-  'Interstellar': { height: 128, width: 128 },
-  'Arcana': { height: 128, width: 256 },
-  'Beyond': { height: 256, width: 256 },
+  'Hunter-Gatherer': { height: 16, width: 32 },
+  'Agriculture': { height: 32, width: 32 },
+  'Metallurgy': { height: 32, width: 64 },
+  'Steam & Industry': { height: 64, width: 64 },
+  'Electric Age': { height: 64, width: 128 },
+  'Computing': { height: 128, width: 128 },
+  'Futurism': { height: 128, width: 256 },
+  'Interstellar': { height: 256, width: 256 },
+  'Arcana': { height: 256, width: 512 },
+  'Beyond': { height: 512, width: 512 },
 };
 
 function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  
+  // Update time every second for build progress
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Clear hover state if hovered object was removed
+  useEffect(() => {
+    if (hoveredPlaced && !placedObjects.find(p => p.id === hoveredPlaced.id)) {
+      setHoveredPlaced(null);
+    }
+  }, [placedObjects, hoveredPlaced]);
+  
+  // Calculate build progress for an object
+  const getBuildProgress = (placed) => {
+    if (!placed.is_building) return null;
+    
+    const placedTime = new Date(placed.placed_at).getTime();
+    const completeTime = new Date(placed.build_complete_at).getTime();
+    const totalDuration = completeTime - placedTime;
+    const elapsed = currentTime - placedTime;
+    const remaining = Math.max(0, completeTime - currentTime);
+    
+    return {
+      percentage: Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)),
+      remainingSeconds: Math.ceil(remaining / 1000)
+    };
+  };
   
   // Get canvas size for current era
   const canvasSize = ERA_SIZES[currentEra] || ERA_SIZES['Hunter-Gatherer'];
@@ -35,6 +67,10 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const scaleToFitWidth = wrapperWidth / (CANVAS_WIDTH * GRID_SIZE);
   const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
   const initialScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95; // 95% to leave small margin
+  
+  // Calculate minimum scale to prevent empty space
+  // The canvas should always fill the viewport
+  const minScale = Math.max(scaleToFitWidth * 0.98, scaleToFitHeight * 0.98);
   
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -123,6 +159,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const handlePlacedClick = (placed, e) => {
     e.stopPropagation();
     if (window.confirm(`Remove ${placed.game_object.object_name}?`)) {
+      setHoveredPlaced(null); // Clear hover state before removing
       onRemove(placed.id);
     }
   };
@@ -140,7 +177,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
         <TransformWrapper
           ref={transformRef}
           initialScale={initialScale}
-          minScale={0.1}
+          minScale={minScale}
           maxScale={2}
           centerOnInit={true}
           wheel={{ step: 0.1 }}
@@ -207,7 +244,17 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                       {placed.is_building && (
                         <div className="building-overlay">
                           <span className="building-icon">🔨</span>
-                          <div className="building-progress"></div>
+                          {(() => {
+                            const progress = getBuildProgress(placed);
+                            return progress ? (
+                              <>
+                                <div className="building-progress">
+                                  <div className="building-progress-bar" style={{ width: `${progress.percentage}%` }}></div>
+                                </div>
+                                <div className="building-time">{progress.remainingSeconds}s</div>
+                              </>
+                            ) : null;
+                          })()}
                         </div>
                       )}
                     </div>
@@ -266,6 +313,15 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                 {hoveredPlaced.is_building ? '🔨 Building' : hoveredPlaced.is_operational ? '✅ Active' : '⏸️ Inactive'}
               </span>
             </div>
+            {hoveredPlaced.is_building && (() => {
+              const progress = getBuildProgress(hoveredPlaced);
+              return progress ? (
+                <div className="stat-row">
+                  <span>⏱️ Time Left:</span>
+                  <span className="stat-value">{progress.remainingSeconds}s ({Math.round(progress.percentage)}%)</span>
+                </div>
+              ) : null;
+            })()}
             <div className="stat-row">
               <span>📏 Size:</span>
               <span className="stat-value">{hoveredPlaced.game_object.footprint_w}×{hoveredPlaced.game_object.footprint_h}</span>
