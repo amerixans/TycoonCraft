@@ -324,6 +324,9 @@ if [ "$SHOULD_BUILD" = true ]; then
     rm -rf node_modules package-lock.json
     npm install
     
+    # Ensure node_modules binaries are executable
+    chmod +x node_modules/.bin/* 2>/dev/null || true
+    
     if [ "$ENABLE_SSL" = true ]; then
         REACT_APP_API_URL=https://${DOMAIN}/api npm run build
     else

@@ -253,6 +253,9 @@ if [ "$SHOULD_REBUILD" = true ]; then
         npm install --quiet
     fi
     
+    # Ensure node_modules binaries are executable (git reset may strip permissions)
+    chmod +x node_modules/.bin/* 2>/dev/null || true
+    
     # Build with correct API URL
     if [ "$SSL_ENABLED" = true ]; then
         REACT_APP_API_URL=https://${DOMAIN}/api npm run build
