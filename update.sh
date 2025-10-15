@@ -61,6 +61,10 @@ cd /var/www/tycooncraft/frontend
 
 # Install dependencies and rebuild
 npm install --quiet
+
+# Ensure node_modules binaries are executable
+chmod +x node_modules/.bin/* 2>/dev/null || true
+
 REACT_APP_API_URL=https://${DOMAIN}/api npm run build
 
 # Fix permissions
