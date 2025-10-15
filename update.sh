@@ -27,6 +27,10 @@ DOMAIN="${DOMAIN:-tycooncraft.com}"
 echo "Stopping TycoonCraft service..."
 systemctl stop tycooncraft
 
+# Change ownership to root for update operations
+echo "Adjusting permissions for updates..."
+chown -R root:root /var/www/tycooncraft
+
 # Navigate to repo
 cd /var/www/tycooncraft
 
