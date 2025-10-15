@@ -136,7 +136,8 @@ echo "✓ Backup complete: $BACKUP_DIR"
 cd /var/www/tycooncraft
 
 # Store current commit for comparison
-CURRENT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+# Run as www-data to avoid git ownership issues
+CURRENT_COMMIT=$(sudo -u www-data git rev-parse HEAD 2>/dev/null || echo "unknown")
 echo "Current commit: $CURRENT_COMMIT"
 
 # ============================================================================
@@ -156,13 +157,17 @@ sleep 2
 
 echo "Pulling latest changes from git ($BRANCH branch)..."
 
+# CRITICAL FIX: Run git commands as www-data to avoid ownership issues
+# Git has security protections against running in directories owned by other users
+# Since /var/www/tycooncraft is owned by www-data, we should run git as www-data
+
 # Stash any local changes first (shouldn't be any, but just in case)
-git stash save "Auto-stash before update $(date)" 2>/dev/null || true
+sudo -u www-data git stash save "Auto-stash before update $(date)" 2>/dev/null || true
 
-git fetch origin $BRANCH
-git reset --hard origin/$BRANCH
+sudo -u www-data git fetch origin $BRANCH
+sudo -u www-data git reset --hard origin/$BRANCH
 
-NEW_COMMIT=$(git rev-parse HEAD)
+NEW_COMMIT=$(sudo -u www-data git rev-parse HEAD)
 echo "New commit: $NEW_COMMIT"
 
 # Check if anything actually changed
@@ -176,7 +181,7 @@ else
     # Show what changed
     echo ""
     echo "Changes since last update:"
-    git log --oneline --no-decorate $CURRENT_COMMIT..$NEW_COMMIT | head -10
+    sudo -u www-data git log --oneline --no-decorate $CURRENT_COMMIT..$NEW_COMMIT | head -10
     echo ""
 fi
 
@@ -190,7 +195,7 @@ cd /var/www/tycooncraft/backend
 # Check if requirements.txt changed
 REQUIREMENTS_CHANGED=false
 if [ "$CHANGES_DETECTED" = true ]; then
-    if git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "backend/requirements.txt"; then
+    if sudo -u www-data git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "backend/requirements.txt"; then
         REQUIREMENTS_CHANGED=true
         echo "📦 Requirements.txt changed - updating dependencies..."
     fi
@@ -271,12 +276,12 @@ FRONTEND_CHANGED=false
 PACKAGE_JSON_CHANGED=false
 
 if [ "$CHANGES_DETECTED" = true ]; then
-    if git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "frontend/"; then
+    if sudo -u www-data git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "frontend/"; then
         FRONTEND_CHANGED=true
         echo "🎨 Frontend files changed"
     fi
     
-    if git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "frontend/package.json"; then
+    if sudo -u www-data git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "frontend/package.json"; then
         PACKAGE_JSON_CHANGED=true
         echo "📦 package.json changed"
     fi
