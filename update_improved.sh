@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# TycoonCraft Update Script - Enhanced Version
+# TycoonCraft Update Script - Fixed Backend Issues
 # Updates the application with latest changes from git
 # Usage: ./update.sh [branch]
 # Example: ./update.sh production
@@ -104,7 +104,7 @@ fi
 # BACKUP BEFORE UPDATE
 # ============================================================================
 
-send_notification "🔄 Starting update of branch: $BRANCH"
+send_notification "📄 Starting update of branch: $BRANCH"
 
 echo "Creating backup directory..."
 mkdir -p /var/backups/tycooncraft
@@ -147,11 +147,18 @@ echo "Stopping TycoonCraft service..."
 systemctl stop tycooncraft
 echo "✓ Service stopped"
 
+# Wait to ensure full shutdown
+sleep 2
+
 # ============================================================================
 # UPDATE CODE
 # ============================================================================
 
 echo "Pulling latest changes from git ($BRANCH branch)..."
+
+# Stash any local changes first (shouldn't be any, but just in case)
+git stash save "Auto-stash before update $(date)" 2>/dev/null || true
+
 git fetch origin $BRANCH
 git reset --hard origin/$BRANCH
 
@@ -189,8 +196,31 @@ if [ "$CHANGES_DETECTED" = true ]; then
     fi
 fi
 
+# CRITICAL FIX: Ensure virtual environment exists and is functional
+if [ ! -d ".venv" ]; then
+    echo "⚠️  Virtual environment missing - creating new one..."
+    python3 -m venv .venv
+    REQUIREMENTS_CHANGED=true
+fi
+
+# CRITICAL FIX: Ensure venv binaries are executable after git reset
+echo "Fixing virtual environment permissions..."
+chmod +x .venv/bin/* 2>/dev/null || true
+
 # Activate virtual environment
 source .venv/bin/activate
+
+# Verify activation worked
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "ERROR: Failed to activate virtual environment"
+    exit 1
+fi
+
+echo "✓ Virtual environment activated: $VIRTUAL_ENV"
+
+# CRITICAL FIX: Always verify/reinstall core dependencies
+echo "Verifying core dependencies..."
+pip install --upgrade pip setuptools wheel --quiet
 
 # Update dependencies only if requirements changed or if it's a forced update
 if [ "$REQUIREMENTS_CHANGED" = true ]; then
@@ -199,6 +229,12 @@ if [ "$REQUIREMENTS_CHANGED" = true ]; then
     echo "✓ Dependencies updated"
 else
     echo "✓ Dependencies unchanged (skipping pip install)"
+fi
+
+# CRITICAL FIX: Verify gunicorn is installed
+if ! command -v gunicorn &> /dev/null; then
+    echo "⚠️  Gunicorn not found - installing..."
+    pip install gunicorn --quiet
 fi
 
 # Run migrations (always run to be safe)
@@ -210,6 +246,18 @@ echo "✓ Migrations complete"
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 echo "✓ Static files collected"
+
+# CRITICAL FIX: Test Django configuration
+echo "Testing Django configuration..."
+if ! python manage.py check --deploy 2>&1 | tee /tmp/django_check.log; then
+    echo "⚠️  Django check found issues (see above)"
+    echo "Continuing anyway, but check logs if backend fails..."
+else
+    echo "✓ Django configuration valid"
+fi
+
+# Deactivate venv (systemd will use it directly)
+deactivate
 
 # ============================================================================
 # UPDATE FRONTEND
@@ -294,11 +342,49 @@ fi
 # ============================================================================
 
 echo "Setting permissions..."
+cd /var/www/tycooncraft
+
+# CRITICAL FIX: Set proper ownership
 chown -R www-data:www-data /var/www/tycooncraft
+
+# Set directory permissions
 find /var/www/tycooncraft -type d -exec chmod 755 {} \;
+
+# Set file permissions
 find /var/www/tycooncraft -type f -exec chmod 644 {} \;
-chmod 755 /var/www/tycooncraft/backend/.venv/bin/* 2>/dev/null || true
+
+# CRITICAL FIX: Ensure backend executables are executable
+chmod +x /var/www/tycooncraft/backend/.venv/bin/* 2>/dev/null || true
+chmod +x /var/www/tycooncraft/backend/manage.py 2>/dev/null || true
+
+# CRITICAL FIX: Ensure .env is readable by www-data
+chmod 640 /var/www/tycooncraft/backend/.env
+
 echo "✓ Permissions set"
+
+# ============================================================================
+# VERIFY SYSTEMD SERVICE CONFIGURATION
+# ============================================================================
+
+echo "Verifying systemd service configuration..."
+
+# Check if service file uses the correct Python interpreter
+SERVICE_FILE="/etc/systemd/system/tycooncraft.service"
+if [ -f "$SERVICE_FILE" ]; then
+    if grep -q "/var/www/tycooncraft/backend/.venv/bin/python" "$SERVICE_FILE" || \
+       grep -q "/var/www/tycooncraft/backend/.venv/bin/gunicorn" "$SERVICE_FILE"; then
+        echo "✓ Service file correctly references virtual environment"
+    else
+        echo "⚠️  WARNING: Service file may not reference virtual environment correctly"
+        echo "   Service file: $SERVICE_FILE"
+        echo "   Check ExecStart line uses: /var/www/tycooncraft/backend/.venv/bin/gunicorn"
+    fi
+else
+    echo "⚠️  WARNING: Service file not found at $SERVICE_FILE"
+fi
+
+# Reload systemd in case service file was modified
+systemctl daemon-reload
 
 # ============================================================================
 # RESTART SERVICES
@@ -315,17 +401,20 @@ echo "Waiting for service to start..."
 sleep 5
 
 # ============================================================================
-# HEALTH CHECKS
+# COMPREHENSIVE HEALTH CHECKS
 # ============================================================================
 
-echo "Running health checks..."
+echo "Running comprehensive health checks..."
 
 # Check if service is active
 if ! systemctl is-active --quiet tycooncraft; then
     echo "❌ ERROR: Service failed to start"
     echo ""
+    echo "Service status:"
+    systemctl status tycooncraft --no-pager -l
+    echo ""
     echo "Recent logs:"
-    journalctl -u tycooncraft -n 50 --no-pager
+    journalctl -u tycooncraft -n 100 --no-pager
     echo ""
     send_notification "❌ Update failed: Service won't start on $BRANCH" "error"
     
@@ -349,6 +438,20 @@ if ! systemctl is-active --quiet tycooncraft; then
 fi
 echo "✓ Service is running"
 
+# CRITICAL FIX: Verify gunicorn process is actually running
+echo "Checking for gunicorn processes..."
+if pgrep -f "gunicorn.*tycooncraft" > /dev/null; then
+    GUNICORN_COUNT=$(pgrep -f "gunicorn.*tycooncraft" | wc -l)
+    echo "✓ Gunicorn processes running: $GUNICORN_COUNT"
+else
+    echo "❌ ERROR: No gunicorn processes found!"
+    echo "Service may be started but gunicorn is not running"
+    echo ""
+    echo "Checking logs for errors..."
+    journalctl -u tycooncraft -n 50 --no-pager
+    exit 1
+fi
+
 # Check if nginx is serving content
 NGINX_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: ${DOMAIN}" http://127.0.0.1/ || echo "000")
 if [ "$NGINX_CHECK" = "200" ]; then
@@ -357,21 +460,35 @@ else
     echo "⚠️  WARNING: Nginx returned HTTP $NGINX_CHECK"
 fi
 
-# Check Django backend health
-echo "Checking Django backend..."
+# CRITICAL FIX: More robust backend health check
+echo "Checking Django backend (30 second timeout)..."
 BACKEND_HEALTHY=false
 for i in {1..15}; do
-    if curl -f -s http://127.0.0.1:8000/api/ &>/dev/null; then
-        echo "✓ Backend API responding"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/ || echo "000")
+    if [ "$HTTP_CODE" = "200" ]; then
+        echo "✓ Backend API responding (HTTP $HTTP_CODE)"
         BACKEND_HEALTHY=true
         break
+    elif [ "$HTTP_CODE" != "000" ]; then
+        echo "Attempt $i: Backend returned HTTP $HTTP_CODE (waiting...)"
+    else
+        echo "Attempt $i: Backend not responding yet (waiting...)"
     fi
     sleep 2
 done
 
 if [ "$BACKEND_HEALTHY" = false ]; then
-    echo "⚠️  WARNING: Backend health check timeout - API may not be responding"
-    send_notification "⚠️ Update completed but backend health check failed on $BRANCH" "warning"
+    echo "❌ ERROR: Backend health check failed - API not responding after 30 seconds"
+    echo ""
+    echo "Checking backend logs..."
+    journalctl -u tycooncraft -n 100 --no-pager
+    echo ""
+    echo "Checking error logs..."
+    if [ -f /var/log/tycooncraft-error.log ]; then
+        tail -50 /var/log/tycooncraft-error.log
+    fi
+    send_notification "❌ Update failed: Backend not responding on $BRANCH" "error"
+    exit 1
 fi
 
 # Store deployed commit
