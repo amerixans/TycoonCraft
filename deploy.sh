@@ -155,7 +155,15 @@ echo "Building React frontend..."
 cd /var/www/tycooncraft/frontend
 rm -rf node_modules package-lock.json
 npm install
-REACT_APP_API_URL=https://${DOMAIN}/api npm run build
+
+# Set API URL based on SSL setting
+if [ "$ENABLE_SSL" = true ]; then
+    API_PROTOCOL="https"
+else
+    API_PROTOCOL="http"
+fi
+echo "Building frontend with API URL: ${API_PROTOCOL}://${DOMAIN}/api"
+REACT_APP_API_URL=${API_PROTOCOL}://${DOMAIN}/api npm run build
 
 # Configure Nginx
 echo "Configuring Nginx..."
