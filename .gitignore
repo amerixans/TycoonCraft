@@ -35,7 +35,9 @@ build/
 backend/static/
 backend/staticfiles/
 backend/media/**
+!backend/media/**/
 !backend/media/objects/starter*
+
 
 # Logs & local backups
 *.log
