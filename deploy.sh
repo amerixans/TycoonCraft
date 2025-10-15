@@ -2,6 +2,8 @@
 set -euo pipefail
 
 # TycoonCraft Deployment Script
+# Usage: ./deploy.sh [branch]
+# Example: ./deploy.sh production
 
 # Prevent interactive prompts
 export DEBIAN_FRONTEND=noninteractive
@@ -14,6 +16,9 @@ cat > /etc/needrestart/needrestart.conf << 'EOF'
 $nrconf{restart} = 'a';
 $nrconf{kernelhints} = 0;
 EOF
+
+# Get branch from argument or default to 'dev'
+BRANCH="${1:-dev}"
 
 # Check for required environment variables
 if [ -z "${DB_PASSWORD:-}" ]; then
@@ -32,6 +37,7 @@ DOMAIN="${DOMAIN:-tycooncraft.com}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@tycooncraft.com}"
 
 echo "Starting TycoonCraft deployment..."
+echo "Target branch: $BRANCH"
 
 # Configure apt for non-interactive use
 export DEBIAN_FRONTEND=noninteractive
@@ -50,13 +56,13 @@ apt-get install -y -o Dpkg::Options::="--force-confnew" \
   python3 python3-pip python3-venv postgresql nginx git curl
 
 # Clone repository
-echo "Cloning repository..."
+echo "Cloning repository from branch: $BRANCH..."
 cd /var/www
 if [ -d "tycooncraft" ]; then
     echo "Directory exists, removing..."
     rm -rf tycooncraft
 fi
-git clone -b production --single-branch --depth 1 https://github.com/amerixans/tycooncraft.git
+git clone -b $BRANCH --single-branch --depth 1 https://github.com/amerixans/tycooncraft.git
 cd tycooncraft
 
 # Setup PostgreSQL
@@ -301,6 +307,7 @@ curl -I -H "Host: ${DOMAIN}" http://127.0.0.1/ || true
 echo "=========================================="
 echo "Deployment complete!"
 echo "=========================================="
+echo "Branch deployed: $BRANCH"
 echo "Site: http://${DOMAIN}"
 echo "Admin: http://${DOMAIN}/admin"
 echo "API: http://${DOMAIN}/api"
