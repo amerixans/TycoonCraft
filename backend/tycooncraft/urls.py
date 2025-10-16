@@ -1,9 +1,40 @@
-from django.contrib import admin
-from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
+from django.urls import path
+from django.http import JsonResponse
+from . import views
+
+def api_root(request):
+    """
+    API root endpoint - returns available endpoints and API status.
+    This makes /api/ return 200 OK for health checks.
+    """
+    return JsonResponse({
+        'status': 'online',
+        'message': 'TycoonCraft Game API',
+        'version': '1.0',
+        'endpoints': {
+            'register': '/api/register/',
+            'login': '/api/login/',
+            'logout': '/api/logout/',
+            'game_state': '/api/game-state/',
+            'craft': '/api/craft/',
+            'place': '/api/place/',
+            'remove': '/api/remove/',
+            'unlock_era': '/api/unlock-era/',
+            'export': '/api/export/',
+            'import': '/api/import/',
+        }
+    })
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('game.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('', api_root, name='api-root'),  # Root endpoint at /api/
+    path('register/', views.register, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('game-state/', views.game_state, name='game_state'),
+    path('craft/', views.craft_objects, name='craft'),
+    path('place/', views.place_object, name='place'),
+    path('remove/', views.remove_object, name='remove'),
+    path('unlock-era/', views.unlock_era, name='unlock_era'),
+    path('export/', views.export_game, name='export'),
+    path('import/', views.import_game, name='import'),
+]

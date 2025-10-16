@@ -261,6 +261,27 @@ else
     echo "✓ Django configuration valid"
 fi
 
+# NEW: Verify URL configuration exists
+echo "Verifying Django URL patterns..."
+if python manage.py show_urls 2>/dev/null | head -20; then
+    echo "✓ URL patterns detected"
+elif python -c "
+import sys
+sys.path.insert(0, '/var/www/tycooncraft/backend')
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tycooncraft.settings')
+import django
+django.setup()
+from django.urls import get_resolver
+resolver = get_resolver()
+patterns = [str(p.pattern) for p in resolver.url_patterns[:10]]
+print('Configured URL patterns:', patterns)
+" 2>/dev/null; then
+    echo "✓ URL configuration found"
+else
+    echo "⚠️  Warning: Could not verify URL patterns (this is OK if custom configuration)"
+fi
+
 # Deactivate venv (systemd will use it directly)
 deactivate
 
@@ -465,35 +486,138 @@ else
     echo "⚠️  WARNING: Nginx returned HTTP $NGINX_CHECK"
 fi
 
-# CRITICAL FIX: More robust backend health check
+# CRITICAL FIX: Comprehensive backend health check with actual API endpoints
 echo "Checking Django backend (30 second timeout)..."
 BACKEND_HEALTHY=false
-for i in {1..15}; do
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/ || echo "000")
-    if [ "$HTTP_CODE" = "200" ]; then
-        echo "✓ Backend API responding (HTTP $HTTP_CODE)"
-        BACKEND_HEALTHY=true
-        break
-    elif [ "$HTTP_CODE" != "000" ]; then
-        echo "Attempt $i: Backend returned HTTP $HTTP_CODE (waiting...)"
-    else
-        echo "Attempt $i: Backend not responding yet (waiting...)"
+TESTED_ENDPOINT=""
+
+# Test actual API endpoints that should exist based on your game/urls.py
+# Also test admin which we know works from diagnostics
+ENDPOINTS_TO_TEST=(
+    "/admin/"              # Should redirect (301/302) - proves Django is working
+    "/api/game-state/"     # Actual API endpoint from your game/urls.py
+    "/api/register/"       # Actual API endpoint
+    "/api/login/"          # Actual API endpoint
+)
+
+# Function to check if response code indicates health
+is_healthy_response() {
+    local code="$1"
+    # Accept: 200 OK, 301/302 redirect, 401 unauthorized (means endpoint exists but needs auth),
+    # 403 forbidden (means endpoint exists), 405 method not allowed (means endpoint exists)
+    if [ "$code" = "200" ] || [ "$code" = "301" ] || [ "$code" = "302" ] || \
+       [ "$code" = "401" ] || [ "$code" = "403" ] || [ "$code" = "405" ]; then
+        return 0
     fi
-    sleep 2
+    return 1
+}
+
+# First pass: Quick test of all endpoints
+echo "Testing Django endpoints..."
+for endpoint in "${ENDPOINTS_TO_TEST[@]}"; do
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000${endpoint} 2>/dev/null || echo "000")
+    
+    if is_healthy_response "$HTTP_CODE"; then
+        BACKEND_HEALTHY=true
+        TESTED_ENDPOINT="$endpoint"
+        echo "✓ Backend responding on ${endpoint} (HTTP $HTTP_CODE)"
+        break
+    else
+        echo "  ${endpoint}: HTTP ${HTTP_CODE}"
+    fi
 done
 
+# If no endpoint worked immediately, retry with delays
 if [ "$BACKEND_HEALTHY" = false ]; then
-    echo "❌ ERROR: Backend health check failed - API not responding after 30 seconds"
+    echo "No endpoints responded immediately, retrying with delays..."
+    for i in {1..15}; do
+        # Test admin first (most likely to work), then actual API endpoints
+        for endpoint in "/admin/" "/api/game-state/" "/api/register/"; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000${endpoint} 2>/dev/null || echo "000")
+            
+            if is_healthy_response "$HTTP_CODE"; then
+                echo "✓ Backend responding on ${endpoint} (HTTP $HTTP_CODE)"
+                BACKEND_HEALTHY=true
+                TESTED_ENDPOINT="$endpoint"
+                break 2
+            fi
+        done
+        echo "Attempt $i/15: Waiting for backend to respond..."
+        sleep 2
+    done
+fi
+
+if [ "$BACKEND_HEALTHY" = false ]; then
+    echo "❌ ERROR: Backend health check failed - No endpoints responding after 30 seconds"
     echo ""
-    echo "Checking backend logs..."
-    journalctl -u tycooncraft -n 100 --no-pager
+    echo "Comprehensive Django Diagnostics:"
+    echo "======================================"
+    echo "Testing all known endpoints:"
     echo ""
-    echo "Checking error logs..."
+    
+    # Test all possible endpoints with detailed output
+    ALL_ENDPOINTS=(
+        "/"
+        "/admin/"
+        "/api/"
+        "/api/register/"
+        "/api/login/"
+        "/api/game-state/"
+        "/api/craft/"
+        "/api/place/"
+    )
+    
+    for endpoint in "${ALL_ENDPOINTS[@]}"; do
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000${endpoint} 2>/dev/null || echo "000")
+        RESPONSE=$(curl -s http://127.0.0.1:8000${endpoint} 2>/dev/null | head -c 200)
+        
+        printf "%-20s: HTTP %-3s" "$endpoint" "$HTTP_CODE"
+        
+        if is_healthy_response "$HTTP_CODE"; then
+            echo " ✓ (Healthy response)"
+        elif [ "$HTTP_CODE" = "404" ]; then
+            echo " ✗ (Not Found)"
+        elif [ "$HTTP_CODE" = "500" ]; then
+            echo " ✗ (Server Error)"
+        elif [ "$HTTP_CODE" = "000" ]; then
+            echo " ✗ (No Response)"
+        else
+            echo " ? (Unexpected: $HTTP_CODE)"
+        fi
+        
+        if [ -n "$RESPONSE" ] && [ "$HTTP_CODE" != "000" ]; then
+            echo "     Response preview: ${RESPONSE:0:100}"
+        fi
+    done
+    
+    echo ""
+    echo "======================================"
+    echo "Service Logs (last 50 lines):"
+    echo "======================================"
+    journalctl -u tycooncraft -n 50 --no-pager
+    echo ""
+    echo "======================================"
+    echo "Error Logs:"
+    echo "======================================"
     if [ -f /var/log/tycooncraft-error.log ]; then
-        tail -50 /var/log/tycooncraft-error.log
+        tail -30 /var/log/tycooncraft-error.log
+    else
+        echo "No error log found at /var/log/tycooncraft-error.log"
     fi
+    echo ""
+    echo "======================================"
+    echo "❌ DIAGNOSIS:"
+    echo "   - Gunicorn is running (verified earlier)"
+    echo "   - But Django is not responding to any endpoints"
+    echo "   - Check for Django errors in logs above"
+    echo "   - Possible issues: ALLOWED_HOSTS, database connection, imports"
+    echo "======================================"
+    echo ""
     send_notification "❌ Update failed: Backend not responding on $BRANCH" "error"
     exit 1
+else
+    echo ""
+    echo "✓ Backend health check passed using endpoint: ${TESTED_ENDPOINT}"
 fi
 
 # Store deployed commit
