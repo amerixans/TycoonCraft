@@ -168,50 +168,28 @@
 .building-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(243, 156, 18, 0.2);
+  background: rgba(243, 156, 18, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
+  pointer-events: none;
 }
 
-.building-icon {
-  font-size: 2rem;
-  animation: hammer 0.5s ease-in-out infinite;
-}
-
-@keyframes hammer {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(-20deg);
-  }
-}
-
-.building-progress {
-  width: 80%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-}
-
-.building-progress-bar {
-  height: 100%;
-  background: var(--accent-success);
-  transition: width 0.3s ease;
-  border-radius: 4px;
+.building-progress-circle {
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
 }
 
 .building-time {
   color: white;
   font-weight: 700;
-  font-size: 0.9rem;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-  margin-top: 0.3rem;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
 }
 
 /* Enhanced Tooltip */
