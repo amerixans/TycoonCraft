@@ -4,130 +4,199 @@ Do not include commentary, reasoning, examples, or extra properties.
 
 Game context (authoritative)
 • TycoonCraft is a civilization-crafting tycoon. Players combine two objects to discover/craft new ones.
-• Only objects from the player’s unlocked Era can be crafted/placed; discovery of future items occurs elsewhere.
+• Only objects from the player's unlocked Era can be crafted/placed; discovery of future items occurs elsewhere.
 • Each object passively generates coins per second while operational. Some objects (rare) also generate time crystals per second.
 • 1 tile = 1 meter (use this for footprint vs. size consistency).
+• CRITICAL: All coin values must be integers ≥ 1. No fractional coins allowed.
 
 Eras (AUTHORITATIVE: enum + details; use these exact names for era_name)
 
 Hunter-Gatherer
-• Unique Mechanic (applies to items in/after this era): Decay — basic items “burn out” after a short operation window, yielding salvage.
-• Keystone to Unlock: Campfire (Fire + Wood)
+• Unique Mechanic (applies to items in/after this era): Decay — basic items "burn out" after a short operation window, yielding salvage.
+• Keystone to Unlock: Campfire (Fire + Wood) — MUST be assigned to "Agriculture" era
 • Crystal Gate (suggested): 0
-• Core Examples: Berry Patch, Stone Tool, Campfire
+• Cost Range: 50–1,000 coins
+• Income Range: 1–10 coins/second
+• Core Examples: Berry Patch, Stone Tool, Flint Knife, Bark Shelter
 
 Agriculture
 • Unique Mechanic (applies to items in/after this era): Growth — farmables can be replanted to extend operation (choice: cash out vs. regrow).
-• Keystone to Unlock: Fertilizer (Animal + Plant)
+• Keystone to Unlock: Fertilizer (Animal + Plant) — MUST be assigned to "Metallurgy" era
 • Crystal Gate (suggested): 10
-• Core Examples: Farm, Granary, Well
+• Cost Range: 800–8,000 coins
+• Income Range: 5–80 coins/second
+• Core Examples: Farm, Granary, Well, Plow, Barn
 
 Metallurgy
 • Unique Mechanic (applies to items in/after this era): Extraction Chains — Mines output Ore; smelters convert to Ingots (intermediate goods).
-• Keystone to Unlock: Metal (Ore + Fire)
+• Keystone to Unlock: Metal (Ore + Fire) — MUST be assigned to "Steam & Industry" era
 • Crystal Gate (suggested): 50
-• Core Examples: Mine, Furnace, Anvil
+• Cost Range: 5,000–50,000 coins
+• Income Range: 30–500 coins/second
+• Core Examples: Mine, Furnace, Anvil, Forge, Sword
 
 Steam & Industry
 • Unique Mechanic (applies to items in/after this era): Throughput — buildings have input buffers; upgrades increase buffers (fewer deadtimes).
-• Keystone to Unlock: Boiler (Metal + Water)
+• Keystone to Unlock: Boiler (Metal + Water) — MUST be assigned to "Electric Age" era
 • Crystal Gate (suggested): 250
-• Core Examples: Steam Engine, Factory, Rail
+• Cost Range: 40,000–400,000 coins
+• Income Range: 200–3,000 coins/second
+• Core Examples: Steam Engine, Factory, Rail, Locomotive, Warehouse
 
 Electric Age
 • Unique Mechanic (applies to items in/after this era): Power Grid — powered buildings gain % income; overdraw causes brownouts (temporary debuffs).
-• Keystone to Unlock: Generator (Metal + Magnet)
+• Keystone to Unlock: Generator (Metal + Magnet) — MUST be assigned to "Computing" era
 • Crystal Gate (suggested): 1,200
-• Core Examples: Dynamo, Power Lines, Lightbulb
+• Cost Range: 300,000–3,000,000 coins
+• Income Range: 1,500–25,000 coins/second
+• Core Examples: Dynamo, Power Lines, Lightbulb, Telegraph, Battery
 
 Computing
 • Unique Mechanic (applies to items in/after this era): Automation — craft queues auto-repeat; bot slots reduce cooldowns.
-• Keystone to Unlock: Microchip (Silicon + Circuit)
+• Keystone to Unlock: Microchip (Silicon + Circuit) — MUST be assigned to "Futurism" era
 • Crystal Gate (suggested): 6,000
-• Core Examples: Computer, Router, Data Center
+• Cost Range: 2,000,000–20,000,000 coins
+• Income Range: 10,000–180,000 coins/second
+• Core Examples: Computer, Router, Data Center, Server, Processor
 
 Futurism
 • Unique Mechanic (applies to items in/after this era): Synthesis — fabricators convert raw inputs to any tagged intermediate at an efficiency loss.
-• Keystone to Unlock: Nanofab (Assembler + Microchip)
+• Keystone to Unlock: Nanofab (Assembler + Microchip) — MUST be assigned to "Interstellar" era
 • Crystal Gate (suggested): 30,000
-• Core Examples: Drone Bay, Fusion Prototype
+• Cost Range: 15,000,000–150,000,000 coins
+• Income Range: 75,000–1,200,000 coins/second
+• Core Examples: Drone Bay, Fusion Prototype, Quantum Lab, Nanites
 
 Interstellar
 • Unique Mechanic (applies to items in/after this era): Logistics Lanes — routes between districts add global multipliers; congestion penalties apply.
-• Keystone to Unlock: FTL Relay (Fusion + Crystal)
+• Keystone to Unlock: FTL Relay (Fusion + Crystal) — MUST be assigned to "Arcana" era
 • Crystal Gate (suggested): 150,000
-• Core Examples: Orbital Farm, Asteroid Mine
+• Cost Range: 100,000,000–1,000,000,000 coins
+• Income Range: 500,000–8,000,000 coins/second
+• Core Examples: Orbital Farm, Asteroid Mine, Starport, Warp Gate
 
 Arcana
 • Unique Mechanic (applies to items in/after this era): Enchantment — socket runes to items for additive/multiplicative bonuses; runes wear over time.
-• Keystone to Unlock: Ley Capacitor (Crystal + Ritual)
+• Keystone to Unlock: Ley Capacitor (Crystal + Ritual) — MUST be assigned to "Beyond" era
 • Crystal Gate (suggested): 800,000
-• Core Examples: Mana Well, Transmutation Lab
+• Cost Range: 800,000,000–8,000,000,000 coins
+• Income Range: 4,000,000–60,000,000 coins/second
+• Core Examples: Mana Well, Transmutation Lab, Arcane Tower, Rune Forge
 
 Beyond
-• Unique Mechanic (applies to items in/after this era): Sim Layers — instantiate “simulated duplicates” of a layout for burst yield, with cooldown.
-• Keystone to Unlock: Seed AI (Quantum Core + Archive)
+• Unique Mechanic (applies to items in/after this era): Sim Layers — instantiate "simulated duplicates" of a layout for burst yield, with cooldown.
+• Keystone to Unlock: Seed AI (Quantum Core + Archive) — Final era, assigned to "Beyond"
 • Crystal Gate (suggested): 4,000,000
-• Core Examples: World Forge, Reality Printer
+• Cost Range: 6,000,000,000–60,000,000,000 coins
+• Income Range: 30,000,000–500,000,000 coins/second
+• Core Examples: World Forge, Reality Printer, Singularity Core, Time Weaver
 
-Era rule (must obey): the output object’s era_name must be the higher era of the two inputs. Do not leap beyond that era. If a concept implies a later mechanic, downgrade it to the chosen era’s capabilities.
+⚠️ CRITICAL ERA ASSIGNMENT RULES ⚠️
+
+For KEYSTONE objects (is_keystone: true):
+• The keystone MUST be assigned to the NEXT era after the higher input era
+• Example: If combining Hunter-Gatherer objects → keystone goes in "Agriculture" era
+• Example: If combining Agriculture + Hunter-Gatherer → keystone goes in "Metallurgy" era
+• This is because placing the keystone UNLOCKS that next era for the player
+• Keystones should have cap_per_civ of 1–3 and be thematically significant
+
+For REGULAR objects (is_keystone: false):
+• MUST be assigned to the higher era of the two input objects
+• Example: Hunter-Gatherer + Agriculture → result is "Agriculture" era
+• Example: Agriculture + Agriculture → result is "Agriculture" era
+• NEVER assign beyond the higher input era for regular objects
 
 Keystone policy (is_keystone)
-• Set is_keystone: true if and only if the object’s name matches the era’s “Keystone to Unlock” in Section 2. Otherwise set false.
-• When true, prefer a small cap_per_civ (e.g., 1–3).
+• Set is_keystone: true if and only if the object's name matches the era's "Keystone to Unlock" above
+• When true, always use cap_per_civ of 1–3 (keystones are rare and powerful)
+• Keystones should be thematically important milestones (e.g., Campfire, Fertilizer, Metal)
+• Otherwise set is_keystone: false and use cap_per_civ: null
 
 Categories (enum for category)
 natural, structure, farm, mine, factory, power, logistics, research, cultural, housing, magic, wonder
-Choose the category that best matches the object’s primary purpose. This powers global modifiers and UI grouping.
+Choose the category that best matches the object's primary purpose. This powers global modifiers and UI grouping.
 
-Economy & pacing (targets, not hard limits)
-• cost (coins): positive number; scales by era (later eras are orders of magnitude higher).
-• ROI target (coins): aim for break-even in
-• early eras (1–4): 30–500 seconds,
-• mid (5–7): 70–1000 seconds,
-• late (8–10): 30–2000 seconds.
-• income_per_second ≈ cost / (break_even_seconds * 60) × (0.9–1.1 variance).
-• time_crystal_cost: usually 0 (very rare to require crystals).
-• time_crystal_generation: per-second rate; usually 0 (rare objects may use very small values, e.g., 0.001–0.01).
+Economy & pacing (MUST follow for integer coin values)
+• cost (coins): integer ≥ 50 (use cost ranges listed under each era above)
+• income_per_second: integer ≥ 1 (use income ranges listed under each era above)
+• ROI calculation: cost / income_per_second = break-even time in seconds
+• Target ROI ranges:
+  - Early eras (1–4): 30–500 seconds (0.5–8 minutes)
+  - Mid eras (5–7): 70–1,000 seconds (1–17 minutes)
+  - Late eras (8–10): 100–2,000 seconds (1.5–33 minutes)
+• Add 10–20% variance to avoid predictability
+• time_crystal_cost: usually 0 (very rare to require crystals for regular objects)
+• time_crystal_generation: usually 0; for rare/epic/legendary objects use 0.001–0.05 per second
 
 Timings & lifecycle
-• build_time_sec: 0–86,400 (prefer short; cooldowns are handled elsewhere).
-• operation_duration_sec: duration before automatic retirement. Typical: 3×–20× the break-even time (in seconds).
-• retire_payout.coins_pct: refund fraction at natural retirement (e.g., 0.1–5).
-• sellback_pct: refund fraction on manual delete (often ≤ retire payout; e.g., 0.1–0.3).
-• These two payouts must be independent.
+• build_time_sec: 0–3600 (prefer 0–300 for most objects; longer for complex structures)
+• operation_duration_sec: duration before automatic retirement
+  - Typical: 5×–20× the break-even time (in seconds)
+  - Early era: 300–5,000 seconds (5–83 minutes)
+  - Mid era: 1,000–10,000 seconds (17–167 minutes)
+  - Late era: 2,000–30,000 seconds (33–500 minutes)
+• retire_payout.coins_pct: refund fraction at natural retirement (0.10–0.40 typical; 0.50+ for valuable items)
+• sellback_pct: refund fraction on manual delete (often ≤ retire payout; 0.10–0.30 typical)
 
 Limits & placement
-• cap_per_civ: integer limit or null for unlimited. Use a small cap for keystones/wonders; null otherwise.
-• footprint.w / footprint.h: integers 1–20 tiles.
-• size: visual size in meters (0.1–20). Keep roughly consistent with footprint (1 tile = 1 meter).
-• Heuristic: size ≈ max(w, h) or a plausible real-world scale.
+• cap_per_civ: integer limit or null for unlimited
+  - Use 1–3 for keystones and wonders
+  - Use 5–20 for powerful unique structures
+  - Use null for common objects
+• footprint.w / footprint.h: integers 1–20 tiles
+  - Small objects: 1×1 to 2×2
+  - Medium objects: 2×2 to 4×4
+  - Large objects: 4×4 to 8×8
+  - Massive structures: 8×8 to 20×20
+• size: visual size in meters (0.5–20)
+  - Keep roughly consistent with footprint (1 tile ≈ 1 meter)
+  - size ≈ average of (w, h) or max(w, h) for tall structures
 
 Quality & flavor
-• quality_tier: common | uncommon | rare | epic | legendary (use sparingly; affects perceived prestige).
-• flavor_text: short, evocative, occasionally humorous, spoiler-free.
+• quality_tier: common | uncommon | rare | epic | legendary
+  - Common: 70% of objects, basic building blocks
+  - Uncommon: 20% of objects, useful specialized items
+  - Rare: 7% of objects, powerful or unique mechanics
+  - Epic: 2% of objects, game-changing structures
+  - Legendary: 1% of objects, keystones and ultimate buildings
+• flavor_text: 30–150 characters, evocative and thematic
+  - Hint at mechanics or history
+  - Occasionally humorous but not silly
+  - Avoid spoilers for future eras
 
 Global auras (global_modifiers, optional)
-Provide only if the object is plausibly an aura/wonder/power hub. Defaults to none ([]).
+Provide only if the object is plausibly an aura/wonder/power hub (rare). Defaults to empty array [].
 Each modifier:
-• active_when: placed or operational (prefer operational).
-• affected_categories: one or more from the category enum.
-• Optional affected_tags may be omitted.
-• Multipliers typical ranges:
-• income_multiplier: 0.9–1.25 (avoid power creep; wonders may go to 1.4 with max_stacks=1).
-• cost_multiplier, build_time_multiplier, operation_duration_multiplier: usually 0.9–1.1.
-• stacking: multiplicative (default).
-• max_stacks: 1 for strong auras; >1 only for small effects.
+• active_when: "operational" (prefer this) or "placed"
+• affected_categories: one or more from the category enum
+• affected_tags: empty array [] (reserved for future use)
+• Multipliers:
+  - income_multiplier: 1.02–1.15 typical; 1.20–1.40 for wonders with max_stacks=1
+  - cost_multiplier: 0.90–1.10 (rarely use >1.0)
+  - build_time_multiplier: 0.90–1.00 (faster build is a reward)
+  - operation_duration_multiplier: 1.00–1.20 (longer operation is usually positive)
+• stacking: "multiplicative" (default; compounds across buildings)
+• max_stacks: 1 for strong auras (keystones, wonders); 3–10 for weaker effects
+
+Exciting gameplay tips
+• Mix mundane + exotic in crafting results (Stone + Fire → Glass; Tree + Metal → Clock)
+• Create intermediate goods that are useful in multiple recipes
+• Make some objects generate resources for others (e.g., Well + Farm synergy)
+• Give keystones unique mechanics or powerful global modifiers
+• Balance high cost with high income for satisfying progression
+• Use operation_duration wisely: short-lived but profitable vs. long-term investments
+• Add flavor to suggest possible combinations without being too obvious
 
 Field-by-field reminders (must satisfy schema)
-• Required: object_name, era_name, is_keystone, category, cost, income_per_second, build_time_sec, operation_duration_sec, retire_payout, sellback_pct, cap_per_civ, footprint.
-• Omit any property not in the provided JSON. No extra fields.
-• All numbers must be non-negative where applicable and within reasonable ranges given era.
+• Required: object_name, era_name, is_keystone, category, quality_tier, cost, time_crystal_cost, income_per_second, time_crystal_generation, build_time_sec, operation_duration_sec, retire_payout, sellback_pct, cap_per_civ, footprint, size, global_modifiers, flavor_text
+• All numbers must be integers for cost and income_per_second (no decimals!)
+• Omit any property not in the schema; do not add extra fields
 
 Output rules
-• Return only the completed JSON values (the container JSON is provided separately).
-• No prose, no lists, no rationale, no markdown.
-• Values must be internally consistent with the two inputs and era rule.
+• Return only the completed JSON values (the container JSON is provided separately)
+• No prose, no lists, no rationale, no markdown
+• Values must be internally consistent with the two inputs and era rules
+• Double-check era assignment: keystones go to NEXT era, regular objects stay in higher input era
 
 ⸻
 
