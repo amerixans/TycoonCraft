@@ -52,6 +52,37 @@ ERA_CRYSTAL_COSTS = {
 }
 
 # -----------------------------
+# Era progression helpers
+# -----------------------------
+
+def get_next_era(current_era):
+    """Get the next era in sequence, or None if at the end."""
+    try:
+        current_index = ERAS.index(current_era)
+        if current_index < len(ERAS) - 1:
+            return ERAS[current_index + 1]
+    except ValueError:
+        pass
+    return None
+
+
+def get_unlocked_eras(profile):
+    """Get list of all eras unlocked by the player."""
+    era_unlocks = EraUnlock.objects.filter(player=profile).values_list('era_name', flat=True)
+    return list(era_unlocks)
+
+
+def get_higher_era(era_a, era_b):
+    """Get the higher (more advanced) era between two eras."""
+    try:
+        index_a = ERAS.index(era_a)
+        index_b = ERAS.index(era_b)
+        return ERAS[max(index_a, index_b)]
+    except ValueError:
+        return era_a  # fallback
+
+
+# -----------------------------
 # Rate limiting helpers
 # -----------------------------
 
@@ -102,21 +133,6 @@ def increment_rate_limit(player, limit_type):
 def update_player_coins(player):
     """Calculate and update coins/time crystals from operational placed objects."""
     now = timezone.now()
-    
-    # First, check for any buildings that have completed construction
-    completed_buildings = PlacedObject.objects.filter(
-        player=player,
-        is_building=True,
-        build_complete_at__lte=now
-    )
-    
-    # Transition completed buildings to operational status
-    if completed_buildings.exists():
-        completed_buildings.update(
-            is_building=False,
-            is_operational=True
-        )
-    
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
     operational_objects = (
@@ -227,7 +243,7 @@ def _extract_responses_text(res_json):
     # 4) Nothing worked
     raise ValueError("Unable to parse text from OpenAI Responses API response.")
 
-def call_openai_crafting(object_a, object_b):
+def call_openai_crafting(object_a, object_b, unlocked_eras, current_era):
     """
     Call OpenAI (Responses API) to generate a new object definition via structured output.
     Uses server-to-server endpoint: POST /v1/responses
@@ -256,12 +272,41 @@ def call_openai_crafting(object_a, object_b):
         "notes": f"Income: {object_b.income_per_second}/s, Cost: {object_b.cost}",
     }
 
+    # Determine the higher era between the two objects
+    higher_era = get_higher_era(object_a.era_name, object_b.era_name)
+    next_era = get_next_era(higher_era)
+    
+    # Build era context for the prompt
+    era_context = f"""
+PLAYER ERA CONTEXT:
+• Current Era: {current_era}
+• Unlocked Eras: {', '.join(unlocked_eras)}
+• Higher Input Era: {higher_era}
+• Next Potential Era: {next_era if next_era else 'None (at max era)'}
+
+CRITICAL ERA ASSIGNMENT RULES:
+1. For KEYSTONE objects (is_keystone: true):
+   - The object MUST be assigned to the NEXT era beyond the higher input era
+   - Example: If combining Agriculture objects, the keystone should be "Metallurgy"
+   - This is because placing the keystone unlocks that next era
+   
+2. For REGULAR objects (is_keystone: false):
+   - The object MUST be assigned to the higher era of the two inputs
+   - Example: If combining Hunter-Gatherer + Agriculture, result is Agriculture
+   - Never assign to an era beyond the player's highest unlocked era + 1
+   
+3. Keystone identification:
+   - Check the era definitions for "Keystone to Unlock" entries
+   - Only set is_keystone: true if the crafted object matches that keystone concept
+   - Example: "Campfire" for Hunter-Gatherer, "Fertilizer" for Agriculture, etc.
+"""
+
     # Fill prompt
     prompt = (
         prompt_template
         .replace("{{object_a_capsule}}", json.dumps(capsule_a, indent=2))
         .replace("{{object_b_capsule}}", json.dumps(capsule_b, indent=2))
-    )
+    ) + "\n" + era_context
 
     # Build payload for structured output
     payload = {
@@ -482,8 +527,12 @@ def craft_objects(request):
     increment_rate_limit(profile, "user_discovery")
     increment_rate_limit(None, "global_api")
 
+    # Get player's era context
+    unlocked_eras = get_unlocked_eras(profile)
+    current_era = profile.current_era
+
     try:
-        obj_data = call_openai_crafting(object_a, object_b)
+        obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
@@ -622,7 +671,24 @@ def place_object(request):
         is_operational=game_object.build_time_sec == 0,
     )
 
-    return Response(PlacedObjectSerializer(placed).data, status=status.HTTP_201_CREATED)
+    # Auto-unlock next era if this is a keystone object
+    response_data = PlacedObjectSerializer(placed).data
+    if game_object.is_keystone:
+        # The keystone's era_name IS the era it unlocks
+        era_to_unlock = game_object.era_name
+        
+        # Check if not already unlocked
+        if not EraUnlock.objects.filter(player=profile, era_name=era_to_unlock).exists():
+            # Unlock the era (no crystal cost when unlocking via keystone)
+            EraUnlock.objects.create(player=profile, era_name=era_to_unlock)
+            profile.current_era = era_to_unlock
+            profile.save()
+            
+            # Add unlock info to response
+            response_data['era_unlocked'] = era_to_unlock
+            response_data['message'] = f'Congratulations! You have unlocked the {era_to_unlock} era!'
+
+    return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])
