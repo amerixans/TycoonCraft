@@ -185,6 +185,17 @@ body {
   font-weight: 600;
 }
 
+.era-progress {
+  background: var(--bg-primary);
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+  font-weight: 600;
+  text-align: center;
+}
+
 .header-center {
   display: flex;
   gap: 2rem;
@@ -890,3 +901,199 @@ body {
   min-width: 600px;
   min-height: 400px;
 }
+
+/* Era Unlock Celebration Modal */
+.era-unlock-overlay {
+  background: rgba(0, 0, 0, 0.85);
+  animation: fadeIn 0.3s;
+}
+
+.era-unlock-modal {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border: 5px solid var(--accent-primary);
+  border-radius: 30px;
+  padding: 3rem;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), 0 0 100px rgba(230, 126, 34, 0.3);
+  animation: eraUnlockAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes eraUnlockAppear {
+  0% {
+    transform: scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.era-unlock-animation {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.era-unlock-icon {
+  font-size: 8rem;
+  animation: eraIconBounce 1s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes eraIconBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+  }
+}
+
+.era-unlock-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.era-unlock-sparkles span {
+  position: absolute;
+  font-size: 2rem;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.era-unlock-sparkles span:nth-child(1) {
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.era-unlock-sparkles span:nth-child(2) {
+  top: 20%;
+  right: 15%;
+  animation-delay: 0.3s;
+}
+
+.era-unlock-sparkles span:nth-child(3) {
+  bottom: 30%;
+  left: 15%;
+  animation-delay: 0.6s;
+}
+
+.era-unlock-sparkles span:nth-child(4) {
+  bottom: 20%;
+  right: 10%;
+  animation-delay: 0.9s;
+}
+
+.era-unlock-sparkles span:nth-child(5) {
+  top: 50%;
+  left: 5%;
+  animation-delay: 1.2s;
+}
+
+.era-unlock-sparkles span:nth-child(6) {
+  top: 50%;
+  right: 5%;
+  animation-delay: 1.5s;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.era-unlock-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--accent-primary);
+  margin: 0 0 1rem 0;
+  text-shadow: 3px 3px 6px var(--shadow-heavy);
+  animation: titlePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.era-unlock-era {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 1rem 0;
+  text-shadow: 0 0 30px rgba(230, 126, 34, 0.5);
+  animation: eraGlow 2s ease-in-out infinite;
+}
+
+@keyframes eraGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(230, 126, 34, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(230, 126, 34, 0.8));
+  }
+}
+
+.era-unlock-message {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  margin: 1.5rem 0;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.era-unlock-description {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin: 1rem 0 2rem 0;
+  line-height: 1.8;
+}
+
+.era-unlock-description strong {
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.era-unlock-button {
+  padding: 1.5rem 3rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-warning) 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(230, 126, 34, 0.4);
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.era-unlock-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 36px rgba(230, 126, 34, 0.6);
+}
+
+.era-unlock-button:active {
+  transform: translateY(0) scale(1);
+}
+

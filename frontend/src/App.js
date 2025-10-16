@@ -40,6 +40,7 @@ function App() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showEraUnlockModal, setShowEraUnlockModal] = useState(null);
   
   const longPressTimer = useRef(null);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -193,9 +194,19 @@ function App() {
 
   const handlePlace = async (objectId, x, y) => {
     try {
-      await game.place(objectId, x, y);
+      const response = await game.place(objectId, x, y);
       await loadGameState();
-      showNotification('✅ Object placed!', 'success');
+      
+      // Check if a new era was unlocked!
+      if (response.data.era_unlocked) {
+        setShowEraUnlockModal({
+          era: response.data.era_unlocked,
+          message: response.data.message
+        });
+        showNotification(`🎉 ${response.data.message}`, 'success');
+      } else {
+        showNotification('✅ Object placed!', 'success');
+      }
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Placement failed';
       setError(errorMsg);
@@ -319,7 +330,12 @@ function App() {
       <div className="header">
         <div className="header-left">
           <h1>🏛️ TycoonCraft</h1>
-          <span className="era-badge">{gameState.profile.current_era}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <span className="era-badge">{gameState.profile.current_era}</span>
+            <span className="era-progress">
+              Era {gameState.era_unlocks.length} of {ERAS.length}
+            </span>
+          </div>
         </div>
         <div className="header-center">
           <div className="resource">
@@ -431,7 +447,7 @@ function App() {
                   
                   {selectedObject.is_keystone && (
                     <div className="object-info-keystone">
-                      🔑 Keystone Object - Purchase to unlock next era!
+                      🔑 Keystone Object - Place to unlock <strong>{selectedObject.era_name}</strong> era!
                     </div>
                   )}
                 </>
@@ -501,6 +517,37 @@ function App() {
               className="info-modal-content"
               dangerouslySetInnerHTML={{ __html: gameInfoContent }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Era Unlock Celebration Modal */}
+      {showEraUnlockModal && (
+        <div className="modal-overlay era-unlock-overlay">
+          <div className="era-unlock-modal">
+            <div className="era-unlock-animation">
+              <div className="era-unlock-icon">🎉</div>
+              <div className="era-unlock-sparkles">
+                <span>✨</span>
+                <span>💫</span>
+                <span>⭐</span>
+                <span>🌟</span>
+                <span>✨</span>
+                <span>💫</span>
+              </div>
+            </div>
+            <h2 className="era-unlock-title">New Era Unlocked!</h2>
+            <div className="era-unlock-era">{showEraUnlockModal.era}</div>
+            <p className="era-unlock-message">{showEraUnlockModal.message}</p>
+            <div className="era-unlock-description">
+              You can now craft and place objects from the <strong>{showEraUnlockModal.era}</strong> era!
+            </div>
+            <button 
+              className="era-unlock-button"
+              onClick={() => setShowEraUnlockModal(null)}
+            >
+              ⚡ Continue Your Journey!
+            </button>
           </div>
         </div>
       )}

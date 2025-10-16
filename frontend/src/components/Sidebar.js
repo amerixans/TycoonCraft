@@ -81,7 +81,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
               <div 
                 key={obj.id}
                 className={`object-item ${obj.is_keystone ? 'keystone' : ''}`}
-                title="Drag to craft or place"
+                title={obj.is_keystone ? `🔑 Keystone: Place to unlock ${obj.era_name}!` : 'Drag to craft or place'}
                 draggable={true}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'copy';
