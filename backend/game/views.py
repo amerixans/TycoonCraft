@@ -51,6 +51,19 @@ ERA_CRYSTAL_COSTS = {
     "Beyond": 4000000,
 }
 
+ERA_CRAFTING_COSTS = {
+    "Hunter-Gatherer": 50,
+    "Agriculture": 250,
+    "Metallurgy": 1250,
+    "Steam & Industry": 6250,
+    "Electric Age": 31250,
+    "Computing": 156250,
+    "Futurism": 781250,
+    "Interstellar": 3906250,
+    "Arcana": 19531250,
+    "Beyond": 97656250,
+}
+
 # -----------------------------
 # Era progression helpers
 # -----------------------------
@@ -632,6 +645,17 @@ def craft_objects(request):
     if object_a.id > object_b.id:
         object_a, object_b = object_b, object_a
 
+    # Calculate crafting cost based on higher era
+    higher_era = get_higher_era(object_a.era_name, object_b.era_name)
+    crafting_cost = Decimal(str(ERA_CRAFTING_COSTS.get(higher_era, 50)))
+    
+    # Check if player has enough coins
+    update_player_coins(profile)
+    if profile.coins < crafting_cost:
+        return Response({
+            "error": f"Insufficient coins. Crafting costs {crafting_cost} coins (based on {higher_era} era)."
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     # Check for predefined recipe first
     predefined_overrides = get_predefined_recipe(object_a, object_b)
     
@@ -647,12 +671,17 @@ def craft_objects(request):
             existing_recipe.delete()
             # Continue to generation below
         else:
+            # Deduct crafting cost
+            profile.coins -= crafting_cost
+            profile.save()
+            
             # Specs matched or no predefined recipe - return existing
             discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
             return Response({
                 "object": GameObjectSerializer(result_obj).data,
                 "newly_discovered": created,
                 "newly_created": False,
+                "crafting_cost": float(crafting_cost),
             })
 
     # New recipe → count, then call OpenAI OUTSIDE DB transaction
@@ -669,6 +698,40 @@ def craft_objects(request):
         obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefined_overrides)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    # Check if an object with this name already exists (handle duplicates gracefully)
+    existing_obj = GameObject.objects.filter(object_name=obj_data.get("object_name")).first()
+    
+    if existing_obj:
+        # Object with this name already exists - use it instead of creating a new one
+        # Don't waste the image generation call
+        try:
+            with transaction.atomic():
+                # Create recipe linking these inputs to the existing result
+                CraftingRecipe.objects.create(
+                    object_a=object_a,
+                    object_b=object_b,
+                    result=existing_obj,
+                    discovered_by=request.user,
+                )
+
+                # Deduct crafting cost
+                profile.coins -= crafting_cost
+                profile.save()
+
+                # Mark as discovered for this player
+                Discovery.objects.create(player=profile, game_object=existing_obj)
+
+                return Response({
+                    "object": GameObjectSerializer(existing_obj).data,
+                    "newly_discovered": True,
+                    "newly_created": False,
+                    "duplicate_name_handled": True,
+                    "crafting_cost": float(crafting_cost),
+                }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Prepare image (second API call) and count it
     increment_rate_limit(None, "global_api")
@@ -723,12 +786,17 @@ def craft_objects(request):
                 discovered_by=request.user,
             )
 
+            # Deduct crafting cost
+            profile.coins -= crafting_cost
+            profile.save()
+
             Discovery.objects.create(player=profile, game_object=new_obj)
 
             return Response({
                 "object": GameObjectSerializer(new_obj).data,
                 "newly_discovered": True,
                 "newly_created": True,
+                "crafting_cost": float(crafting_cost),
             }, status=status.HTTP_201_CREATED)
 
     except Exception as e:

@@ -66,7 +66,7 @@ class CraftingRecipe(models.Model):
 class PlayerProfile(models.Model):
     """Extended user profile for game state"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    coins = models.DecimalField(max_digits=20, decimal_places=2, default=100)
+    coins = models.DecimalField(max_digits=20, decimal_places=2, default=500)
     time_crystals = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     current_era = models.CharField(max_length=50, default='Hunter-Gatherer')
     

@@ -208,3 +208,59 @@
 .craft-button:active:not(:disabled) {
   transform: translateY(0);
 }
+
+.crafting-cost-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  margin-top: 0.5rem;
+}
+
+.cost-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cost-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+}
+
+.cost-value.can-afford {
+  color: var(--accent-success);
+  background: rgba(39, 174, 96, 0.1);
+  border: 2px solid var(--accent-success);
+}
+
+.cost-value.cannot-afford {
+  color: var(--accent-error);
+  background: rgba(231, 76, 60, 0.1);
+  border: 2px solid var(--accent-error);
+}
+
+.insufficient-funds {
+  color: var(--accent-error);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 6px;
+  animation: pulse-funds 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-funds {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
