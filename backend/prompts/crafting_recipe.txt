@@ -13,7 +13,7 @@ Eras (AUTHORITATIVE: enum + details; use these exact names for era_name)
 
 Hunter-Gatherer
 • Unique Mechanic (applies to items in/after this era): Decay — basic items "burn out" after a short operation window, yielding salvage.
-• Keystone to Unlock: Campfire (Fire + Wood) — MUST be assigned to "Agriculture" era
+• Keystone to Unlock: Campfire (Stick + Wood) — MUST be assigned to "Agriculture" era
 • Crystal Gate (suggested): 0
 • Cost Range: 50–1,000 coins
 • Income Range: 1–10 coins/second

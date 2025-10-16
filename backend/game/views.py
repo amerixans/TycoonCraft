@@ -194,6 +194,86 @@ def update_player_coins(player):
     return coins_earned, crystals_earned
 
 
+def validate_predefined_match(game_object, predefined_overrides):
+    """
+    Check if existing game object matches predefined specifications.
+    Returns True if all predefined fields match, False otherwise.
+    """
+    if not predefined_overrides:
+        return True
+    
+    for key, expected_value in predefined_overrides.items():
+        # Handle nested fields like retire_payout.coins_pct or footprint.w
+        if '.' in key:
+            parts = key.split('.')
+            if parts[0] == 'retire_payout':
+                # Special handling for retire_payout which is stored as retire_payout_coins_pct
+                if parts[1] == 'coins_pct':
+                    actual_value = game_object.retire_payout_coins_pct
+                else:
+                    return False  # Unknown nested field
+            elif parts[0] == 'footprint':
+                # footprint.w -> footprint_w, footprint.h -> footprint_h
+                field_name = f"footprint_{parts[1]}"
+                actual_value = getattr(game_object, field_name, None)
+            else:
+                # Try to get as dict first (for JSON fields like global_modifiers)
+                parent = getattr(game_object, parts[0], None)
+                if isinstance(parent, dict):
+                    actual_value = parent.get(parts[1])
+                else:
+                    return False
+        else:
+            actual_value = getattr(game_object, key, None)
+        
+        # Convert Decimal to float for comparison
+        if hasattr(actual_value, '__float__'):
+            actual_value = float(actual_value)
+        if isinstance(expected_value, (int, float)):
+            expected_value = float(expected_value)
+        
+        # Compare
+        if actual_value != expected_value:
+            return False
+    
+    return True
+
+
+# -----------------------------
+# Predefined recipes
+# -----------------------------
+
+_PREDEFINED_RECIPES_CACHE = None
+
+def load_predefined_recipes():
+    """Load predefined recipes from JSON file."""
+    global _PREDEFINED_RECIPES_CACHE
+    if _PREDEFINED_RECIPES_CACHE is not None:
+        return _PREDEFINED_RECIPES_CACHE
+    
+    recipes_path = os.path.join(settings.BASE_DIR, "prompts", "predefined_recipes.json")
+    if not os.path.exists(recipes_path):
+        _PREDEFINED_RECIPES_CACHE = []
+        return []
+    
+    with open(recipes_path, "r", encoding="utf-8") as f:
+        _PREDEFINED_RECIPES_CACHE = json.load(f)
+    return _PREDEFINED_RECIPES_CACHE
+
+
+def get_predefined_recipe(object_a, object_b):
+    """Check if there's a predefined recipe for this combination."""
+    recipes = load_predefined_recipes()
+    
+    for recipe in recipes:
+        # Check both orderings
+        if ((recipe["input_a"] == object_a.object_name and recipe["input_b"] == object_b.object_name) or
+            (recipe["input_a"] == object_b.object_name and recipe["input_b"] == object_a.object_name)):
+            return recipe.get("output", {})
+    
+    return None
+
+
 # -----------------------------
 # OpenAI helpers
 # -----------------------------
@@ -257,10 +337,12 @@ def _extract_responses_text(res_json):
     # 4) Nothing worked
     raise ValueError("Unable to parse text from OpenAI Responses API response.")
 
-def call_openai_crafting(object_a, object_b, unlocked_eras, current_era):
+def call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefined_overrides=None):
     """
     Call OpenAI (Responses API) to generate a new object definition via structured output.
     Uses server-to-server endpoint: POST /v1/responses
+    
+    predefined_overrides: dict of field values that MUST be respected in the output
     """
 
     prompts_dir = os.path.join(settings.BASE_DIR, "prompts")
@@ -315,6 +397,15 @@ CRITICAL ERA ASSIGNMENT RULES:
    - Example: "Campfire" for Hunter-Gatherer, "Fertilizer" for Agriculture, etc.
 """
 
+    # Add predefined constraints if any
+    if predefined_overrides:
+        constraints_text = "\n\nPREDEFINED CONSTRAINTS (MUST BE RESPECTED):\n"
+        constraints_text += "The following fields have been predefined and MUST match exactly:\n"
+        for key, value in predefined_overrides.items():
+            constraints_text += f"  • {key}: {json.dumps(value)}\n"
+        constraints_text += "\nAll other fields should be generated normally following the game rules.\n"
+        era_context += constraints_text
+
     # Fill prompt
     prompt = (
         prompt_template
@@ -356,6 +447,21 @@ CRITICAL ERA ASSIGNMENT RULES:
         parsed = json.loads(text)
     except Exception as e:
         raise ValueError(f"Failed to parse JSON from model output: {e}\nRaw: {text[:500]}")
+
+    # Apply predefined overrides to the result
+    if predefined_overrides:
+        for key, value in predefined_overrides.items():
+            # Handle nested fields like retire_payout.coins_pct
+            if '.' in key:
+                parts = key.split('.')
+                target = parsed
+                for part in parts[:-1]:
+                    if part not in target:
+                        target[part] = {}
+                    target = target[part]
+                target[parts[-1]] = value
+            else:
+                parsed[key] = value
 
     return parsed
 
@@ -526,16 +632,28 @@ def craft_objects(request):
     if object_a.id > object_b.id:
         object_a, object_b = object_b, object_a
 
+    # Check for predefined recipe first
+    predefined_overrides = get_predefined_recipe(object_a, object_b)
+    
     # Pre-existing recipe?
     existing_recipe = CraftingRecipe.objects.filter(object_a=object_a, object_b=object_b).select_related("result").first()
     if existing_recipe:
         result_obj = existing_recipe.result
-        discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
-        return Response({
-            "object": GameObjectSerializer(result_obj).data,
-            "newly_discovered": created,
-            "newly_created": False,
-        })
+        
+        # Validate against predefined recipe if one exists
+        if predefined_overrides and not validate_predefined_match(result_obj, predefined_overrides):
+            # Specs don't match - delete old object and regenerate
+            result_obj.delete()
+            existing_recipe.delete()
+            # Continue to generation below
+        else:
+            # Specs matched or no predefined recipe - return existing
+            discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
+            return Response({
+                "object": GameObjectSerializer(result_obj).data,
+                "newly_discovered": created,
+                "newly_created": False,
+            })
 
     # New recipe → count, then call OpenAI OUTSIDE DB transaction
     increment_rate_limit(profile, "user_discovery")
@@ -545,8 +663,10 @@ def craft_objects(request):
     unlocked_eras = get_unlocked_eras(profile)
     current_era = profile.current_era
 
+    # predefined_overrides already retrieved above
+
     try:
-        obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era)
+        obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefined_overrides)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
