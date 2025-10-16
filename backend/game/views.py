@@ -102,6 +102,21 @@ def increment_rate_limit(player, limit_type):
 def update_player_coins(player):
     """Calculate and update coins/time crystals from operational placed objects."""
     now = timezone.now()
+    
+    # First, check for any buildings that have completed construction
+    completed_buildings = PlacedObject.objects.filter(
+        player=player,
+        is_building=True,
+        build_complete_at__lte=now
+    )
+    
+    # Transition completed buildings to operational status
+    if completed_buildings.exists():
+        completed_buildings.update(
+            is_building=False,
+            is_operational=True
+        )
+    
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
     operational_objects = (
