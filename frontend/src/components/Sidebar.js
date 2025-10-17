@@ -150,28 +150,14 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                     {obj.object_name}
                   </div>
                   <div className="object-stats">
-                    <div title="Cost">💰 {Math.floor(obj.cost)}</div>
-                    <div title="Income per second">📊 {Math.floor(obj.income_per_second)}/s</div>
-                  </div>
-                  <div className="object-extra-stats">
-                    <div title={`Category: ${obj.category}`}>🏷️ {obj.category}</div>
-                    <div title={`Quality: ${obj.quality_tier}`}>⭐ {obj.quality_tier}</div>
-                    <div title={`Operation Duration: ${Math.floor(obj.operation_duration_sec / 60)}m ${obj.operation_duration_sec % 60}s`}>⏱️ {Math.floor(obj.operation_duration_sec / 60)}m</div>
-                    {obj.build_time_sec > 0 && (
-                      <div title={`Build Time: ${obj.build_time_sec}s`}>🔨 {obj.build_time_sec}s</div>
-                    )}
-                    <div title={`Sellback: ${Math.floor(obj.cost * obj.sellback_pct)} coins (${Math.floor(obj.sellback_pct * 100)}%)`}>
-                      💵 {Math.floor(obj.sellback_pct * 100)}%
-                    </div>
-                    <div title={`Retirement Payout: ${Math.floor(obj.cost * obj.retire_payout_coins_pct)} coins (${Math.floor(obj.retire_payout_coins_pct * 100)}%)`}>
-                      🎁 {Math.floor(obj.retire_payout_coins_pct * 100)}%
-                    </div>
+                    <div>💰 {Math.floor(obj.cost)}</div>
+                    <div>📊 {Math.floor(obj.income_per_second)}/s</div>
                   </div>
                 </div>
                 <div 
                   className="object-info-icon"
                   onClick={(e) => handleInfoClick(obj, e)}
-                  title="View full details"
+                  title="View details"
                 >
                   ℹ️
                 </div>

@@ -23,8 +23,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [canvasMode, setCanvasMode] = useState('normal'); // 'normal', 'trash', 'move'
-  const [movingObject, setMovingObject] = useState(null);
   
   // Update time every second for build progress
   useEffect(() => {
@@ -163,72 +161,9 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   
   const handlePlacedClick = (placed, e) => {
     e.stopPropagation();
-    
-    if (canvasMode === 'trash') {
-      // Trash mode: remove with confirmation
-      const refund = Math.floor(placed.game_object.cost * placed.game_object.sellback_pct);
-      if (window.confirm(`Remove ${placed.game_object.object_name}? You'll receive ${refund} coins back.`)) {
-        setHoveredPlaced(null);
-        onRemove(placed.id);
-      }
-    } else if (canvasMode === 'move') {
-      // Move mode: select object for moving
-      if (movingObject && movingObject.id === placed.id) {
-        // Clicking the same object deselects it
-        setMovingObject(null);
-      } else {
-        setMovingObject(placed);
-      }
-    } else {
-      // Normal mode: show confirmation dialog
-      if (window.confirm(`Remove ${placed.game_object.object_name}?`)) {
-        setHoveredPlaced(null);
-        onRemove(placed.id);
-      }
-    }
-  };
-  
-  const handleCanvasClick = (e) => {
-    if (canvasMode === 'move' && movingObject && e.target.classList.contains('canvas')) {
-      // Calculate click position for moving object
-      const transformState = transformRef.current?.instance?.transformState;
-      if (!transformState) return;
-      
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / transformState.scale;
-      const y = (e.clientY - rect.top) / transformState.scale;
-      
-      const gridX = Math.floor(x / GRID_SIZE);
-      const gridY = Math.floor(y / GRID_SIZE);
-      
-      // Check bounds
-      if (gridX < 0 || gridY < 0 || 
-          gridX + movingObject.game_object.footprint_w > CANVAS_WIDTH || 
-          gridY + movingObject.game_object.footprint_h > CANVAS_HEIGHT) {
-        alert('⚠️ Out of bounds! Place the object within the grid.');
-        return;
-      }
-      
-      // Check for overlap with other objects (excluding the moving object itself)
-      const wouldOverlap = placedObjects.some(placed => {
-        if (placed.id === movingObject.id) return false;
-        return (
-          gridX < placed.x + placed.game_object.footprint_w &&
-          gridX + movingObject.game_object.footprint_w > placed.x &&
-          gridY < placed.y + placed.game_object.footprint_h &&
-          gridY + movingObject.game_object.footprint_h > placed.y
-        );
-      });
-      
-      if (wouldOverlap) {
-        alert('⚠️ Space occupied! Choose another location.');
-        return;
-      }
-      
-      // Move the object (we'll need to add an onMove callback)
-      // For now, we'll show an alert - the parent component needs to handle this
-      alert(`Moving ${movingObject.game_object.object_name} to (${gridX}, ${gridY}) - Feature needs backend support`);
-      setMovingObject(null);
+    if (window.confirm(`Remove ${placed.game_object.object_name}?`)) {
+      setHoveredPlaced(null); // Clear hover state before removing
+      onRemove(placed.id);
     }
   };
   
@@ -237,38 +172,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
       <div className="canvas-header">
         <h3>🗺️ World Map ({CANVAS_HEIGHT}×{CANVAS_WIDTH})</h3>
         <div className="canvas-controls">
-          <div className="mode-buttons">
-            <button 
-              className={`mode-btn ${canvasMode === 'normal' ? 'active' : ''}`}
-              onClick={() => {
-                setCanvasMode('normal');
-                setMovingObject(null);
-              }}
-              title="Normal Mode"
-            >
-              👆 Normal
-            </button>
-            <button 
-              className={`mode-btn ${canvasMode === 'move' ? 'active' : ''}`}
-              onClick={() => {
-                setCanvasMode('move');
-                setMovingObject(null);
-              }}
-              title="Move Mode - Drag objects to reposition"
-            >
-              ↔️ Move
-            </button>
-            <button 
-              className={`mode-btn trash ${canvasMode === 'trash' ? 'active' : ''}`}
-              onClick={() => {
-                setCanvasMode('trash');
-                setMovingObject(null);
-              }}
-              title="Trash Mode - Click objects to delete"
-            >
-              🗑️ Trash
-            </button>
-          </div>
           <span className="control-hint">🖱️ Drag to pan • 🔍 Scroll to zoom</span>
         </div>
       </div>
@@ -304,11 +207,10 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                 }}
               >
                 <div
-                  className={`canvas ${canvasMode === 'trash' ? 'trash-mode' : ''} ${canvasMode === 'move' ? 'move-mode' : ''}`}
+                  className="canvas"
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
-                  onClick={handleCanvasClick}
                   style={{
                     width: CANVAS_WIDTH * GRID_SIZE + 'px',
                     height: CANVAS_HEIGHT * GRID_SIZE + 'px',
@@ -319,7 +221,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                   {placedObjects.map(placed => (
                     <div
                       key={placed.id}
-                      className={`placed-object ${placed.is_building ? 'building' : ''} ${!placed.is_operational ? 'inactive' : ''} ${canvasMode === 'trash' ? 'trashable' : ''} ${canvasMode === 'move' ? 'movable' : ''} ${movingObject && movingObject.id === placed.id ? 'selected-for-move' : ''}`}
+                      className={`placed-object ${placed.is_building ? 'building' : ''} ${!placed.is_operational ? 'inactive' : ''}`}
                       style={{
                         left: placed.x * GRID_SIZE + 'px',
                         top: placed.y * GRID_SIZE + 'px',
@@ -433,16 +335,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
           <p className="tooltip-flavor">{hoveredPlaced.game_object.flavor_text}</p>
           <div className="tooltip-stats">
             <div className="stat-row">
-              <span>🏷️ Category:</span>
-              <span className="stat-value">{hoveredPlaced.game_object.category}</span>
-            </div>
-            <div className="stat-row">
-              <span>⭐ Quality:</span>
-              <span className="stat-value">{hoveredPlaced.game_object.quality_tier}</span>
-            </div>
-            <div className="stat-row">
               <span>💰 Income:</span>
-              <span className="stat-value">{Math.floor(hoveredPlaced.game_object.income_per_second)}/s</span>
+              <span className="stat-value">{hoveredPlaced.game_object.income_per_second}/s</span>
             </div>
             {hoveredPlaced.game_object.time_crystal_generation > 0 && (
               <div className="stat-row">
@@ -450,24 +344,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                 <span className="stat-value">{hoveredPlaced.game_object.time_crystal_generation}/s</span>
               </div>
             )}
-            <div className="stat-row">
-              <span>⏱️ Duration:</span>
-              <span className="stat-value">{Math.floor(hoveredPlaced.game_object.operation_duration_sec / 60)}m {hoveredPlaced.game_object.operation_duration_sec % 60}s</span>
-            </div>
-            {hoveredPlaced.game_object.build_time_sec > 0 && (
-              <div className="stat-row">
-                <span>🔨 Build Time:</span>
-                <span className="stat-value">{hoveredPlaced.game_object.build_time_sec}s</span>
-              </div>
-            )}
-            <div className="stat-row">
-              <span>💵 Sellback:</span>
-              <span className="stat-value">{Math.floor(hoveredPlaced.game_object.cost * hoveredPlaced.game_object.sellback_pct)} ({Math.floor(hoveredPlaced.game_object.sellback_pct * 100)}%)</span>
-            </div>
-            <div className="stat-row">
-              <span>🎁 Retire Payout:</span>
-              <span className="stat-value">{Math.floor(hoveredPlaced.game_object.cost * hoveredPlaced.game_object.retire_payout_coins_pct)} ({Math.floor(hoveredPlaced.game_object.retire_payout_coins_pct * 100)}%)</span>
-            </div>
             <div className="stat-row">
               <span>📊 Status:</span>
               <span className={`stat-value ${hoveredPlaced.is_operational ? 'operational' : 'inactive'}`}>
@@ -488,11 +364,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
               <span className="stat-value">{hoveredPlaced.game_object.footprint_w}×{hoveredPlaced.game_object.footprint_h}</span>
             </div>
           </div>
-          <div className="tooltip-hint">
-            {canvasMode === 'normal' ? 'Click to remove' : 
-             canvasMode === 'trash' ? 'Click to trash (get sellback)' :
-             'Click to select for moving'}
-          </div>
+          <div className="tooltip-hint">Click to remove</div>
         </div>
       )}
     </div>
