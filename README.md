@@ -294,3 +294,8 @@ For issues, questions, or support:
 - Built with Django, React, and OpenAI
 - Pixel art styling inspired by retro games
 - Game design by TycoonCraft team
+
+---
+
+**Version**: 1.0.0  
+**Last Updated**: October 17, 2025
