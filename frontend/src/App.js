@@ -95,8 +95,8 @@ function App() {
   useEffect(() => {
     loadGameState().finally(() => setLoading(false));
     
-    // Auto-refresh game state every 5 seconds
-    const interval = setInterval(loadGameState, 5000);
+    // Auto-refresh game state every second
+    const interval = setInterval(loadGameState, 1000);
     return () => clearInterval(interval);
   }, [loadGameState]);
 
