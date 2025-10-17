@@ -216,15 +216,38 @@ def validate_predefined_match(game_object, predefined_overrides):
         return True
     
     for key, expected_value in predefined_overrides.items():
-        # Get actual value from game object
+        # Handle nested dict fields that need special mapping to model fields
+        if key == 'retire_payout' and isinstance(expected_value, dict):
+            # Handle retire_payout as a nested dict
+            for sub_key, sub_value in expected_value.items():
+                if sub_key == 'coins_pct':
+                    actual_value = game_object.retire_payout_coins_pct
+                    actual_normalized = _normalize_value(actual_value)
+                    expected_normalized = _normalize_value(sub_value)
+                    if not _values_equal(actual_normalized, expected_normalized):
+                        return False
+            continue
+        
+        if key == 'footprint' and isinstance(expected_value, dict):
+            # Handle footprint as a nested dict
+            for sub_key, sub_value in expected_value.items():
+                field_name = f"footprint_{sub_key}"
+                actual_value = getattr(game_object, field_name, None)
+                actual_normalized = _normalize_value(actual_value)
+                expected_normalized = _normalize_value(sub_value)
+                if not _values_equal(actual_normalized, expected_normalized):
+                    return False
+            continue
+        
+        # Get actual value from game object for simple fields
         if '.' in key:
-            # Handle nested fields
+            # Handle dotted notation (legacy support)
             parts = key.split('.')
             if parts[0] == 'retire_payout':
                 if parts[1] == 'coins_pct':
                     actual_value = game_object.retire_payout_coins_pct
                 else:
-                    continue  # Skip unknown nested fields instead of failing
+                    continue
             elif parts[0] == 'footprint':
                 field_name = f"footprint_{parts[1]}"
                 actual_value = getattr(game_object, field_name, None)
@@ -234,7 +257,7 @@ def validate_predefined_match(game_object, predefined_overrides):
                 if isinstance(parent, dict):
                     actual_value = parent.get(parts[1])
                 else:
-                    continue  # Skip if can't access instead of failing
+                    continue
         else:
             actual_value = getattr(game_object, key, None)
         
