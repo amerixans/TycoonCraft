@@ -252,6 +252,11 @@ echo "Setting up admin testing account..."
 python manage.py create_admin_account
 echo "✓ Admin account configured"
 
+# Initialize starter objects (idempotent - safe to run multiple times)
+echo "Initializing starter objects..."
+python manage.py initialize_starter_objects
+echo "✓ Starter objects initialized"
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
