@@ -10,7 +10,10 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
   
   const objectsByEra = {};
   eras.forEach(era => {
-    objectsByEra[era] = allObjects.filter(obj => obj.era_name === era);
+    // Include objects that match this era OR are keystone objects (visible in all eras)
+    objectsByEra[era] = allObjects.filter(obj => 
+      obj.era_name === era || obj.is_keystone
+    );
   });
   
   const getEraStatus = (era) => {
