@@ -140,6 +140,14 @@ def increment_rate_limit(player, limit_type):
 
 
 # -----------------------------
+# Admin helper
+# -----------------------------
+
+def is_admin_user(user):
+    """Check if user is the admin testing account."""
+    return user.username == "admin" and user.is_superuser
+
+# -----------------------------
 # Player coin/tc updates
 # -----------------------------
 
@@ -716,9 +724,9 @@ def craft_objects(request):
     higher_era = get_higher_era(object_a.era_name, object_b.era_name)
     crafting_cost = Decimal(str(ERA_CRAFTING_COSTS.get(higher_era, 50)))
     
-    # Check if player has enough coins
+    # Check if player has enough coins (allow admin to go negative)
     update_player_coins(profile)
-    if profile.coins < crafting_cost:
+    if profile.coins < crafting_cost and not is_admin_user(request.user):
         return Response({
             "error": f"Insufficient coins. Crafting costs {crafting_cost} coins (based on {higher_era} era)."
         }, status=status.HTTP_400_BAD_REQUEST)
@@ -892,7 +900,8 @@ def place_object(request):
     if not Discovery.objects.filter(player=profile, game_object=game_object).exists():
         return Response({"error": "Object not discovered"}, status=status.HTTP_403_FORBIDDEN)
 
-    if profile.coins < game_object.cost:
+    # Allow admin to go negative on coins when placing objects
+    if profile.coins < game_object.cost and not is_admin_user(request.user):
         return Response({"error": "Insufficient coins"}, status=status.HTTP_400_BAD_REQUEST)
 
     if profile.time_crystals < game_object.time_crystal_cost:
