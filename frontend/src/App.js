@@ -390,7 +390,7 @@ function App() {
             <div className="object-info-panel">
               <h3>📋 Object Details</h3>
               {selectedObject ? (
-                <>
+                <div className="object-info-content">
                   {selectedObject.image_path && (
                     <div className="object-info-image-container">
                       <img 
@@ -401,56 +401,58 @@ function App() {
                     </div>
                   )}
                   
-                  <div className="object-info-name">{selectedObject.object_name}</div>
-                  <div className="object-info-flavor">{selectedObject.flavor_text}</div>
-                  
-                  <div className="object-info-stats">
-                    <div className="object-info-stat">
-                      <span className="object-info-stat-label">💰 Cost</span>
-                      <span className="object-info-stat-value">{selectedObject.cost}</span>
-                    </div>
-                    <div className="object-info-stat">
-                      <span className="object-info-stat-label">📊 Income/sec</span>
-                      <span className="object-info-stat-value">{selectedObject.income_per_second}</span>
-                    </div>
-                    {parseFloat(selectedObject.time_crystal_generation) > 0 && (
+                  <div className="object-info-details">
+                    <div className="object-info-name">{selectedObject.object_name}</div>
+                    <div className="object-info-flavor">{selectedObject.flavor_text}</div>
+                    
+                    <div className="object-info-stats">
                       <div className="object-info-stat">
-                        <span className="object-info-stat-label">💎 Crystals/sec</span>
-                        <span className="object-info-stat-value">{selectedObject.time_crystal_generation}</span>
+                        <span className="object-info-stat-label">💰 Cost</span>
+                        <span className="object-info-stat-value">{selectedObject.cost}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📊 Income/sec</span>
+                        <span className="object-info-stat-value">{selectedObject.income_per_second}</span>
+                      </div>
+                      {parseFloat(selectedObject.time_crystal_generation) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">💎 Crystals/sec</span>
+                          <span className="object-info-stat-value">{selectedObject.time_crystal_generation}</span>
+                        </div>
+                      )}
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📏 Size</span>
+                        <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
+                      </div>
+                      {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">🔨 Build Time</span>
+                          <span className="object-info-stat-value">{selectedObject.build_time}s</span>
+                        </div>
+                      )}
+                      {selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">⏱️ Duration</span>
+                          <span className="object-info-stat-value">{selectedObject.operation_duration}s</span>
+                        </div>
+                      )}
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">🏛️ Era</span>
+                        <span className="object-info-stat-value">{selectedObject.era_name}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📁 Category</span>
+                        <span className="object-info-stat-value">{selectedObject.category}</span>
+                      </div>
+                    </div>
+                    
+                    {selectedObject.is_keystone && (
+                      <div className="object-info-keystone">
+                        🔑 Keystone Object - Place to unlock <strong>{selectedObject.era_name}</strong> era!
                       </div>
                     )}
-                    <div className="object-info-stat">
-                      <span className="object-info-stat-label">📏 Size</span>
-                      <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
-                    </div>
-                    {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">🔨 Build Time</span>
-                        <span className="object-info-stat-value">{selectedObject.build_time}s</span>
-                      </div>
-                    )}
-                    {selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">⏱️ Duration</span>
-                        <span className="object-info-stat-value">{selectedObject.operation_duration}s</span>
-                      </div>
-                    )}
-                    <div className="object-info-stat">
-                      <span className="object-info-stat-label">🏛️ Era</span>
-                      <span className="object-info-stat-value">{selectedObject.era_name}</span>
-                    </div>
-                    <div className="object-info-stat">
-                      <span className="object-info-stat-label">📁 Category</span>
-                      <span className="object-info-stat-value">{selectedObject.category}</span>
-                    </div>
                   </div>
-                  
-                  {selectedObject.is_keystone && (
-                    <div className="object-info-keystone">
-                      🔑 Keystone Object - Place to unlock <strong>{selectedObject.era_name}</strong> era!
-                    </div>
-                  )}
-                </>
+                </div>
               ) : (
                 <div className="object-info-empty">
                   Click the ℹ️ icon on any object in the sidebar to view its details here
