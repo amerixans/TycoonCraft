@@ -1,0 +1,110 @@
+.crafting-queue-panel {
+  background: var(--bg-secondary);
+  border: 3px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px var(--shadow);
+  max-height: 300px;
+  max-width: 350px;
+  min-width: 250px;
+  overflow-y: auto;
+}
+
+.crafting-queue-panel h4 {
+  margin: 0 0 1rem 0;
+  color: var(--accent-secondary);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.queue-item {
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  transition: all 0.2s;
+}
+
+.queue-item.crafting {
+  border-color: var(--accent-warning);
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: var(--accent-warning);
+  }
+  50% {
+    border-color: var(--accent-secondary);
+  }
+}
+
+.queue-item.success {
+  border-color: var(--accent-success);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(46, 204, 113, 0.1) 100%);
+}
+
+.queue-item.failed {
+  border-color: var(--accent-error);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(231, 76, 60, 0.1) 100%);
+}
+
+.queue-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.queue-objects {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.queue-spinner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-warning);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.queue-result {
+  color: var(--accent-success);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.queue-error {
+  color: var(--accent-error);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* Scrollbar for queue panel */
+.crafting-queue-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.crafting-queue-panel::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 4px;
+}
+
+.crafting-queue-panel::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.crafting-queue-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}

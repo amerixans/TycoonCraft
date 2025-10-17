@@ -16,7 +16,7 @@ class Command(BaseCommand):
                 'quality_tier': 'common',
                 'cost': Decimal('10'),
                 'time_crystal_cost': Decimal('0'),
-                'income_per_second': Decimal('0.1'),
+                'income_per_second': Decimal('0'),
                 'time_crystal_generation': Decimal('0'),
                 'build_time_sec': 0,
                 'operation_duration_sec': 300,
@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'A simple rock. Hard and useful.',
-                'image_path': ''
+                'image_path': '/media/objects/starter-rock.png'
             },
             {
                 'object_name': 'Stick',
@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 'quality_tier': 'common',
                 'cost': Decimal('10'),
                 'time_crystal_cost': Decimal('0'),
-                'income_per_second': Decimal('0.1'),
+                'income_per_second': Decimal('0'),
                 'time_crystal_generation': Decimal('0'),
                 'build_time_sec': 0,
                 'operation_duration_sec': 300,
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'A sturdy stick. Nature\'s first tool.',
-                'image_path': ''
+                'image_path': '/media/objects/starter-stick.png'
             },
             {
                 'object_name': 'Water',
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 'quality_tier': 'common',
                 'cost': Decimal('10'),
                 'time_crystal_cost': Decimal('0'),
-                'income_per_second': Decimal('0.1'),
+                'income_per_second': Decimal('0'),
                 'time_crystal_generation': Decimal('0'),
                 'build_time_sec': 0,
                 'operation_duration_sec': 300,
@@ -72,7 +72,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'Pure water. Essential for life.',
-                'image_path': ''
+                'image_path': '/media/objects/starter-water.png'
             },
             {
                 'object_name': 'Dirt',
@@ -82,7 +82,7 @@ class Command(BaseCommand):
                 'quality_tier': 'common',
                 'cost': Decimal('10'),
                 'time_crystal_cost': Decimal('0'),
-                'income_per_second': Decimal('0.1'),
+                'income_per_second': Decimal('0'),
                 'time_crystal_generation': Decimal('0'),
                 'build_time_sec': 0,
                 'operation_duration_sec': 300,
@@ -94,7 +94,7 @@ class Command(BaseCommand):
                 'size': Decimal('0.5'),
                 'global_modifiers': [],
                 'flavor_text': 'Rich earth. The foundation of all.',
-                'image_path': ''
+                'image_path': '/media/objects/starter-dirt.png'
             }
         ]
 

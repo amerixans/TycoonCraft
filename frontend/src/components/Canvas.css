@@ -3,7 +3,7 @@
   background: var(--bg-secondary);
   border: 3px solid var(--border-color);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -105,7 +105,7 @@
 
 .placed-object:hover {
   border-color: var(--accent-primary);
-  transform: scale(1.08);
+  transform: scale(1.03);
   box-shadow: 0 6px 20px rgba(230, 126, 34, 0.5);
   z-index: 10;
 }
@@ -168,52 +168,28 @@
 .building-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(243, 156, 18, 0.2);
+  background: rgba(243, 156, 18, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
+  pointer-events: none;
 }
 
-.building-icon {
-  font-size: 2rem;
-  animation: hammer 0.5s ease-in-out infinite;
+.building-progress-circle {
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
 }
 
-@keyframes hammer {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(-20deg);
-  }
-}
-
-.building-progress {
-  width: 80%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.building-progress::after {
-  content: '';
-  display: block;
-  width: 50%;
-  height: 100%;
-  background: var(--accent-success);
-  animation: progress 2s ease-in-out infinite;
-}
-
-@keyframes progress {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(200%);
-  }
+.building-time {
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
 }
 
 /* Enhanced Tooltip */
@@ -226,6 +202,7 @@
   box-shadow: 0 8px 32px var(--shadow-heavy);
   z-index: 100;
   animation: fadeInUp 0.2s;
+  pointer-events: none; /* Prevent tooltip from blocking clicks */
 }
 
 @keyframes fadeInUp {

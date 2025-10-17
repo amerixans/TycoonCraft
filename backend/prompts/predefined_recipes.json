@@ -1,0 +1,80 @@
+[
+  {
+    "comment": "Example 1: Fully defined object",
+    "input_a": "Stick",
+    "input_b": "Rock",
+    "output": {
+      "object_name": "Stone Axe",
+      "era_name": "Hunter-Gatherer",
+      "is_keystone": false,
+      "category": "natural",
+      "quality_tier": "common",
+      "cost": 50,
+      "time_crystal_cost": 0,
+      "income_per_second": 1,
+      "time_crystal_generation": 0,
+      "build_time_sec": 10,
+      "operation_duration_sec": 600,
+      "retire_payout": {
+        "coins_pct": 0.25
+      },
+      "sellback_pct": 0.15,
+      "cap_per_civ": null,
+      "footprint": {
+        "w": 1,
+        "h": 1
+      },
+      "size": 1.0,
+      "global_modifiers": [],
+      "flavor_text": "A primitive tool for chopping wood and survival."
+    }
+  },
+  {
+    "comment": "Example 2: Only name and cost defined, OpenAI fills the rest",
+    "input_a": "Water",
+    "input_b": "Dirt",
+    "output": {
+      "object_name": "Mud",
+      "cost": 100
+    }
+  },
+  {
+    "comment": "Example 3: Just the name defined",
+    "input_a": "Rock",
+    "input_b": "Rock",
+    "output": {
+      "object_name": "Gravel"
+    }
+  },
+  {
+    "comment": "Example 4: Name, era, and category defined",
+    "input_a": "Stick",
+    "input_b": "Stick",
+    "output": {
+      "object_name": "Kindling",
+      "era_name": "Hunter-Gatherer",
+      "category": "natural"
+    }
+  },
+    {
+    "comment": "Example 4: Name, era, and category defined",
+    "input_a": "Kindling",
+    "input_b": "Rock",
+    "output": {
+      "object_name": "Campfire",
+      "era_name": "Agriculture",
+      "category": "natural"
+    }
+  },
+  {
+    "comment": "Example 5: Define economy but let AI handle other aspects",
+    "input_a": "Water",
+    "input_b": "Rock",
+    "output": {
+      "object_name": "Stone Well",
+      "cost": 500,
+      "income_per_second": 8,
+      "operation_duration_sec": 1200
+    }
+  }
+]

@@ -1,7 +1,32 @@
 from django.urls import path
+from django.http import JsonResponse
 from . import views
 
+def api_root(request):
+    """
+    API root endpoint - returns available endpoints and API status.
+    This makes /api/ return 200 OK for health checks.
+    """
+    return JsonResponse({
+        'status': 'online',
+        'message': 'TycoonCraft Game API',
+        'version': '1.0',
+        'endpoints': {
+            'register': '/api/register/',
+            'login': '/api/login/',
+            'logout': '/api/logout/',
+            'game_state': '/api/game-state/',
+            'craft': '/api/craft/',
+            'place': '/api/place/',
+            'remove': '/api/remove/',
+            'unlock_era': '/api/unlock-era/',
+            'export': '/api/export/',
+            'import': '/api/import/',
+        }
+    })
+
 urlpatterns = [
+    path('', api_root, name='api-root'),  # Root endpoint at /api/
     path('register/', views.register, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
