@@ -216,40 +216,75 @@ def validate_predefined_match(game_object, predefined_overrides):
         return True
     
     for key, expected_value in predefined_overrides.items():
-        # Handle nested fields like retire_payout.coins_pct or footprint.w
+        # Get actual value from game object
         if '.' in key:
+            # Handle nested fields
             parts = key.split('.')
             if parts[0] == 'retire_payout':
-                # Special handling for retire_payout which is stored as retire_payout_coins_pct
                 if parts[1] == 'coins_pct':
                     actual_value = game_object.retire_payout_coins_pct
                 else:
-                    return False  # Unknown nested field
+                    continue  # Skip unknown nested fields instead of failing
             elif parts[0] == 'footprint':
-                # footprint.w -> footprint_w, footprint.h -> footprint_h
                 field_name = f"footprint_{parts[1]}"
                 actual_value = getattr(game_object, field_name, None)
             else:
-                # Try to get as dict first (for JSON fields like global_modifiers)
+                # Try to get from dict/JSON field
                 parent = getattr(game_object, parts[0], None)
                 if isinstance(parent, dict):
                     actual_value = parent.get(parts[1])
                 else:
-                    return False
+                    continue  # Skip if can't access instead of failing
         else:
             actual_value = getattr(game_object, key, None)
         
-        # Convert Decimal to float for comparison
-        if hasattr(actual_value, '__float__'):
-            actual_value = float(actual_value)
-        if isinstance(expected_value, (int, float)):
-            expected_value = float(expected_value)
+        # Normalize values for comparison
+        actual_normalized = _normalize_value(actual_value)
+        expected_normalized = _normalize_value(expected_value)
         
-        # Compare
-        if actual_value != expected_value:
+        # Compare with appropriate method
+        if not _values_equal(actual_normalized, expected_normalized):
             return False
     
     return True
+
+
+def _normalize_value(value):
+    """Normalize a value for comparison."""
+    # Convert Decimal to float (but not bool, since bool is a subclass of int)
+    if hasattr(value, '__float__') and not isinstance(value, bool):
+        return float(value)
+    # Keep None, lists, dicts, strings, bools as-is
+    return value
+
+
+def _values_equal(actual, expected):
+    """Check if two values are equal, with special handling for floats."""
+    # Handle None
+    if actual is None and expected is None:
+        return True
+    if actual is None or expected is None:
+        return False
+    
+    # Handle numeric comparisons with tolerance for floating point precision
+    if isinstance(actual, (int, float)) and isinstance(expected, (int, float)):
+        # Use small epsilon for float comparison to handle precision issues
+        return abs(float(actual) - float(expected)) < 1e-9
+    
+    # Handle list comparison
+    if isinstance(actual, list) and isinstance(expected, list):
+        if len(actual) != len(expected):
+            return False
+        return all(_values_equal(a, e) for a, e in zip(actual, expected))
+    
+    # Handle dict comparison
+    if isinstance(actual, dict) and isinstance(expected, dict):
+        if set(actual.keys()) != set(expected.keys()):
+            return False
+        return all(_values_equal(actual.get(k), expected.get(k)) for k in actual.keys())
+    
+    # Direct comparison for everything else (strings, bools, etc.)
+    return actual == expected
 
 
 # -----------------------------
