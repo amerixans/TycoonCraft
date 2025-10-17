@@ -1,0 +1,41 @@
+# Token Efficiency Rules
+
+## Core Principles
+- **Minimize token usage** - Only read/explore files when absolutely necessary to solve the problem
+- **Accuracy first** - Fulfill the request correctly, but avoid unnecessary context gathering
+- **No speculative exploration** - Don't read files "just in case" they might be relevant
+- **Direct approach** - Use the most straightforward solution path
+
+## File Operations
+- Do NOT read files unless their contents are required to complete the task
+- Do NOT use `list_files` recursively unless the task specifically requires directory exploration
+- Do NOT use `search_files` to "discover" information when the user has already provided sufficient context
+- When creating new files, do NOT read similar existing files for reference unless explicitly needed
+
+## Testing Guidelines
+- **No testing** unless specifically requested or truly necessary to verify correctness
+- **No server/localhost testing** - This environment does not support local server testing
+- **Local file testing only** - Test only with direct file operations when absolutely required
+- If testing is needed, use the minimal approach (e.g., read the file back to verify syntax)
+
+## Context Management
+- Do NOT explore project structure unnecessarily
+- Do NOT read configuration files unless they directly impact the task
+- Do NOT examine related files "for consistency" unless the task requires it
+- Use existing context from environment_details when available instead of reading files
+
+## Code Changes
+- Make targeted changes using `replace_in_file` over `write_to_file` when possible
+- Do NOT read entire files before making small edits
+- Trust the user's description of the codebase structure
+
+## Communication
+- Keep responses brief and technical
+- Do NOT ask for clarification on non-essential details
+- Make reasonable inferences when appropriate
+- Provide concise summaries only when requested
+
+## Task Completion
+- Complete tasks efficiently using the minimum necessary steps
+- Use `attempt_completion` as soon as the task is done
+- Do NOT suggest additional improvements or enhancements unless requested
