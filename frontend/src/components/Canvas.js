@@ -6,16 +6,16 @@ const GRID_SIZE = 50; // Pixels per grid tile
 
 // Era-based canvas sizes (height x width in tiles)
 const ERA_SIZES = {
-  'Hunter-Gatherer': { height: 16, width: 32 },
-  'Agriculture': { height: 32, width: 32 },
-  'Metallurgy': { height: 32, width: 64 },
-  'Steam & Industry': { height: 64, width: 64 },
-  'Electric Age': { height: 64, width: 128 },
-  'Computing': { height: 128, width: 128 },
-  'Futurism': { height: 128, width: 256 },
-  'Interstellar': { height: 256, width: 256 },
-  'Arcana': { height: 256, width: 512 },
-  'Beyond': { height: 512, width: 512 },
+  'Hunter-Gatherer': { height: 5, width: 15 },
+  'Agriculture': { height: 10, width: 15 },
+  'Metallurgy': { height: 10, width: 30 },
+  'Steam & Industry': { height: 20, width: 30 },
+  'Electric Age': { height: 20, width: 60 },
+  'Computing': { height: 40, width: 60 },
+  'Futurism': { height: 40, width: 120 },
+  'Interstellar': { height: 80, width: 120 },
+  'Arcana': { height: 80, width: 240 },
+  'Beyond': { height: 160, width: 240 },
 };
 
 function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
@@ -68,8 +68,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
   const fitScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95;
   
-  // Start zoomed in one level more (add one zoom step of 0.1)
-  const initialScale = fitScale + 0.1;
+  // Start significantly more zoomed in
+  const initialScale = fitScale + 0.5;
   
   // Calculate minimum scale to prevent empty space
   // Canvas must always fill the viewport completely
