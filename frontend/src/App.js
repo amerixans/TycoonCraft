@@ -270,7 +270,7 @@ function App() {
     return (
       <div className="auth-screen">
         <div className="auth-container">
-          <h1>🏛️ TycoonCraft</h1>
+          <h1>🛒 TycoonCraft</h1>
           <p className="tagline">Build Your Civilization Through Crafting</p>
           
           <form onSubmit={handleAuth}>
@@ -329,7 +329,7 @@ function App() {
       
       <div className="header">
         <div className="header-left">
-          <h1>🏛️ TycoonCraft</h1>
+          <h1>🛒 TycoonCraft</h1>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
             <span className="era-badge">{gameState.profile.current_era}</span>
             <span className="era-progress">
@@ -421,7 +421,7 @@ function App() {
                         </div>
                       )}
                       <div className="object-info-stat">
-                        <span className="object-info-stat-label">📏 Size</span>
+                        <span className="object-info-stat-label">📐 Size</span>
                         <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
                       </div>
                       {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
@@ -437,7 +437,7 @@ function App() {
                         </div>
                       )}
                       <div className="object-info-stat">
-                        <span className="object-info-stat-label">🏛️ Era</span>
+                        <span className="object-info-stat-label">🛒 Era</span>
                         <span className="object-info-stat-value">{selectedObject.era_name}</span>
                       </div>
                       <div className="object-info-stat">
@@ -466,6 +466,7 @@ function App() {
                 <CraftingArea 
                   discoveries={gameState.discoveries}
                   onCraft={handleCraft}
+                  playerCoins={gameState.profile.coins}
                 />
                 
                 {craftingOperations.length > 0 && (
