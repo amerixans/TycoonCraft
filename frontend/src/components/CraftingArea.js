@@ -133,24 +133,18 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
           </div>
         </div>
         
-        {slotA && slotB && (
-          <div className="crafting-cost-display">
-            <span className="cost-label">Crafting Cost:</span>
-            <span className={`cost-value ${canAffordCraft ? 'can-afford' : 'cannot-afford'}`}>
-              💰 {craftingCost}
-            </span>
-            {!canAffordCraft && (
-              <span className="insufficient-funds">Insufficient coins!</span>
-            )}
-          </div>
-        )}
-        
         <button 
-          className="craft-button"
+          className={`craft-button ${slotA && slotB && !canAffordCraft ? 'insufficient' : ''}`}
           onClick={handleCraft}
           disabled={!slotA || !slotB || !canAffordCraft}
         >
-          ⚒️ Craft Now! {slotA && slotB && `(${craftingCost} coins)`}
+          {!slotA || !slotB ? (
+            '⚒️ Craft Now!'
+          ) : canAffordCraft ? (
+            `⚒️ Craft Now! (💰 ${craftingCost} coins)`
+          ) : (
+            `⚒️ Craft Now! (💰 ${craftingCost} coins - Insufficient!)`
+          )}
         </button>
       </div>
     </div>
