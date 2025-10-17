@@ -23,18 +23,27 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
   const [slotA, setSlotA] = useState(null);
   const [slotB, setSlotB] = useState(null);
   const [craftingCost, setCraftingCost] = useState(0);
+  const [eraMismatch, setEraMismatch] = useState(false);
   
   useEffect(() => {
     if (slotA && slotB) {
-      // Calculate crafting cost based on higher era
-      const indexA = ERAS.indexOf(slotA.era_name);
-      const indexB = ERAS.indexOf(slotB.era_name);
-      const higherEraIndex = Math.max(indexA, indexB);
-      const higherEra = ERAS[higherEraIndex];
-      const cost = ERA_CRAFTING_COSTS[higherEra] || 50;
-      setCraftingCost(cost);
+      // Check for era mismatch
+      if (slotA.era_name !== slotB.era_name) {
+        setEraMismatch(true);
+        setCraftingCost(0);
+      } else {
+        setEraMismatch(false);
+        // Calculate crafting cost based on higher era
+        const indexA = ERAS.indexOf(slotA.era_name);
+        const indexB = ERAS.indexOf(slotB.era_name);
+        const higherEraIndex = Math.max(indexA, indexB);
+        const higherEra = ERAS[higherEraIndex];
+        const cost = ERA_CRAFTING_COSTS[higherEra] || 50;
+        setCraftingCost(cost);
+      }
     } else {
       setCraftingCost(0);
+      setEraMismatch(false);
     }
   }, [slotA, slotB]);
   
@@ -133,13 +142,21 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
           </div>
         </div>
         
+        {eraMismatch && (
+          <div className="era-mismatch-warning">
+            ⚠️ Cannot combine items from different eras! {slotA.object_name} is from {slotA.era_name}, but {slotB.object_name} is from {slotB.era_name}. Only items from the same era can be combined.
+          </div>
+        )}
+        
         <button 
-          className={`craft-button ${slotA && slotB && !canAffordCraft ? 'insufficient' : ''}`}
+          className={`craft-button ${slotA && slotB && !canAffordCraft ? 'insufficient' : ''} ${eraMismatch ? 'era-mismatch' : ''}`}
           onClick={handleCraft}
-          disabled={!slotA || !slotB || !canAffordCraft}
+          disabled={!slotA || !slotB || !canAffordCraft || eraMismatch}
         >
           {!slotA || !slotB ? (
             '⚒️ Craft Now!'
+          ) : eraMismatch ? (
+            '⚠️ Era Mismatch!'
           ) : canAffordCraft ? (
             `⚒️ Craft Now! (💰 ${craftingCost} coins)`
           ) : (

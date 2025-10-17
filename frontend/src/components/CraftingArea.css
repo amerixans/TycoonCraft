@@ -210,8 +210,25 @@
 }
 
 .craft-button.insufficient {
-  background: linear-gradient(135deg, var(--accent-error) 0%, #c0392b 100%);
-  animation: pulse-funds 1.5s ease-in-out infinite;
+  background: var(--error);
+  cursor: not-allowed;
+}
+
+.craft-button.era-mismatch {
+  background: #e67e22;
+  cursor: not-allowed;
+}
+
+.era-mismatch-warning {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  color: #856404;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 @keyframes pulse-funds {

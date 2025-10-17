@@ -26,8 +26,53 @@
 
 .canvas-controls {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+}
+
+.mode-btn {
+  padding: 0.5rem 1rem;
+  background: var(--bg-secondary);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.mode-btn:hover {
+  background: var(--bg-primary);
+  border-color: var(--accent-secondary);
+  transform: translateY(-2px);
+}
+
+.mode-btn.active {
+  background: var(--accent-secondary);
+  color: white;
+  border-color: var(--accent-primary);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.mode-btn.trash:hover {
+  border-color: var(--accent-error);
+}
+
+.mode-btn.trash.active {
+  background: var(--accent-error);
+  border-color: #c0392b;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
 }
 
 .control-hint {
@@ -91,16 +136,59 @@
 
 .placed-object {
   position: absolute;
-  background: var(--bg-secondary);
-  border: 3px solid var(--accent-secondary);
+  border: 2px solid var(--accent-secondary);
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
+  background: var(--bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px var(--shadow);
   overflow: hidden;
-  box-shadow: 0 4px 12px var(--shadow-heavy);
+}
+
+.placed-object.trashable {
+  cursor: crosshair;
+  border-color: var(--accent-error);
+}
+
+.placed-object.trashable:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #c0392b;
+  box-shadow: 0 0 16px rgba(231, 76, 60, 0.5);
+}
+
+.placed-object.movable {
+  cursor: move;
+}
+
+.placed-object.movable:hover {
+  border-color: var(--accent-warning);
+  box-shadow: 0 0 16px rgba(230, 126, 34, 0.5);
+}
+
+.placed-object.selected-for-move {
+  border: 3px solid var(--accent-warning);
+  box-shadow: 0 0 20px rgba(230, 126, 34, 0.7);
+  animation: pulse-move 1s ease-in-out infinite;
+}
+
+@keyframes pulse-move {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.canvas.trash-mode {
+  cursor: crosshair;
+}
+
+.canvas.move-mode {
+  cursor: crosshair;
 }
 
 .placed-object:hover {

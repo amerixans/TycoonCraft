@@ -430,9 +430,9 @@ PLAYER ERA CONTEXT:
 
 CRITICAL ERA ASSIGNMENT RULES:
 1. For KEYSTONE objects (is_keystone: true):
-   - The object MUST be assigned to the NEXT era beyond the higher input era
-   - Example: If combining Agriculture objects, the keystone should be "Metallurgy"
-   - This is because placing the keystone unlocks that next era
+   - The object MUST be assigned to the SAME era as the higher input era
+   - Example: If combining Agriculture objects, the keystone should be "Agriculture"
+   - Placing this keystone will unlock the NEXT era for the player
    
 2. For REGULAR objects (is_keystone: false):
    - The object MUST be assigned to the higher era of the two inputs
@@ -675,6 +675,15 @@ def craft_objects(request):
         return Response({"error": "You have not discovered object A"}, status=status.HTTP_403_FORBIDDEN)
     if not Discovery.objects.filter(player=profile, game_object=object_b).exists():
         return Response({"error": "You have not discovered object B"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Validate that both objects are from the same era
+    if object_a.era_name != object_b.era_name:
+        return Response({
+            "error": f"Cannot combine items from different eras. {object_a.object_name} is from {object_a.era_name}, but {object_b.object_name} is from {object_b.era_name}. Only items from the same era can be combined.",
+            "error_type": "era_mismatch",
+            "object_a_era": object_a.era_name,
+            "object_b_era": object_b.era_name
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     # Normalize order
     if object_a.id > object_b.id:
