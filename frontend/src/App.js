@@ -1,14 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { auth, game } from './api';
 import Sidebar from './components/Sidebar';
 import CraftingArea from './components/CraftingArea';
+import CraftingQueue from './components/CraftingQueue';
 import Canvas from './components/Canvas';
+import { gameInfoContent } from './GameInfo';
 import './App.css';
 
 const ERAS = [
   'Hunter-Gatherer', 'Agriculture', 'Metallurgy', 'Steam & Industry',
   'Electric Age', 'Computing', 'Futurism', 'Interstellar', 'Arcana', 'Beyond'
 ];
+
+const COLOR_THEMES = {
+  light: { name: 'Light', primary: '#e67e22', secondary: '#3498db' },
+  dark: { name: 'Dark', primary: '#e94560', secondary: '#00d4ff' },
+  blue: { name: 'Ocean', primary: '#1976d2', secondary: '#42a5f5' },
+  pink: { name: 'Pink', primary: '#e91e63', secondary: '#ff6b9d' },
+  green: { name: 'Forest', primary: '#27ae60', secondary: '#4caf50' },
+  purple: { name: 'Twilight', primary: '#8e44ad', secondary: '#ab47bc' },
+  red: { name: 'Fire', primary: '#c0392b', secondary: '#e74c3c' },
+  gray: { name: 'Steel', primary: '#7f8c8d', secondary: '#95a5a6' },
+};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -24,14 +37,41 @@ function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
   });
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedObject, setSelectedObject] = useState(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showEraUnlockModal, setShowEraUnlockModal] = useState(null);
+  
+  const longPressTimer = useRef(null);
+  const [isLongPress, setIsLongPress] = useState(false);
 
   useEffect(() => {
     document.body.className = theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const handleThemeClick = () => {
+    if (!isLongPress) {
+      setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    }
+  };
+  
+  const handleThemeMouseDown = () => {
+    setIsLongPress(false);
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPress(true);
+      setShowColorPicker(true);
+    }, 500);
+  };
+  
+  const handleThemeMouseUp = () => {
+    clearTimeout(longPressTimer.current);
+    setTimeout(() => setIsLongPress(false), 100);
+  };
+  
+  const handleColorSelect = (colorKey) => {
+    setTheme(colorKey);
+    setShowColorPicker(false);
   };
 
   const showNotification = useCallback((message, type = 'info') => {
@@ -154,9 +194,19 @@ function App() {
 
   const handlePlace = async (objectId, x, y) => {
     try {
-      await game.place(objectId, x, y);
+      const response = await game.place(objectId, x, y);
       await loadGameState();
-      showNotification('✅ Object placed!', 'success');
+      
+      // Check if a new era was unlocked!
+      if (response.data.era_unlocked) {
+        setShowEraUnlockModal({
+          era: response.data.era_unlocked,
+          message: response.data.message
+        });
+        showNotification(`🎉 ${response.data.message}`, 'success');
+      } else {
+        showNotification('✅ Object placed!', 'success');
+      }
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Placement failed';
       setError(errorMsg);
@@ -280,7 +330,12 @@ function App() {
       <div className="header">
         <div className="header-left">
           <h1>🏛️ TycoonCraft</h1>
-          <span className="era-badge">{gameState.profile.current_era}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <span className="era-badge">{gameState.profile.current_era}</span>
+            <span className="era-progress">
+              Era {gameState.era_unlocks.length} of {ERAS.length}
+            </span>
+          </div>
         </div>
         <div className="header-center">
           <div className="resource">
@@ -295,8 +350,17 @@ function App() {
           </div>
         </div>
         <div className="header-right">
-          <button onClick={toggleTheme} className="btn-icon" title="Toggle Theme">
-            {theme === 'light' ? '🌙' : '☀️'}
+          <button 
+            onClick={handleThemeClick}
+            onMouseDown={handleThemeMouseDown}
+            onMouseUp={handleThemeMouseUp}
+            onMouseLeave={handleThemeMouseUp}
+            onTouchStart={handleThemeMouseDown}
+            onTouchEnd={handleThemeMouseUp}
+            className="btn-icon" 
+            title="Click to toggle, long-press for colors"
+          >
+            {theme === 'light' ? '🌙' : theme === 'dark' ? '☀️' : '🎨'}
           </button>
           <button onClick={handleExport} className="btn-small">💾 Export</button>
           <label className="btn-small">
@@ -304,6 +368,9 @@ function App() {
             <input type="file" accept=".json" onChange={handleImport} style={{display: 'none'}} />
           </label>
           <button onClick={handleLogout} className="btn-small">🚪 Logout</button>
+          <button onClick={() => setShowInfoModal(true)} className="btn-icon" title="Game Info">
+            ℹ️
+          </button>
         </div>
       </div>
 
@@ -314,23 +381,179 @@ function App() {
           eraUnlocks={gameState.era_unlocks}
           currentEra={gameState.profile.current_era}
           eras={ERAS}
+          onObjectInfo={setSelectedObject}
         />
         
         <div className="main-area">
-          <CraftingArea 
-            discoveries={gameState.discoveries}
-            onCraft={handleCraft}
-            craftingOperations={craftingOperations}
-          />
+          <div className="top-section-container">
+            {/* Object Info Panel */}
+            <div className="object-info-panel">
+              <h3>📋 Object Details</h3>
+              {selectedObject ? (
+                <div className="object-info-content">
+                  {selectedObject.image_path && (
+                    <div className="object-info-image-container">
+                      <img 
+                        src={selectedObject.image_path} 
+                        alt={selectedObject.object_name}
+                        className="object-info-image"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="object-info-details">
+                    <div className="object-info-name">{selectedObject.object_name}</div>
+                    <div className="object-info-flavor">{selectedObject.flavor_text}</div>
+                    
+                    <div className="object-info-stats">
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">💰 Cost</span>
+                        <span className="object-info-stat-value">{selectedObject.cost}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📊 Income/sec</span>
+                        <span className="object-info-stat-value">{selectedObject.income_per_second}</span>
+                      </div>
+                      {parseFloat(selectedObject.time_crystal_generation) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">💎 Crystals/sec</span>
+                          <span className="object-info-stat-value">{selectedObject.time_crystal_generation}</span>
+                        </div>
+                      )}
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📐 Size</span>
+                        <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
+                      </div>
+                      {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">🔨 Build Time</span>
+                          <span className="object-info-stat-value">{selectedObject.build_time}s</span>
+                        </div>
+                      )}
+                      {selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">⏱️ Duration</span>
+                          <span className="object-info-stat-value">{selectedObject.operation_duration}s</span>
+                        </div>
+                      )}
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">🏛️ Era</span>
+                        <span className="object-info-stat-value">{selectedObject.era_name}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📁 Category</span>
+                        <span className="object-info-stat-value">{selectedObject.category}</span>
+                      </div>
+                    </div>
+                    
+                    {selectedObject.is_keystone && (
+                      <div className="object-info-keystone">
+                        🔑 Keystone Object - Place to unlock <strong>{selectedObject.era_name}</strong> era!
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="object-info-empty">
+                  Click the ℹ️ icon on any object in the sidebar to view its details here
+                </div>
+              )}
+            </div>
+            
+            {/* Crafting and Queue */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <CraftingArea 
+                  discoveries={gameState.discoveries}
+                  onCraft={handleCraft}
+                  playerCoins={gameState.profile.coins}
+                />
+                
+                {craftingOperations.length > 0 && (
+                  <CraftingQueue 
+                    craftingOperations={craftingOperations}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
           
           <Canvas 
             placedObjects={gameState.placed_objects}
             discoveries={gameState.discoveries}
             onPlace={handlePlace}
             onRemove={handleRemove}
+            currentEra={gameState.profile.current_era}
           />
         </div>
       </div>
+
+      {/* Color Picker Modal */}
+      {showColorPicker && (
+        <div className="modal-overlay" onClick={() => setShowColorPicker(false)}>
+          <div className="color-picker-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>🎨 Choose Your Theme</h3>
+            <div className="color-presets">
+              {Object.entries(COLOR_THEMES).map(([key, theme]) => (
+                <div
+                  key={key}
+                  className={`color-preset ${key === theme ? 'active' : ''}`}
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`
+                  }}
+                  onClick={() => handleColorSelect(key)}
+                >
+                  {theme.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Info Modal */}
+      {showInfoModal && (
+        <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <button className="modal-close" onClick={() => setShowInfoModal(false)}>✕</button>
+            <div 
+              className="info-modal-content"
+              dangerouslySetInnerHTML={{ __html: gameInfoContent }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Era Unlock Celebration Modal */}
+      {showEraUnlockModal && (
+        <div className="modal-overlay era-unlock-overlay">
+          <div className="era-unlock-modal">
+            <div className="era-unlock-animation">
+              <div className="era-unlock-icon">🎉</div>
+              <div className="era-unlock-sparkles">
+                <span>✨</span>
+                <span>💫</span>
+                <span>⭐</span>
+                <span>🌟</span>
+                <span>✨</span>
+                <span>💫</span>
+              </div>
+            </div>
+            <h2 className="era-unlock-title">New Era Unlocked!</h2>
+            <div className="era-unlock-era">{showEraUnlockModal.era}</div>
+            <p className="era-unlock-message">{showEraUnlockModal.message}</p>
+            <div className="era-unlock-description">
+              You can now craft and place objects from the <strong>{showEraUnlockModal.era}</strong> era!
+            </div>
+            <button 
+              className="era-unlock-button"
+              onClick={() => setShowEraUnlockModal(null)}
+            >
+              ⚡ Continue Your Journey!
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="error-toast">

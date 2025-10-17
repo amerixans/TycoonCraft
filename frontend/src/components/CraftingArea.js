@@ -1,9 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './CraftingArea.css';
 
-function CraftingArea({ discoveries, onCraft, craftingOperations }) {
+const ERA_CRAFTING_COSTS = {
+  'Hunter-Gatherer': 50,
+  'Agriculture': 250,
+  'Metallurgy': 1250,
+  'Steam & Industry': 6250,
+  'Electric Age': 31250,
+  'Computing': 156250,
+  'Futurism': 781250,
+  'Interstellar': 3906250,
+  'Arcana': 19531250,
+  'Beyond': 97656250,
+};
+
+const ERAS = [
+  'Hunter-Gatherer', 'Agriculture', 'Metallurgy', 'Steam & Industry',
+  'Electric Age', 'Computing', 'Futurism', 'Interstellar', 'Arcana', 'Beyond'
+];
+
+function CraftingArea({ discoveries, onCraft, playerCoins }) {
   const [slotA, setSlotA] = useState(null);
   const [slotB, setSlotB] = useState(null);
+  const [craftingCost, setCraftingCost] = useState(0);
+  
+  useEffect(() => {
+    if (slotA && slotB) {
+      // Calculate crafting cost based on higher era
+      const indexA = ERAS.indexOf(slotA.era_name);
+      const indexB = ERAS.indexOf(slotB.era_name);
+      const higherEraIndex = Math.max(indexA, indexB);
+      const higherEra = ERAS[higherEraIndex];
+      const cost = ERA_CRAFTING_COSTS[higherEra] || 50;
+      setCraftingCost(cost);
+    } else {
+      setCraftingCost(0);
+    }
+  }, [slotA, slotB]);
   
   const handleDrop = (slot) => (e) => {
     e.preventDefault();
@@ -33,6 +66,8 @@ function CraftingArea({ discoveries, onCraft, craftingOperations }) {
     if (slot === 'A') setSlotA(null);
     else setSlotB(null);
   };
+  
+  const canAffordCraft = playerCoins >= craftingCost;
   
   return (
     <div className="crafting-area">
@@ -99,46 +134,19 @@ function CraftingArea({ discoveries, onCraft, craftingOperations }) {
         </div>
         
         <button 
-          className="craft-button"
+          className={`craft-button ${slotA && slotB && !canAffordCraft ? 'insufficient' : ''}`}
           onClick={handleCraft}
-          disabled={!slotA || !slotB}
+          disabled={!slotA || !slotB || !canAffordCraft}
         >
-          ⚒️ Craft Now!
+          {!slotA || !slotB ? (
+            '⚒️ Craft Now!'
+          ) : canAffordCraft ? (
+            `⚒️ Craft Now! (💰 ${craftingCost} coins)`
+          ) : (
+            `⚒️ Craft Now! (💰 ${craftingCost} coins - Insufficient!)`
+          )}
         </button>
       </div>
-      
-      {craftingOperations.length > 0 && (
-        <div className="crafting-queue">
-          <h4>🔄 Active Crafts ({craftingOperations.length})</h4>
-          <div className="queue-list">
-            {craftingOperations.map(op => (
-              <div key={op.id} className={`queue-item ${op.status}`}>
-                <div className="queue-content">
-                  <span className="queue-objects">
-                    {op.objectA.object_name} + {op.objectB.object_name}
-                  </span>
-                  {op.status === 'crafting' && (
-                    <div className="queue-spinner">
-                      <div className="spinner"></div>
-                      <span>Crafting...</span>
-                    </div>
-                  )}
-                  {op.status === 'success' && op.result && (
-                    <div className="queue-result">
-                      ✅ {op.result.object.object_name}
-                    </div>
-                  )}
-                  {op.status === 'failed' && (
-                    <div className="queue-error">
-                      ❌ {op.error}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

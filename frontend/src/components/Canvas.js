@@ -1,14 +1,79 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import './Canvas.css';
 
-const GRID_SIZE = 50; // Pixels per grid tile (increased for better visibility)
-const CANVAS_SIZE = 1000; // Logical canvas size in tiles
+const GRID_SIZE = 50; // Pixels per grid tile
 
-function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
+// Era-based canvas sizes (height x width in tiles)
+const ERA_SIZES = {
+  'Hunter-Gatherer': { height: 16, width: 32 },
+  'Agriculture': { height: 32, width: 32 },
+  'Metallurgy': { height: 32, width: 64 },
+  'Steam & Industry': { height: 64, width: 64 },
+  'Electric Age': { height: 64, width: 128 },
+  'Computing': { height: 128, width: 128 },
+  'Futurism': { height: 128, width: 256 },
+  'Interstellar': { height: 256, width: 256 },
+  'Arcana': { height: 256, width: 512 },
+  'Beyond': { height: 512, width: 512 },
+};
+
+function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  
+  // Update time every second for build progress
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Clear hover state if hovered object was removed
+  useEffect(() => {
+    if (hoveredPlaced && !placedObjects.find(p => p.id === hoveredPlaced.id)) {
+      setHoveredPlaced(null);
+    }
+  }, [placedObjects, hoveredPlaced]);
+  
+  // Calculate build progress for an object
+  const getBuildProgress = (placed) => {
+    if (!placed.is_building) return null;
+    
+    const placedTime = new Date(placed.placed_at).getTime();
+    const completeTime = new Date(placed.build_complete_at).getTime();
+    const totalDuration = completeTime - placedTime;
+    const elapsed = currentTime - placedTime;
+    const remaining = Math.max(0, completeTime - currentTime);
+    
+    return {
+      percentage: Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)),
+      remainingSeconds: Math.ceil(remaining / 1000)
+    };
+  };
+  
+  // Get canvas size for current era
+  const canvasSize = ERA_SIZES[currentEra] || ERA_SIZES['Hunter-Gatherer'];
+  const CANVAS_WIDTH = canvasSize.width;
+  const CANVAS_HEIGHT = canvasSize.height;
+  
+  // Calculate initial scale to fit canvas nicely (with small padding)
+  // Assuming wrapper is around 1200px wide and 600px tall on average
+  const wrapperWidth = 1200;
+  const wrapperHeight = 600;
+  const scaleToFitWidth = wrapperWidth / (CANVAS_WIDTH * GRID_SIZE);
+  const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
+  const fitScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95;
+  
+  // Start zoomed in one level more (add one zoom step of 0.1)
+  const initialScale = fitScale + 0.1;
+  
+  // Calculate minimum scale to prevent empty space
+  // Canvas must always fill the viewport completely
+  const minScale = Math.min(scaleToFitWidth, scaleToFitHeight);
   
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -23,22 +88,18 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     // Get the transform component's current state
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
-      console.log('No transform state in dragOver');
       return;
     }
     
     const rect = e.currentTarget.getBoundingClientRect();
     
     // Calculate position accounting for zoom
-    // getBoundingClientRect() already accounts for the pan (translate), so we only divide by scale
     const x = (e.clientX - rect.left) / transformState.scale;
     const y = (e.clientY - rect.top) / transformState.scale;
     
     // Convert to grid coordinates
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
-    
-    console.log('DragOver - Client:', e.clientX, e.clientY, 'Rect:', rect.left, rect.top, 'Scale:', transformState.scale, 'Grid:', gridX, gridY);
     
     setDraggedObject({ obj, x: gridX, y: gridY });
   };
@@ -48,19 +109,15 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     e.stopPropagation();
     
     const objectId = e.dataTransfer.getData('objectId');
-    console.log('Drop event - objectId:', objectId);
     
     if (!objectId) {
-      console.log('No objectId found in drop event');
       setDraggedObject(null);
       return;
     }
     
     const discovery = discoveries.find(d => d.game_object.id === parseInt(objectId));
-    console.log('Found discovery:', discovery);
     
     if (!discovery || !discovery.game_object) {
-      console.log('No discovery or game_object found');
       setDraggedObject(null);
       return;
     }
@@ -70,7 +127,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     // Get the transform component's current state
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
-      console.log('No transform state - ref:', transformRef.current);
       setDraggedObject(null);
       return;
     }
@@ -78,7 +134,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     const rect = e.currentTarget.getBoundingClientRect();
     
     // Calculate position accounting for zoom
-    // getBoundingClientRect() already accounts for the pan (translate), so we only divide by scale
     const x = (e.clientX - rect.left) / transformState.scale;
     const y = (e.clientY - rect.top) / transformState.scale;
     
@@ -86,19 +141,13 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
     
-    console.log('Drop at client:', e.clientX, e.clientY);
-    console.log('Rect position:', rect.left, rect.top);
-    console.log('Transform state:', { scale: transformState.scale, posX: transformState.positionX, posY: transformState.positionY });
-    console.log('Calculated position:', { x, y, gridX, gridY, footprint: [obj.footprint_w, obj.footprint_h] });
-    
     // Check bounds
-    if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_SIZE || gridY + obj.footprint_h > CANVAS_SIZE) {
+    if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_WIDTH || gridY + obj.footprint_h > CANVAS_HEIGHT) {
       alert('⚠️ Out of bounds! Place the object within the grid.');
       setDraggedObject(null);
       return;
     }
     
-    console.log('Calling onPlace with:', obj.id, gridX, gridY);
     onPlace(obj.id, gridX, gridY);
     setDraggedObject(null);
   };
@@ -113,6 +162,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
   const handlePlacedClick = (placed, e) => {
     e.stopPropagation();
     if (window.confirm(`Remove ${placed.game_object.object_name}?`)) {
+      setHoveredPlaced(null); // Clear hover state before removing
       onRemove(placed.id);
     }
   };
@@ -120,7 +170,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
   return (
     <div className="canvas-container">
       <div className="canvas-header">
-        <h3>🗺️ World Map</h3>
+        <h3>🗺️ World Map ({CANVAS_HEIGHT}×{CANVAS_WIDTH})</h3>
         <div className="canvas-controls">
           <span className="control-hint">🖱️ Drag to pan • 🔍 Scroll to zoom</span>
         </div>
@@ -129,8 +179,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
       <div className="canvas-wrapper">
         <TransformWrapper
           ref={transformRef}
-          initialScale={0.5}
-          minScale={0.2}
+          initialScale={initialScale}
+          minScale={minScale}
           maxScale={2}
           centerOnInit={true}
           wheel={{ step: 0.1 }}
@@ -152,8 +202,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
                   cursor: draggedObject ? 'crosshair' : 'grab'
                 }}
                 contentStyle={{
-                  width: CANVAS_SIZE * GRID_SIZE + 'px',
-                  height: CANVAS_SIZE * GRID_SIZE + 'px',
+                  width: CANVAS_WIDTH * GRID_SIZE + 'px',
+                  height: CANVAS_HEIGHT * GRID_SIZE + 'px',
                 }}
               >
                 <div
@@ -162,8 +212,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   style={{
-                    width: CANVAS_SIZE * GRID_SIZE + 'px',
-                    height: CANVAS_SIZE * GRID_SIZE + 'px',
+                    width: CANVAS_WIDTH * GRID_SIZE + 'px',
+                    height: CANVAS_HEIGHT * GRID_SIZE + 'px',
                     backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
                   }}
                 >
@@ -194,12 +244,56 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
                         </div>
                       )}
                       
-                      {placed.is_building && (
-                        <div className="building-overlay">
-                          <span className="building-icon">🔨</span>
-                          <div className="building-progress"></div>
-                        </div>
-                      )}
+                      {placed.is_building && (() => {
+                        const progress = getBuildProgress(placed);
+                        if (!progress) return null;
+                        
+                        // Calculate circle size based on object footprint
+                        const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
+                        const circleSize = Math.min(minDimension * GRID_SIZE * 0.6, 60);
+                        const strokeWidth = Math.max(circleSize * 0.15, 4);
+                        const radius = (circleSize - strokeWidth) / 2;
+                        const circumference = 2 * Math.PI * radius;
+                        const offset = circumference - (progress.percentage / 100) * circumference;
+                        
+                        return (
+                          <div className="building-overlay">
+                            <svg 
+                              className="building-progress-circle"
+                              width={circleSize} 
+                              height={circleSize}
+                              style={{ width: circleSize, height: circleSize }}
+                            >
+                              {/* Background circle */}
+                              <circle
+                                cx={circleSize / 2}
+                                cy={circleSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke="rgba(255, 255, 255, 0.2)"
+                                strokeWidth={strokeWidth}
+                              />
+                              {/* Progress circle */}
+                              <circle
+                                cx={circleSize / 2}
+                                cy={circleSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke="#27ae60"
+                                strokeWidth={strokeWidth}
+                                strokeDasharray={circumference}
+                                strokeDashoffset={offset}
+                                strokeLinecap="round"
+                                transform={`rotate(-90 ${circleSize / 2} ${circleSize / 2})`}
+                                style={{ transition: 'stroke-dashoffset 0.3s ease' }}
+                              />
+                            </svg>
+                            <div className="building-time" style={{ fontSize: `${Math.max(circleSize * 0.25, 10)}px` }}>
+                              {progress.remainingSeconds}s
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                   
@@ -256,6 +350,15 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove }) {
                 {hoveredPlaced.is_building ? '🔨 Building' : hoveredPlaced.is_operational ? '✅ Active' : '⏸️ Inactive'}
               </span>
             </div>
+            {hoveredPlaced.is_building && (() => {
+              const progress = getBuildProgress(hoveredPlaced);
+              return progress ? (
+                <div className="stat-row">
+                  <span>⏱️ Time Left:</span>
+                  <span className="stat-value">{progress.remainingSeconds}s ({Math.round(progress.percentage)}%)</span>
+                </div>
+              ) : null;
+            })()}
             <div className="stat-row">
               <span>📏 Size:</span>
               <span className="stat-value">{hoveredPlaced.game_object.footprint_w}×{hoveredPlaced.game_object.footprint_h}</span>

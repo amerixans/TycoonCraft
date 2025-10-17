@@ -34,7 +34,10 @@ build/
 # Django collected static & user uploads (don’t commit generated/user content)
 backend/static/
 backend/staticfiles/
-backend/media/
+backend/media/**
+!backend/media/**/
+!backend/media/objects/starter*
+
 
 # Logs & local backups
 *.log

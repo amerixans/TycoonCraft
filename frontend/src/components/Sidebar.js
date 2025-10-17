@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
+function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -26,6 +26,12 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
         discoveredIds.has(obj.id)
       )
     : objectsByEra[selectedEra]?.filter(obj => discoveredIds.has(obj.id)) || [];
+  
+  const handleInfoClick = (obj, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onObjectInfo(obj);
+  };
   
   return (
     <div className="sidebar">
@@ -75,20 +81,82 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras }) {
               <div 
                 key={obj.id}
                 className={`object-item ${obj.is_keystone ? 'keystone' : ''}`}
-                title={obj.flavor_text}
+                title={obj.is_keystone ? `🔑 Keystone: Place to unlock ${obj.era_name}!` : 'Drag to craft or place'}
                 draggable={true}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'copy';
                   e.dataTransfer.setData('objectId', obj.id.toString());
                   e.dataTransfer.setData('text/plain', obj.object_name);
+                  
+                  // Create custom drag image with just the object image
+                  const dragImage = document.createElement('div');
+                  dragImage.style.width = '64px';
+                  dragImage.style.height = '64px';
+                  dragImage.style.background = 'var(--bg-secondary)';
+                  dragImage.style.border = '3px solid var(--accent-secondary)';
+                  dragImage.style.borderRadius = '12px';
+                  dragImage.style.display = 'flex';
+                  dragImage.style.alignItems = 'center';
+                  dragImage.style.justifyContent = 'center';
+                  dragImage.style.position = 'absolute';
+                  dragImage.style.top = '-1000px';
+                  dragImage.style.overflow = 'hidden';
+                  dragImage.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                  
+                  if (obj.image_path) {
+                    const img = document.createElement('img');
+                    img.src = obj.image_path;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'contain';
+                    img.style.imageRendering = 'pixelated';
+                    dragImage.appendChild(img);
+                  } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.textContent = obj.object_name.substring(0, 2).toUpperCase();
+                    placeholder.style.fontSize = '1.5rem';
+                    placeholder.style.fontWeight = '900';
+                    placeholder.style.color = 'var(--accent-primary)';
+                    dragImage.appendChild(placeholder);
+                  }
+                  
+                  document.body.appendChild(dragImage);
+                  e.dataTransfer.setDragImage(dragImage, 32, 32);
+                  
+                  // Clean up after drag starts
+                  setTimeout(() => {
+                    document.body.removeChild(dragImage);
+                  }, 0);
                 }}
               >
-                <div className="object-name">
-                  {obj.object_name}
+                <div className="object-image-container">
+                  {obj.image_path ? (
+                    <img 
+                      src={obj.image_path} 
+                      alt={obj.object_name}
+                      className="object-item-image"
+                    />
+                  ) : (
+                    <div className="object-image-placeholder">
+                      {obj.object_name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                 </div>
-                <div className="object-stats">
-                  <div>💰 {obj.cost}</div>
-                  <div>📊 {obj.income_per_second}/s</div>
+                <div className="object-content">
+                  <div className="object-name">
+                    {obj.object_name}
+                  </div>
+                  <div className="object-stats">
+                    <div>💰 {obj.cost}</div>
+                    <div>📊 {obj.income_per_second}/s</div>
+                  </div>
+                </div>
+                <div 
+                  className="object-info-icon"
+                  onClick={(e) => handleInfoClick(obj, e)}
+                  title="View details"
+                >
+                  ℹ️
                 </div>
                 {obj.is_keystone && (
                   <div className="keystone-badge">🔑</div>

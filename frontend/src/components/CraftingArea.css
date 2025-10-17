@@ -7,6 +7,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
+  min-width: 500px;
 }
 
 .crafting-header {
@@ -207,91 +209,16 @@
   transform: translateY(0);
 }
 
-/* Crafting Queue */
-.crafting-queue {
-  background: var(--bg-primary);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-top: 0.5rem;
+.craft-button.insufficient {
+  background: linear-gradient(135deg, var(--accent-error) 0%, #c0392b 100%);
+  animation: pulse-funds 1.5s ease-in-out infinite;
 }
 
-.crafting-queue h4 {
-  margin: 0 0 0.8rem 0;
-  color: var(--accent-secondary);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.queue-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.queue-item {
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.8rem 1rem;
-  transition: all 0.2s;
-}
-
-.queue-item.crafting {
-  border-color: var(--accent-warning);
-  animation: pulse-border 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-border {
+@keyframes pulse-funds {
   0%, 100% {
-    border-color: var(--accent-warning);
+    opacity: 1;
   }
   50% {
-    border-color: var(--accent-secondary);
+    opacity: 0.7;
   }
-}
-
-.queue-item.success {
-  border-color: var(--accent-success);
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(46, 204, 113, 0.1) 100%);
-}
-
-.queue-item.failed {
-  border-color: var(--accent-error);
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(231, 76, 60, 0.1) 100%);
-}
-
-.queue-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.queue-objects {
-  font-weight: 600;
-  color: var(--text-primary);
-  flex: 1;
-  font-size: 0.9rem;
-}
-
-.queue-spinner {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--accent-warning);
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.queue-result {
-  color: var(--accent-success);
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.queue-error {
-  color: var(--accent-error);
-  font-weight: 600;
-  font-size: 0.85rem;
 }

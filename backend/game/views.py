@@ -51,6 +51,50 @@ ERA_CRYSTAL_COSTS = {
     "Beyond": 4000000,
 }
 
+ERA_CRAFTING_COSTS = {
+    "Hunter-Gatherer": 50,
+    "Agriculture": 250,
+    "Metallurgy": 1250,
+    "Steam & Industry": 6250,
+    "Electric Age": 31250,
+    "Computing": 156250,
+    "Futurism": 781250,
+    "Interstellar": 3906250,
+    "Arcana": 19531250,
+    "Beyond": 97656250,
+}
+
+# -----------------------------
+# Era progression helpers
+# -----------------------------
+
+def get_next_era(current_era):
+    """Get the next era in sequence, or None if at the end."""
+    try:
+        current_index = ERAS.index(current_era)
+        if current_index < len(ERAS) - 1:
+            return ERAS[current_index + 1]
+    except ValueError:
+        pass
+    return None
+
+
+def get_unlocked_eras(profile):
+    """Get list of all eras unlocked by the player."""
+    era_unlocks = EraUnlock.objects.filter(player=profile).values_list('era_name', flat=True)
+    return list(era_unlocks)
+
+
+def get_higher_era(era_a, era_b):
+    """Get the higher (more advanced) era between two eras."""
+    try:
+        index_a = ERAS.index(era_a)
+        index_b = ERAS.index(era_b)
+        return ERAS[max(index_a, index_b)]
+    except ValueError:
+        return era_a  # fallback
+
+
 # -----------------------------
 # Rate limiting helpers
 # -----------------------------
@@ -102,6 +146,20 @@ def increment_rate_limit(player, limit_type):
 def update_player_coins(player):
     """Calculate and update coins/time crystals from operational placed objects."""
     now = timezone.now()
+    
+    # Check for completed buildings and transition them to operational
+    completed_buildings = PlacedObject.objects.filter(
+        player=player,
+        is_building=True,
+        build_complete_at__lte=now
+    )
+    
+    if completed_buildings.exists():
+        completed_buildings.update(
+            is_building=False,
+            is_operational=True
+        )
+    
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
     operational_objects = (
@@ -147,6 +205,121 @@ def update_player_coins(player):
     player.save()
 
     return coins_earned, crystals_earned
+
+
+def validate_predefined_match(game_object, predefined_overrides):
+    """
+    Check if existing game object matches predefined specifications.
+    Returns True if all predefined fields match, False otherwise.
+    """
+    if not predefined_overrides:
+        return True
+    
+    for key, expected_value in predefined_overrides.items():
+        # Get actual value from game object
+        if '.' in key:
+            # Handle nested fields
+            parts = key.split('.')
+            if parts[0] == 'retire_payout':
+                if parts[1] == 'coins_pct':
+                    actual_value = game_object.retire_payout_coins_pct
+                else:
+                    continue  # Skip unknown nested fields instead of failing
+            elif parts[0] == 'footprint':
+                field_name = f"footprint_{parts[1]}"
+                actual_value = getattr(game_object, field_name, None)
+            else:
+                # Try to get from dict/JSON field
+                parent = getattr(game_object, parts[0], None)
+                if isinstance(parent, dict):
+                    actual_value = parent.get(parts[1])
+                else:
+                    continue  # Skip if can't access instead of failing
+        else:
+            actual_value = getattr(game_object, key, None)
+        
+        # Normalize values for comparison
+        actual_normalized = _normalize_value(actual_value)
+        expected_normalized = _normalize_value(expected_value)
+        
+        # Compare with appropriate method
+        if not _values_equal(actual_normalized, expected_normalized):
+            return False
+    
+    return True
+
+
+def _normalize_value(value):
+    """Normalize a value for comparison."""
+    # Convert Decimal to float (but not bool, since bool is a subclass of int)
+    if hasattr(value, '__float__') and not isinstance(value, bool):
+        return float(value)
+    # Keep None, lists, dicts, strings, bools as-is
+    return value
+
+
+def _values_equal(actual, expected):
+    """Check if two values are equal, with special handling for floats."""
+    # Handle None
+    if actual is None and expected is None:
+        return True
+    if actual is None or expected is None:
+        return False
+    
+    # Handle numeric comparisons with tolerance for floating point precision
+    if isinstance(actual, (int, float)) and isinstance(expected, (int, float)):
+        # Use small epsilon for float comparison to handle precision issues
+        return abs(float(actual) - float(expected)) < 1e-9
+    
+    # Handle list comparison
+    if isinstance(actual, list) and isinstance(expected, list):
+        if len(actual) != len(expected):
+            return False
+        return all(_values_equal(a, e) for a, e in zip(actual, expected))
+    
+    # Handle dict comparison
+    if isinstance(actual, dict) and isinstance(expected, dict):
+        if set(actual.keys()) != set(expected.keys()):
+            return False
+        return all(_values_equal(actual.get(k), expected.get(k)) for k in actual.keys())
+    
+    # Direct comparison for everything else (strings, bools, etc.)
+    return actual == expected
+
+
+# -----------------------------
+# Predefined recipes
+# -----------------------------
+
+_PREDEFINED_RECIPES_CACHE = None
+
+def load_predefined_recipes():
+    """Load predefined recipes from JSON file."""
+    global _PREDEFINED_RECIPES_CACHE
+    if _PREDEFINED_RECIPES_CACHE is not None:
+        return _PREDEFINED_RECIPES_CACHE
+    
+    recipes_path = os.path.join(settings.BASE_DIR, "prompts", "predefined_recipes.json")
+    if not os.path.exists(recipes_path):
+        _PREDEFINED_RECIPES_CACHE = []
+        return []
+    
+    with open(recipes_path, "r", encoding="utf-8") as f:
+        _PREDEFINED_RECIPES_CACHE = json.load(f)
+    return _PREDEFINED_RECIPES_CACHE
+
+
+def get_predefined_recipe(object_a, object_b):
+    """Check if there's a predefined recipe for this combination."""
+    recipes = load_predefined_recipes()
+    
+    for recipe in recipes:
+        # Check both orderings
+        if ((recipe["input_a"] == object_a.object_name and recipe["input_b"] == object_b.object_name) or
+            (recipe["input_a"] == object_b.object_name and recipe["input_b"] == object_a.object_name)):
+            return recipe.get("output", {})
+    
+    return None
 
 
 # -----------------------------
@@ -212,10 +385,12 @@ def _extract_responses_text(res_json):
     # 4) Nothing worked
     raise ValueError("Unable to parse text from OpenAI Responses API response.")
 
-def call_openai_crafting(object_a, object_b):
+def call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefined_overrides=None):
     """
     Call OpenAI (Responses API) to generate a new object definition via structured output.
     Uses server-to-server endpoint: POST /v1/responses
+    
+    predefined_overrides: dict of field values that MUST be respected in the output
     """
 
     prompts_dir = os.path.join(settings.BASE_DIR, "prompts")
@@ -241,12 +416,50 @@ def call_openai_crafting(object_a, object_b):
         "notes": f"Income: {object_b.income_per_second}/s, Cost: {object_b.cost}",
     }
 
+    # Determine the higher era between the two objects
+    higher_era = get_higher_era(object_a.era_name, object_b.era_name)
+    next_era = get_next_era(higher_era)
+    
+    # Build era context for the prompt
+    era_context = f"""
+PLAYER ERA CONTEXT:
+• Current Era: {current_era}
+• Unlocked Eras: {', '.join(unlocked_eras)}
+• Higher Input Era: {higher_era}
+• Next Potential Era: {next_era if next_era else 'None (at max era)'}
+
+CRITICAL ERA ASSIGNMENT RULES:
+1. For KEYSTONE objects (is_keystone: true):
+   - The object MUST be assigned to the NEXT era beyond the higher input era
+   - Example: If combining Agriculture objects, the keystone should be "Metallurgy"
+   - This is because placing the keystone unlocks that next era
+   
+2. For REGULAR objects (is_keystone: false):
+   - The object MUST be assigned to the higher era of the two inputs
+   - Example: If combining Hunter-Gatherer + Agriculture, result is Agriculture
+   - Never assign to an era beyond the player's highest unlocked era + 1
+   
+3. Keystone identification:
+   - Check the era definitions for "Keystone to Unlock" entries
+   - Only set is_keystone: true if the crafted object matches that keystone concept
+   - Example: "Campfire" for Hunter-Gatherer, "Fertilizer" for Agriculture, etc.
+"""
+
+    # Add predefined constraints if any
+    if predefined_overrides:
+        constraints_text = "\n\nPREDEFINED CONSTRAINTS (MUST BE RESPECTED):\n"
+        constraints_text += "The following fields have been predefined and MUST match exactly:\n"
+        for key, value in predefined_overrides.items():
+            constraints_text += f"  • {key}: {json.dumps(value)}\n"
+        constraints_text += "\nAll other fields should be generated normally following the game rules.\n"
+        era_context += constraints_text
+
     # Fill prompt
     prompt = (
         prompt_template
         .replace("{{object_a_capsule}}", json.dumps(capsule_a, indent=2))
         .replace("{{object_b_capsule}}", json.dumps(capsule_b, indent=2))
-    )
+    ) + "\n" + era_context
 
     # Build payload for structured output
     payload = {
@@ -282,6 +495,21 @@ def call_openai_crafting(object_a, object_b):
         parsed = json.loads(text)
     except Exception as e:
         raise ValueError(f"Failed to parse JSON from model output: {e}\nRaw: {text[:500]}")
+
+    # Apply predefined overrides to the result
+    if predefined_overrides:
+        for key, value in predefined_overrides.items():
+            # Handle nested fields like retire_payout.coins_pct
+            if '.' in key:
+                parts = key.split('.')
+                target = parsed
+                for part in parts[:-1]:
+                    if part not in target:
+                        target[part] = {}
+                    target = target[part]
+                target[parts[-1]] = value
+            else:
+                parsed[key] = value
 
     return parsed
 
@@ -452,25 +680,93 @@ def craft_objects(request):
     if object_a.id > object_b.id:
         object_a, object_b = object_b, object_a
 
+    # Calculate crafting cost based on higher era
+    higher_era = get_higher_era(object_a.era_name, object_b.era_name)
+    crafting_cost = Decimal(str(ERA_CRAFTING_COSTS.get(higher_era, 50)))
+    
+    # Check if player has enough coins
+    update_player_coins(profile)
+    if profile.coins < crafting_cost:
+        return Response({
+            "error": f"Insufficient coins. Crafting costs {crafting_cost} coins (based on {higher_era} era)."
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for predefined recipe first
+    predefined_overrides = get_predefined_recipe(object_a, object_b)
+    
     # Pre-existing recipe?
     existing_recipe = CraftingRecipe.objects.filter(object_a=object_a, object_b=object_b).select_related("result").first()
     if existing_recipe:
         result_obj = existing_recipe.result
-        discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
-        return Response({
-            "object": GameObjectSerializer(result_obj).data,
-            "newly_discovered": created,
-            "newly_created": False,
-        })
+        
+        # Validate against predefined recipe if one exists
+        if predefined_overrides and not validate_predefined_match(result_obj, predefined_overrides):
+            # Specs don't match - delete old object and regenerate
+            result_obj.delete()
+            existing_recipe.delete()
+            # Continue to generation below
+        else:
+            # Deduct crafting cost
+            profile.coins -= crafting_cost
+            profile.save()
+            
+            # Specs matched or no predefined recipe - return existing
+            discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
+            return Response({
+                "object": GameObjectSerializer(result_obj).data,
+                "newly_discovered": created,
+                "newly_created": False,
+                "crafting_cost": float(crafting_cost),
+            })
 
     # New recipe → count, then call OpenAI OUTSIDE DB transaction
     increment_rate_limit(profile, "user_discovery")
     increment_rate_limit(None, "global_api")
 
+    # Get player's era context
+    unlocked_eras = get_unlocked_eras(profile)
+    current_era = profile.current_era
+
+    # predefined_overrides already retrieved above
+
     try:
-        obj_data = call_openai_crafting(object_a, object_b)
+        obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefined_overrides)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    # Check if an object with this name already exists (handle duplicates gracefully)
+    existing_obj = GameObject.objects.filter(object_name=obj_data.get("object_name")).first()
+    
+    if existing_obj:
+        # Object with this name already exists - use it instead of creating a new one
+        # Don't waste the image generation call
+        try:
+            with transaction.atomic():
+                # Create recipe linking these inputs to the existing result
+                CraftingRecipe.objects.create(
+                    object_a=object_a,
+                    object_b=object_b,
+                    result=existing_obj,
+                    discovered_by=request.user,
+                )
+
+                # Deduct crafting cost
+                profile.coins -= crafting_cost
+                profile.save()
+
+                # Mark as discovered for this player
+                Discovery.objects.create(player=profile, game_object=existing_obj)
+
+                return Response({
+                    "object": GameObjectSerializer(existing_obj).data,
+                    "newly_discovered": True,
+                    "newly_created": False,
+                    "duplicate_name_handled": True,
+                    "crafting_cost": float(crafting_cost),
+                }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Prepare image (second API call) and count it
     increment_rate_limit(None, "global_api")
@@ -525,12 +821,17 @@ def craft_objects(request):
                 discovered_by=request.user,
             )
 
+            # Deduct crafting cost
+            profile.coins -= crafting_cost
+            profile.save()
+
             Discovery.objects.create(player=profile, game_object=new_obj)
 
             return Response({
                 "object": GameObjectSerializer(new_obj).data,
                 "newly_discovered": True,
                 "newly_created": True,
+                "crafting_cost": float(crafting_cost),
             }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -607,7 +908,24 @@ def place_object(request):
         is_operational=game_object.build_time_sec == 0,
     )
 
-    return Response(PlacedObjectSerializer(placed).data, status=status.HTTP_201_CREATED)
+    # Auto-unlock next era if this is a keystone object
+    response_data = PlacedObjectSerializer(placed).data
+    if game_object.is_keystone:
+        # The keystone's era_name IS the era it unlocks
+        era_to_unlock = game_object.era_name
+        
+        # Check if not already unlocked
+        if not EraUnlock.objects.filter(player=profile, era_name=era_to_unlock).exists():
+            # Unlock the era (no crystal cost when unlocking via keystone)
+            EraUnlock.objects.create(player=profile, era_name=era_to_unlock)
+            profile.current_era = era_to_unlock
+            profile.save()
+            
+            # Add unlock info to response
+            response_data['era_unlocked'] = era_to_unlock
+            response_data['message'] = f'Congratulations! You have unlocked the {era_to_unlock} era!'
+
+    return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])

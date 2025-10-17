@@ -56,9 +56,10 @@
         "description": "Quality tier used for lightweight scaling and drops."
       },
       "cost": {
-        "type": "number",
-        "minimum": 1,
-        "description": "Coin cost to place/build."
+        "type": "integer",
+        "minimum": 50,
+        "maximum": 100000000000,
+        "description": "Coin cost to place/build. Must be integer ≥ 50."
       },
       "time_crystal_cost": {
         "type": "number",
@@ -67,27 +68,30 @@
         "description": "Crystals spent to place/promote this object. Very rare; usually 0."
       },
       "income_per_second": {
-        "type": "number",
-        "minimum": 0,
-        "description": "Base coin income per second."
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000000000,
+        "description": "Base coin income per second. Must be integer ≥ 1."
       },
       "time_crystal_generation": {
         "type": "number",
         "minimum": 0,
+        "maximum": 1,
         "default": 0,
         "description": "Time crystals generated per second while operational (rare; usually 0)."
       },
       "build_time_sec": {
         "type": "integer",
         "minimum": 0,
-        "maximum": 86400,
+        "maximum": 3600,
         "default": 0,
-        "description": "Build time in seconds."
+        "description": "Build time in seconds. Prefer 0-300 for most objects."
       },
       "operation_duration_sec": {
         "type": "integer",
-        "minimum": 1,
-        "description": "How long it stays operational before retiring/decaying."
+        "minimum": 60,
+        "maximum": 86400,
+        "description": "How long it stays operational before retiring/decaying. Minimum 1 minute."
       },
       "retire_payout": {
         "type": "object",
@@ -97,7 +101,7 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "default": 0.2,
+            "default": 0.25,
             "description": "Fraction of cost refunded automatically when the object retires at end of operation."
           }
         },
@@ -108,12 +112,13 @@
         "type": "number",
         "minimum": 0,
         "maximum": 1,
-        "default": 0.2,
+        "default": 0.15,
         "description": "Fraction of cost refunded if the player deletes the object early."
       },
       "cap_per_civ": {
         "type": ["integer", "null"],
         "minimum": 1,
+        "maximum": 100,
         "default": null,
         "description": "Max copies allowed per civilization; null means unlimited."
       },
@@ -129,7 +134,7 @@
       },
       "size": {
         "type": "number",
-        "minimum": 0.1,
+        "minimum": 0.5,
         "maximum": 20,
         "description": "Approximate physical size in meters (visual metric)."
       },
@@ -175,29 +180,29 @@
             },
             "income_multiplier": {
               "type": "number",
-              "minimum": 0,
-              "maximum": 100,
+              "minimum": 0.5,
+              "maximum": 2.0,
               "default": 1,
               "description": "Multiply income of affected objects (e.g., 1.1 = +10%)."
             },
             "cost_multiplier": {
               "type": "number",
-              "minimum": 0,
-              "maximum": 100,
+              "minimum": 0.5,
+              "maximum": 2.0,
               "default": 1,
               "description": "Multiply build cost of affected objects."
             },
             "build_time_multiplier": {
               "type": "number",
-              "minimum": 0,
-              "maximum": 100,
+              "minimum": 0.5,
+              "maximum": 2.0,
               "default": 1,
               "description": "Multiply build time of affected objects."
             },
             "operation_duration_multiplier": {
               "type": "number",
-              "minimum": 0,
-              "maximum": 100,
+              "minimum": 0.5,
+              "maximum": 2.0,
               "default": 1,
               "description": "Multiply operation duration of affected objects."
             },
@@ -210,6 +215,7 @@
             "max_stacks": {
               "type": "integer",
               "minimum": 1,
+              "maximum": 50,
               "default": 1,
               "description": "Upper bound on stacking from this source."
             }
@@ -230,6 +236,7 @@
       },
       "flavor_text": {
         "type": "string",
+        "minLength": 10,
         "maxLength": 200,
         "description": "Short thematic blurb."
       }
