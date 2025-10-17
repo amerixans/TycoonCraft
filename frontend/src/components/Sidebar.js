@@ -150,8 +150,8 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                     {obj.object_name}
                   </div>
                   <div className="object-stats">
-                    <div>💰 {obj.cost}</div>
-                    <div>📊 {obj.income_per_second}/s</div>
+                    <div>💰 {Math.floor(obj.cost)}</div>
+                    <div>📊 {Math.floor(obj.income_per_second)}/s</div>
                   </div>
                 </div>
                 <div 
