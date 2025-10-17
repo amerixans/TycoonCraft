@@ -247,6 +247,11 @@ echo "Running database migrations..."
 python manage.py migrate
 echo "✓ Migrations complete"
 
+# Create admin account (idempotent - safe to run multiple times)
+echo "Setting up admin testing account..."
+python manage.py create_admin_account
+echo "✓ Admin account configured"
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
