@@ -94,11 +94,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if DEBUG:
     # Allow all origins in development
     CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
 else:
     # In production, only allow specific origins
-    CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
-    # Filter out empty strings from split
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
+    cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+    if cors_origins:
+        CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+    else:
+        # Fallback: construct from domain if CORS_ALLOWED_ORIGINS not set
+        domain = os.environ.get('DOMAIN', 'localhost')
+        server_ip = os.environ.get('SERVER_IP', '')
+        CORS_ALLOWED_ORIGINS = [
+            f'http://{domain}',
+            f'https://{domain}',
+            f'http://www.{domain}',
+            f'https://www.{domain}',
+        ]
+        if server_ip:
+            CORS_ALLOWED_ORIGINS.extend([f'http://{server_ip}', f'https://{server_ip}'])
+
+    CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -108,6 +123,29 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# Session and CSRF Cookie Configuration
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400 * 30  # 30 days
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = not DEBUG  # Only secure cookies in production (HTTPS)
+
+CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read it for the header
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG  # Only secure cookies in production (HTTPS)
+CSRF_TRUSTED_ORIGINS = []
+
+# Add domain to CSRF_TRUSTED_ORIGINS
+if not DEBUG:
+    domain = os.environ.get('DOMAIN', 'localhost')
+    server_ip = os.environ.get('SERVER_IP', '')
+    CSRF_TRUSTED_ORIGINS = [
+        f'https://{domain}',
+        f'https://www.{domain}',
+    ]
+    if server_ip:
+        CSRF_TRUSTED_ORIGINS.append(f'https://{server_ip}')
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
