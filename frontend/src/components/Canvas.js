@@ -184,6 +184,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
           minScale={minScale}
           maxScale={10}
           centerOnInit={true}
+          centerZoomedOut={true}
           wheel={{ step: 0.1 }}
           doubleClick={{ disabled: true }}
           panning={{ velocityDisabled: true }}

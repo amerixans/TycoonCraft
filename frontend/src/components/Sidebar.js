@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Sidebar.css';
 
 function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Update selectedEra when currentEra changes
+  useEffect(() => {
+    setSelectedEra(currentEra);
+  }, [currentEra]);
   
   const discoveredIds = new Set(discoveries.map(d => d.game_object.id));
   const unlockedEras = new Set(eraUnlocks.map(u => u.era_name));
