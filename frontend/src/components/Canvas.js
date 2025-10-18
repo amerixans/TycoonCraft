@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { formatNumber } from '../utils/formatNumber';
 import './Canvas.css';
 
 const GRID_SIZE = 50; // Pixels per grid tile
@@ -338,12 +339,12 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
           <div className="tooltip-stats">
             <div className="stat-row">
               <span>💰 Income:</span>
-              <span className="stat-value">{hoveredPlaced.game_object.income_per_second}/s</span>
+              <span className="stat-value">{formatNumber(hoveredPlaced.game_object.income_per_second)}/s</span>
             </div>
             {hoveredPlaced.game_object.time_crystal_generation > 0 && (
               <div className="stat-row">
                 <span>💎 Crystals:</span>
-                <span className="stat-value">{hoveredPlaced.game_object.time_crystal_generation}/s</span>
+                <span className="stat-value">{formatNumber(hoveredPlaced.game_object.time_crystal_generation)}/s</span>
               </div>
             )}
             <div className="stat-row">

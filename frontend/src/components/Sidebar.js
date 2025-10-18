@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatNumber } from '../utils/formatNumber';
 import './Sidebar.css';
 
 function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
@@ -160,8 +161,8 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                     {obj.object_name}
                   </div>
                   <div className="object-stats">
-                    <div>💰 {Math.floor(obj.cost)}</div>
-                    <div>📊 {Math.floor(obj.income_per_second)}/s</div>
+                    <div>💰 {formatNumber(obj.cost)}</div>
+                    <div>📊 {formatNumber(obj.income_per_second)}/s</div>
                   </div>
                 </div>
                 <div 

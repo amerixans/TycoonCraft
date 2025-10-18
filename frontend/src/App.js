@@ -5,6 +5,7 @@ import CraftingArea from './components/CraftingArea';
 import CraftingQueue from './components/CraftingQueue';
 import Canvas from './components/Canvas';
 import { gameInfoContent } from './GameInfo';
+import { formatNumber } from './utils/formatNumber';
 import './App.css';
 
 const ERAS = [
@@ -358,12 +359,12 @@ function App() {
         <div className="header-center">
           <div className="resource">
             <span className="resource-icon">💰</span>
-            <span className="resource-value">{Math.floor(gameState.profile.coins)}</span>
+            <span className="resource-value">{formatNumber(gameState.profile.coins)}</span>
             <span className="resource-label">Coins</span>
           </div>
           <div className="resource">
             <span className="resource-icon">💎</span>
-            <span className="resource-value">{Math.floor(gameState.profile.time_crystals)}</span>
+            <span className="resource-value">{formatNumber(gameState.profile.time_crystals)}</span>
             <span className="resource-label">Crystals</span>
           </div>
         </div>
@@ -435,16 +436,16 @@ function App() {
                     <div className="object-info-stats">
                       <div className="object-info-stat">
                         <span className="object-info-stat-label">💰 Cost</span>
-                        <span className="object-info-stat-value">{selectedObject.cost}</span>
+                        <span className="object-info-stat-value">{formatNumber(selectedObject.cost)}</span>
                       </div>
                       <div className="object-info-stat">
                         <span className="object-info-stat-label">📊 Income/sec</span>
-                        <span className="object-info-stat-value">{selectedObject.income_per_second}</span>
+                        <span className="object-info-stat-value">{formatNumber(selectedObject.income_per_second)}</span>
                       </div>
                       {parseFloat(selectedObject.time_crystal_generation) > 0 && (
                         <div className="object-info-stat">
                           <span className="object-info-stat-label">💎 Crystals/sec</span>
-                          <span className="object-info-stat-value">{selectedObject.time_crystal_generation}</span>
+                          <span className="object-info-stat-value">{formatNumber(selectedObject.time_crystal_generation)}</span>
                         </div>
                       )}
                       <div className="object-info-stat">

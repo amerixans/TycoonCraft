@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatNumber } from '../utils/formatNumber';
 import './CraftingArea.css';
 
 const ERA_CRAFTING_COSTS = {
@@ -158,9 +159,9 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
           ) : eraMismatch ? (
             '⚠️ Era Mismatch!'
           ) : canAffordCraft ? (
-            `⚒️ Craft Now! (💰 ${craftingCost} coins)`
+            `⚒️ Craft Now! (💰 ${formatNumber(craftingCost)} coins)`
           ) : (
-            `⚒️ Craft Now! (💰 ${craftingCost} coins - Insufficient!)`
+            `⚒️ Craft Now! (💰 ${formatNumber(craftingCost)} coins - Insufficient!)`
           )}
         </button>
       </div>
