@@ -123,3 +123,8 @@ RATE_LIMIT_DAILY_ADMIN = 1000   # Admin users
 RATE_LIMIT_DAILY_GLOBAL = 4000  # Total API calls per day across all users
 
 STARTING_COINS = 500
+
+# Image Compression Settings
+# Quality level: 0-95 (higher = better quality, larger file size)
+# 75-85 recommended for good quality/size tradeoff
+IMAGE_COMPRESSION_QUALITY = 85

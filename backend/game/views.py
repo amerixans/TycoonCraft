@@ -4,11 +4,13 @@ from decimal import Decimal
 from datetime import timedelta
 import base64
 import hashlib
+import io
 import json
 import os
 import time
 
 import requests
+from PIL import Image
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -505,10 +507,47 @@ CRITICAL ERA ASSIGNMENT RULES:
     return parsed
 
 
+def _compress_image(image_bytes):
+    """
+    Compress image bytes using PIL while maintaining quality.
+
+    Uses the IMAGE_COMPRESSION_QUALITY setting from settings.py.
+    Returns compressed image as PNG bytes.
+    """
+    try:
+        from PIL import Image
+        import io
+
+        # Load image from bytes
+        img = Image.open(io.BytesIO(image_bytes))
+
+        # Convert RGBA to RGB if needed (PNG to PNG with quality setting)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            # Create white background for transparency
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+            img = background
+
+        # Get compression quality from settings
+        quality = getattr(settings, 'IMAGE_COMPRESSION_QUALITY', 85)
+
+        # Compress and save to bytes
+        output = io.BytesIO()
+        img.save(output, format='PNG', optimize=True, quality=quality)
+        return output.getvalue()
+    except ImportError:
+        # If PIL not available, return original bytes
+        return image_bytes
+
+
 def call_openai_image(object_name):
     """
     Call OpenAI Images API with gpt-image-1-mini.
     Uses POST /v1/images (returns base64 in data[0].b64_json).
+
+    Image is automatically compressed after generation using settings.IMAGE_COMPRESSION_QUALITY.
     """
 
     prompts_dir = os.path.join(settings.BASE_DIR, "prompts")
@@ -537,7 +576,12 @@ def call_openai_image(object_name):
     b64 = data[0].get("b64_json")
     if not b64:
         raise Exception("Image API: missing b64_json in response")
-    return base64.b64decode(b64)
+
+    image_bytes = base64.b64decode(b64)
+
+    # Compress the image before returning
+    compressed_bytes = _compress_image(image_bytes)
+    return compressed_bytes
 
 
 # -----------------------------
