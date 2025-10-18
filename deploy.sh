@@ -241,6 +241,7 @@ ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN},127.0.0.1,localhost,${SERVER_IP}
 DOMAIN=${DOMAIN}
 SERVER_IP=${SERVER_IP}
 CORS_ALLOWED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN},http://${SERVER_IP},https://${SERVER_IP}
+CSRF_TRUSTED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN},http://${SERVER_IP},https://${SERVER_IP}
 EOF
 
 # Run Django migrations

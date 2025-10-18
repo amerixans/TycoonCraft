@@ -138,14 +138,25 @@ CSRF_TRUSTED_ORIGINS = []
 
 # Add domain to CSRF_TRUSTED_ORIGINS
 if not DEBUG:
-    domain = os.environ.get('DOMAIN', 'localhost')
-    server_ip = os.environ.get('SERVER_IP', '')
-    CSRF_TRUSTED_ORIGINS = [
-        f'https://{domain}',
-        f'https://www.{domain}',
-    ]
-    if server_ip:
-        CSRF_TRUSTED_ORIGINS.append(f'https://{server_ip}')
+    # First check if CSRF_TRUSTED_ORIGINS is set in environment
+    csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+    if csrf_origins:
+        CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(',') if origin.strip()]
+    else:
+        # Fallback: construct from DOMAIN and SERVER_IP
+        domain = os.environ.get('DOMAIN', 'localhost')
+        server_ip = os.environ.get('SERVER_IP', '')
+        CSRF_TRUSTED_ORIGINS = [
+            f'https://{domain}',
+            f'https://www.{domain}',
+            f'http://{domain}',  # Allow HTTP in case HTTPS not configured
+            f'http://www.{domain}',
+        ]
+        if server_ip:
+            CSRF_TRUSTED_ORIGINS.extend([
+                f'https://{server_ip}',
+                f'http://{server_ip}',  # Allow HTTP for IP access
+            ])
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
