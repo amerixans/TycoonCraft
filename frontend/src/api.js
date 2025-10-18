@@ -44,19 +44,21 @@ export const auth = {
 };
 
 export const game = {
-  getState: () => 
+  getState: () =>
     api.get('/game-state/'),
-  craft: (objectAId, objectBId) => 
+  getObjectCatalog: () =>
+    api.get('/object-catalog/'),
+  craft: (objectAId, objectBId) =>
     api.post('/craft/', { object_a_id: objectAId, object_b_id: objectBId }),
-  place: (objectId, x, y) => 
+  place: (objectId, x, y) =>
     api.post('/place/', { object_id: objectId, x, y }),
-  remove: (placedId) => 
+  remove: (placedId) =>
     api.post('/remove/', { placed_id: placedId }),
-  unlockEra: (eraName) => 
+  unlockEra: (eraName) =>
     api.post('/unlock-era/', { era_name: eraName }),
-  export: () => 
+  export: () =>
     api.get('/export/'),
-  import: (data) => 
+  import: (data) =>
     api.post('/import/', data),
   redeemUpgradeKey: (key) =>
     api.post('/redeem-upgrade-key/', { key }),

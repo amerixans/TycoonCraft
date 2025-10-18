@@ -7,12 +7,8 @@ import CraftingResults from './components/CraftingResults';
 import Canvas from './components/Canvas';
 import { gameInfoContent } from './GameInfo';
 import { formatNumber } from './utils/formatNumber';
+import { ERAS } from './config';
 import './App.css';
-
-const ERAS = [
-  'Hunter-Gatherer', 'Agriculture', 'Metallurgy', 'Steam & Industry',
-  'Electric Age', 'Computing', 'Futurism', 'Interstellar', 'Arcana', 'Beyond'
-];
 
 const COLOR_THEMES = {
   light: { name: 'Light', primary: '#e67e22', secondary: '#3498db' },
@@ -48,7 +44,8 @@ function App() {
   const [upgradeKey, setUpgradeKey] = useState('');
   const [upgradeError, setUpgradeError] = useState('');
   const [showDiscoveryModal, setShowDiscoveryModal] = useState(null);
-  
+  const [objectCatalog, setObjectCatalog] = useState(null);
+
   const longPressTimer = useRef(null);
   const [isLongPress, setIsLongPress] = useState(false);
 
@@ -99,13 +96,33 @@ function App() {
     }
   }, []);
 
+  const loadObjectCatalog = useCallback(async () => {
+    // Check if catalog is already cached in sessionStorage
+    const cached = sessionStorage.getItem('objectCatalog');
+    if (cached) {
+      setObjectCatalog(JSON.parse(cached));
+      return;
+    }
+
+    try {
+      const response = await game.getObjectCatalog();
+      setObjectCatalog(response.data);
+      // Cache the catalog in sessionStorage since it rarely changes
+      sessionStorage.setItem('objectCatalog', JSON.stringify(response.data));
+    } catch (err) {
+      console.error('Failed to load object catalog:', err);
+    }
+  }, []);
+
   useEffect(() => {
     loadGameState().finally(() => setLoading(false));
-    
-    // Auto-refresh game state every second
-    const interval = setInterval(loadGameState, 1000);
+    loadObjectCatalog();
+
+    // Auto-refresh game state less frequently (every 5 seconds instead of 1)
+    // to reduce database load and network traffic
+    const interval = setInterval(loadGameState, 5000);
     return () => clearInterval(interval);
-  }, [loadGameState]);
+  }, [loadGameState, loadObjectCatalog]);
 
   const handleAuth = async (e) => {
     e.preventDefault();

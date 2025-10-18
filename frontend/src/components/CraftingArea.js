@@ -1,24 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatNumber } from '../utils/formatNumber';
+import { ERAS, ERA_CRAFTING_COSTS } from '../config';
 import './CraftingArea.css';
-
-const ERA_CRAFTING_COSTS = {
-  'Hunter-Gatherer': 50,
-  'Agriculture': 250,
-  'Metallurgy': 1250,
-  'Steam & Industry': 6250,
-  'Electric Age': 31250,
-  'Computing': 156250,
-  'Futurism': 781250,
-  'Interstellar': 3906250,
-  'Arcana': 19531250,
-  'Beyond': 97656250,
-};
-
-const ERAS = [
-  'Hunter-Gatherer', 'Agriculture', 'Metallurgy', 'Steam & Industry',
-  'Electric Age', 'Computing', 'Futurism', 'Interstellar', 'Arcana', 'Beyond'
-];
 
 function CraftingArea({ discoveries, onCraft, playerCoins }) {
   const [slotA, setSlotA] = useState(null);

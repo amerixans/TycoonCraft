@@ -26,257 +26,54 @@ from .models import (
 )
 from .serializers import (
     GameObjectSerializer, PlayerProfileSerializer, DiscoverySerializer,
-    PlacedObjectSerializer, UserSerializer, EraUnlockSerializer
+    PlacedObjectSerializer, UserSerializer, EraUnlockSerializer,
+    GameStateImportSerializer
+)
+from .services.rate_limit import (
+    check_daily_rate_limit, check_global_daily_rate_limit,
+    increment_daily_rate_limit, increment_global_daily_rate_limit,
+    get_daily_rate_limit, check_rate_limit, increment_rate_limit,
+    is_admin_user
+)
+from .config import (
+    ERAS, ERA_CRYSTAL_COSTS, ERA_CRAFTING_COSTS,
+    get_next_era, get_higher_era, get_crafting_cost, get_unlock_cost
 )
 
-# -----------------------------
-# Era definitions / costs
-# -----------------------------
 
-ERAS = [
-    "Hunter-Gatherer", "Agriculture", "Metallurgy", "Steam & Industry",
-    "Electric Age", "Computing", "Futurism", "Interstellar", "Arcana", "Beyond"
-]
-
-ERA_CRYSTAL_COSTS = {
-    "Hunter-Gatherer": 0,
-    "Agriculture": 10,
-    "Metallurgy": 50,
-    "Steam & Industry": 250,
-    "Electric Age": 1200,
-    "Computing": 6000,
-    "Futurism": 30000,
-    "Interstellar": 150000,
-    "Arcana": 800000,
-    "Beyond": 4000000,
-}
-
-ERA_CRAFTING_COSTS = {
-    "Hunter-Gatherer": 50*2,
-    "Agriculture": 250*3,
-    "Metallurgy": 1250*4,
-    "Steam & Industry": 6250*5,
-    "Electric Age": 31250*6,
-    "Computing": 156250*7,
-    "Futurism": 781250*8,
-    "Interstellar": 3906250*9,
-    "Arcana": 19531250*10,
-    "Beyond": 97656250*11,
-}
-
-# -----------------------------
-# Era progression helpers
-# -----------------------------
-
-def get_next_era(current_era):
-    """Get the next era in sequence, or None if at the end."""
-    try:
-        current_index = ERAS.index(current_era)
-        if current_index < len(ERAS) - 1:
-            return ERAS[current_index + 1]
-    except ValueError:
-        pass
-    return None
-
-
+# Era progression helper
 def get_unlocked_eras(profile):
     """Get list of all eras unlocked by the player."""
     era_unlocks = EraUnlock.objects.filter(player=profile).values_list('era_name', flat=True)
     return list(era_unlocks)
 
 
-def get_higher_era(era_a, era_b):
-    """Get the higher (more advanced) era between two eras."""
-    try:
-        index_a = ERAS.index(era_a)
-        index_b = ERAS.index(era_b)
-        return ERAS[max(index_a, index_b)]
-    except ValueError:
-        return era_a  # fallback
-
-
-# -----------------------------
-# Rate limiting helpers
-# -----------------------------
-
-def get_daily_rate_limit(user):
-    """Get the daily rate limit for a user based on their pro status."""
-    # Admin always get their special limit
-    if is_admin_user(user):
-        return getattr(settings, "RATE_LIMIT_DAILY_ADMIN", 1000)
-    
-    profile = user.profile
-    
-    if profile.is_pro:
-        return getattr(settings, "RATE_LIMIT_DAILY_PRO", 500)
-    else:
-        return getattr(settings, "RATE_LIMIT_DAILY_STANDARD", 20)
-
-
-def check_daily_rate_limit(user):
-    """Check if user has exceeded their daily rate limit."""
-    now = timezone.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Count discoveries made today
-    profile = user.profile
-    rate_limit, created = RateLimit.objects.get_or_create(
-        player=profile,
-        limit_type="daily_discoveries",
-        defaults={"window_start": today_start, "count": 0}
-    )
-    
-    # Reset if we're in a new day
-    if rate_limit.window_start.date() < today_start.date():
-        rate_limit.count = 0
-        rate_limit.window_start = today_start
-        rate_limit.save()
-    
-    max_limit = get_daily_rate_limit(user)
-    
-    if rate_limit.count >= max_limit:
-        return False, max_limit - rate_limit.count
-    
-    return True, max_limit - rate_limit.count
-
-
-def check_global_daily_rate_limit():
-    """Check if global daily API call limit has been exceeded."""
-    now = timezone.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Get global rate limit tracker (player=None for global)
-    rate_limit, created = RateLimit.objects.get_or_create(
-        player=None,
-        limit_type="global_daily_discoveries",
-        defaults={"window_start": today_start, "count": 0}
-    )
-    
-    # Reset if we're in a new day
-    if rate_limit.window_start.date() < today_start.date():
-        rate_limit.count = 0
-        rate_limit.window_start = today_start
-        rate_limit.save()
-    
-    max_limit = getattr(settings, "RATE_LIMIT_DAILY_GLOBAL", 4000)
-    
-    if rate_limit.count >= max_limit:
-        return False, max_limit - rate_limit.count
-    
-    return True, max_limit - rate_limit.count
-
-
-def increment_global_daily_rate_limit():
-    """Increment global daily rate limit counter."""
-    now = timezone.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    rate_limit, created = RateLimit.objects.get_or_create(
-        player=None,
-        limit_type="global_daily_discoveries",
-        defaults={"window_start": today_start, "count": 0}
-    )
-    
-    # Reset if we're in a new day
-    if rate_limit.window_start.date() < today_start.date():
-        rate_limit.count = 0
-        rate_limit.window_start = today_start
-    
-    rate_limit.count += 1
-    rate_limit.save()
-
-
-def increment_daily_rate_limit(user):
-    """Increment daily rate limit counter."""
-    now = timezone.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    profile = user.profile
-    rate_limit, created = RateLimit.objects.get_or_create(
-        player=profile,
-        limit_type="daily_discoveries",
-        defaults={"window_start": today_start, "count": 0}
-    )
-    
-    # Reset if we're in a new day
-    if rate_limit.window_start.date() < today_start.date():
-        rate_limit.count = 0
-        rate_limit.window_start = today_start
-    
-    rate_limit.count += 1
-    rate_limit.save()
-
-
-def check_rate_limit(player, limit_type):
-    """Check if rate limit is exceeded (legacy per-minute limit)."""
-    now = timezone.now()
-
-    rate_limit, _ = RateLimit.objects.get_or_create(
-        player=player if limit_type == "user_discovery" else None,
-        limit_type=limit_type,
-        defaults={"window_start": now, "count": 0},
-    )
-
-    # Reset if window expired
-    window = getattr(settings, "RATE_LIMIT_WINDOW", 60)  # seconds
-    if (now - rate_limit.window_start).total_seconds() >= window:
-        rate_limit.count = 0
-        rate_limit.window_start = now
-        rate_limit.save()
-
-    max_limit = (
-        getattr(settings, "RATE_LIMIT_USER_DISCOVERIES", 10)
-        if limit_type == "user_discovery"
-        else getattr(settings, "RATE_LIMIT_GLOBAL_API_CALLS", 100)
-    )
-
-    if rate_limit.count >= max_limit:
-        return False, max_limit - rate_limit.count
-
-    return True, max_limit - rate_limit.count
-
-
-def increment_rate_limit(player, limit_type):
-    """Increment rate limit counter (legacy per-minute limit)."""
-    rate_limit, _ = RateLimit.objects.get_or_create(
-        player=player if limit_type == "user_discovery" else None,
-        limit_type=limit_type,
-        defaults={"window_start": timezone.now(), "count": 0},
-    )
-    rate_limit.count += 1
-    rate_limit.save()
-
-
-# -----------------------------
-# Admin helper
-# -----------------------------
-
-def is_admin_user(user):
-    """Check if user is the admin testing account."""
-    return user.username == "admin" and user.is_superuser
-
 # -----------------------------
 # Player coin/tc updates
 # -----------------------------
 
 def update_player_coins(player):
-    """Calculate and update coins/time crystals from operational placed objects."""
+    """Calculate and update coins/time crystals from operational placed objects.
+
+    Optimized to cache operational objects and modifiers to reduce database queries
+    from O(n²) to O(n).
+    """
     now = timezone.now()
-    
+
     # Check for completed buildings and transition them to operational
     completed_buildings = PlacedObject.objects.filter(
         player=player,
         is_building=True,
         build_complete_at__lte=now
     ).select_related("game_object")
-    
+
     if completed_buildings.exists():
         # Check for keystone objects that just finished building
         for placed in completed_buildings:
             if placed.game_object.is_keystone:
                 # Unlock the NEXT era
                 era_to_unlock = get_next_era(placed.game_object.era_name)
-                
+
                 if era_to_unlock:  # Make sure there is a next era
                     # Check if not already unlocked
                     if not EraUnlock.objects.filter(player=player, era_name=era_to_unlock).exists():
@@ -284,20 +81,21 @@ def update_player_coins(player):
                         EraUnlock.objects.create(player=player, era_name=era_to_unlock)
                         player.current_era = era_to_unlock
                         player.save()
-                        
+
                         # Give starter objects for the newly unlocked era
                         starter_objects = GameObject.objects.filter(is_starter=True, era_name=era_to_unlock)
                         for obj in starter_objects:
                             Discovery.objects.get_or_create(player=player, game_object=obj)
-        
+
         completed_buildings.update(
             is_building=False,
             is_operational=True
         )
-    
+
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
-    operational_objects = (
+    # Fetch all operational objects once and cache them
+    operational_objects = list(
         PlacedObject.objects
         .filter(player=player, is_operational=True, retire_at__gt=now)
         .select_related("game_object")
@@ -306,27 +104,34 @@ def update_player_coins(player):
     total_income = Decimal("0")
     total_crystals = Decimal("0")
 
+    # Build modifier map: for each category, collect all active modifiers
+    # This avoids looping through all objects for each object
+    modifier_map = {}  # category -> list of (income_multiplier, stacking_type)
+
+    for mod_obj in operational_objects:
+        modifiers = mod_obj.game_object.global_modifiers or []
+        for mod in modifiers:
+            if mod.get("active_when") == "operational":
+                affected_categories = mod.get("affected_categories", [])
+                income_mult = Decimal(str(mod.get("income_multiplier", 1)))
+                stacking = mod.get("stacking", "multiplicative")
+
+                for category in affected_categories:
+                    if category not in modifier_map:
+                        modifier_map[category] = []
+                    modifier_map[category].append((income_mult, stacking))
+
+    # Calculate income for each operational object, using the modifier map
     for placed in operational_objects:
-        # Apply global modifiers
         income_multiplier = Decimal("1")
 
-        modifier_objects = (
-            PlacedObject.objects
-            .filter(player=player, is_operational=True, retire_at__gt=now)
-            .exclude(id=placed.id)
-            .select_related("game_object")
-        )
-
-        for mod_obj in modifier_objects:
-            modifiers = mod_obj.game_object.global_modifiers or []
-            for mod in modifiers:
-                if mod.get("active_when") == "operational":
-                    if placed.game_object.category in mod.get("affected_categories", []):
-                        income_mult = Decimal(str(mod.get("income_multiplier", 1)))
-                        if mod.get("stacking") == "multiplicative":
-                            income_multiplier *= income_mult
-                        else:
-                            income_multiplier += (income_mult - Decimal("1"))
+        # Apply modifiers from the map for this object's category
+        if placed.game_object.category in modifier_map:
+            for income_mult, stacking in modifier_map[placed.game_object.category]:
+                if stacking == "multiplicative":
+                    income_multiplier *= income_mult
+                else:
+                    income_multiplier += (income_mult - Decimal("1"))
 
         total_income += placed.game_object.income_per_second * income_multiplier
         total_crystals += placed.game_object.time_crystal_generation
@@ -783,8 +588,26 @@ def logout_view(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def get_object_catalog(request):
+    """Get static GameObject catalog (cacheable, rarely changes).
+
+    This endpoint serves all game objects and can be cached on the client side
+    to reduce polling payload and database load.
+    """
+    all_objects = GameObject.objects.all()
+    return Response({
+        "all_objects": GameObjectSerializer(all_objects, many=True).data,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def game_state(request):
-    """Get complete game state."""
+    """Get player-specific game state (excluding static catalog).
+
+    Optimized to exclude the large all_objects catalog which is served
+    separately and can be cached by the client.
+    """
     update_player_coins(request.user.profile)
 
     profile = request.user.profile
@@ -797,7 +620,6 @@ def game_state(request):
         "discoveries": DiscoverySerializer(discoveries, many=True).data,
         "placed_objects": PlacedObjectSerializer(placed_objects, many=True).data,
         "era_unlocks": EraUnlockSerializer(era_unlocks, many=True).data,
-        "all_objects": GameObjectSerializer(GameObject.objects.all(), many=True).data,
     })
 
 
@@ -1211,8 +1033,16 @@ def export_game(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def import_game(request):
-    """Import game state from JSON."""
-    data = request.data
+    """Import game state from JSON with validation."""
+    # Validate the import data using the schema serializer
+    serializer = GameStateImportSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {"error": "Invalid import data", "details": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    data = serializer.validated_data
     profile = request.user.profile
 
     with transaction.atomic():
@@ -1220,20 +1050,24 @@ def import_game(request):
         Discovery.objects.filter(player=profile).delete()
         EraUnlock.objects.filter(player=profile).delete()
 
-        profile.coins = Decimal(str(data["profile"]["coins"]))
-        profile.time_crystals = Decimal(str(data["profile"]["time_crystals"]))
+        # Update profile with validated data
+        profile.coins = data["profile"]["coins"]
+        profile.time_crystals = data["profile"]["time_crystals"]
         profile.current_era = data["profile"]["current_era"]
+        if "is_pro" in data["profile"]:
+            profile.is_pro = data["profile"]["is_pro"]
         profile.save()
 
-        # Restore discoveries
+        # Restore discoveries from validated data
         for disc in data.get("discoveries", []):
             try:
                 obj = GameObject.objects.get(id=disc["game_object"]["id"])
                 Discovery.objects.create(player=profile, game_object=obj)
             except GameObject.DoesNotExist:
+                # Silently skip non-existent objects
                 pass
 
-        # Restore placed objects
+        # Restore placed objects from validated data
         for placed in data.get("placed_objects", []):
             try:
                 obj = GameObject.objects.get(id=placed["game_object"]["id"])
@@ -1249,9 +1083,10 @@ def import_game(request):
                     is_operational=placed["is_operational"],
                 )
             except GameObject.DoesNotExist:
+                # Silently skip non-existent objects
                 pass
 
-        # Restore era unlocks
+        # Restore era unlocks from validated data
         for unlock in data.get("era_unlocks", []):
             EraUnlock.objects.create(player=profile, era_name=unlock["era_name"])
 
