@@ -143,7 +143,7 @@ class Command(BaseCommand):
                 'image_path': '/media/objects/starter-clay.png'
             },
             {
-                'object_name': 'Animal',
+                'object_name': 'Chicken',
                 'era_name': 'Agriculture',
                 'is_keystone': False,
                 'category': 'natural',
@@ -165,7 +165,7 @@ class Command(BaseCommand):
                 'image_path': '/media/objects/starter-animal.png'
             },
             {
-                'object_name': 'Plant',
+                'object_name': 'Strawberry Patch',
                 'era_name': 'Agriculture',
                 'is_keystone': False,
                 'category': 'natural',
