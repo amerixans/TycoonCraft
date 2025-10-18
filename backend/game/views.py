@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -119,9 +120,12 @@ def update_player_coins(player):
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
     # Fetch all operational objects once and cache them
+    # Filter for objects that either haven't been assigned a retire_at time yet (NULL)
+    # or haven't reached their retirement time yet
     operational_objects = list(
         PlacedObject.objects
-        .filter(player=player, is_operational=True, retire_at__gt=now)
+        .filter(player=player, is_operational=True)
+        .filter(Q(retire_at__isnull=True) | Q(retire_at__gt=now))
         .select_related("game_object")
     )
 

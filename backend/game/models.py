@@ -109,7 +109,7 @@ class PlacedObject(models.Model):
     
     placed_at = models.DateTimeField(default=timezone.now)
     build_complete_at = models.DateTimeField()
-    retire_at = models.DateTimeField()
+    retire_at = models.DateTimeField(null=True, blank=True)
     
     is_operational = models.BooleanField(default=False)
     is_building = models.BooleanField(default=True)
