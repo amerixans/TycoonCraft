@@ -887,19 +887,23 @@ def craft_objects(request):
             # Specs don't match - delete old object and regenerate
             result_obj.delete()
             existing_recipe.delete()
-            # Continue to generation below
+            # Continue to generation below (fall through to create new recipe)
         else:
+            # Recipe exists and matches predefined specs (or no predefined specs)
             # Deduct crafting cost
             profile.coins -= crafting_cost
             profile.save()
             
-            # Specs matched or no predefined recipe - return existing
+            # Check if player already discovered this
             discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
+            
+            # Return the existing recipe result without calling OpenAI
             return Response({
                 "object": GameObjectSerializer(result_obj).data,
                 "newly_discovered": created,
                 "newly_created": False,
                 "crafting_cost": float(crafting_cost),
+                "used_existing_recipe": True,
             })
 
     # New recipe → count, then call OpenAI OUTSIDE DB transaction
@@ -923,35 +927,61 @@ def craft_objects(request):
     existing_obj = GameObject.objects.filter(object_name=obj_data.get("object_name")).first()
     
     if existing_obj:
-        # Object with this name already exists - use it instead of creating a new one
-        # Don't waste the image generation call
-        try:
-            with transaction.atomic():
-                # Create recipe linking these inputs to the existing result
-                CraftingRecipe.objects.create(
-                    object_a=object_a,
-                    object_b=object_b,
-                    result=existing_obj,
-                    discovered_by=request.user,
-                )
+        # Object with this name already exists
+        # Check if this player already discovered it
+        already_discovered = Discovery.objects.filter(player=profile, game_object=existing_obj).exists()
+        
+        if already_discovered:
+            # Player already knows this object - just inform them and save the recipe
+            profile.coins -= crafting_cost
+            profile.save()
+            
+            # Create recipe linking these inputs to the existing result (if not already exists)
+            CraftingRecipe.objects.get_or_create(
+                object_a=object_a,
+                object_b=object_b,
+                defaults={
+                    "result": existing_obj,
+                    "discovered_by": request.user,
+                }
+            )
+            
+            return Response({
+                "object": GameObjectSerializer(existing_obj).data,
+                "newly_discovered": False,
+                "newly_created": False,
+                "message": f"That combination creates {existing_obj.object_name}, which you have already discovered!",
+                "crafting_cost": float(crafting_cost),
+            })
+        else:
+            # Player hasn't discovered it yet - link recipe and mark as discovered
+            try:
+                with transaction.atomic():
+                    # Create recipe linking these inputs to the existing result
+                    CraftingRecipe.objects.create(
+                        object_a=object_a,
+                        object_b=object_b,
+                        result=existing_obj,
+                        discovered_by=request.user,
+                    )
 
-                # Deduct crafting cost
-                profile.coins -= crafting_cost
-                profile.save()
+                    # Deduct crafting cost
+                    profile.coins -= crafting_cost
+                    profile.save()
 
-                # Mark as discovered for this player
-                Discovery.objects.create(player=profile, game_object=existing_obj)
+                    # Mark as discovered for this player
+                    Discovery.objects.create(player=profile, game_object=existing_obj)
 
-                return Response({
-                    "object": GameObjectSerializer(existing_obj).data,
-                    "newly_discovered": True,
-                    "newly_created": False,
-                    "duplicate_name_handled": True,
-                    "crafting_cost": float(crafting_cost),
-                }, status=status.HTTP_201_CREATED)
+                    return Response({
+                        "object": GameObjectSerializer(existing_obj).data,
+                        "newly_discovered": True,
+                        "newly_created": False,
+                        "duplicate_name_handled": True,
+                        "crafting_cost": float(crafting_cost),
+                    }, status=status.HTTP_201_CREATED)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Prepare image (second API call) and count it
     increment_rate_limit(None, "global_api")
