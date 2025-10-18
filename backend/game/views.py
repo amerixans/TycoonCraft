@@ -17,8 +17,8 @@ from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
+from django.middleware.csrf import get_token
 from django.utils import timezone
-from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -629,9 +629,8 @@ def register(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-@ensure_csrf_cookie
 def login_view(request):
-    """Login user."""
+    """Login user and ensure CSRF cookie is set."""
     username = request.data.get("username")
     password = request.data.get("password")
 
@@ -642,10 +641,27 @@ def login_view(request):
     login(request, user)
     profile, _ = PlayerProfile.objects.get_or_create(user=user)
 
-    return Response({
+    # Explicitly ensure CSRF cookie is set for subsequent requests
+    # get_token() forces Django to set the csrftoken cookie
+    csrf_token = get_token(request)
+
+    response = Response({
         "user": UserSerializer(user).data,
-        "profile": PlayerProfileSerializer(profile).data
+        "profile": PlayerProfileSerializer(profile).data,
+        "csrfToken": csrf_token  # Include in response for debugging
     })
+
+    # Ensure the CSRF cookie is set in the response
+    response.set_cookie(
+        'csrftoken',
+        csrf_token,
+        max_age=31449600,  # 1 year
+        httponly=False,  # Must be False so JavaScript can read it
+        samesite='Lax',
+        secure=not settings.DEBUG  # Only use secure cookie in production (HTTPS)
+    )
+
+    return response
 
 
 @api_view(["POST"])

@@ -129,11 +129,15 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400 * 30  # 30 days
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = not DEBUG  # Only secure cookies in production (HTTPS)
+SESSION_COOKIE_SECURE = not DEBUG  # Only use secure cookies in production (HTTPS)
+SESSION_COOKIE_PATH = '/'  # Ensure cookies work across all paths
+SESSION_COOKIE_NAME = 'sessionid'  # Explicit session cookie name
 
 CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read it for the header
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = not DEBUG  # Only secure cookies in production (HTTPS)
+CSRF_COOKIE_SECURE = not DEBUG  # Only use secure cookies in production (HTTPS)
+CSRF_COOKIE_PATH = '/'  # Ensure CSRF cookie accessible across all paths
+CSRF_COOKIE_NAME = 'csrftoken'  # Explicit CSRF cookie name
 CSRF_TRUSTED_ORIGINS = []
 
 # Add domain to CSRF_TRUSTED_ORIGINS
