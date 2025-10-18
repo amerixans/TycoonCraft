@@ -25,6 +25,11 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const wrapperRef = useRef(null);
+  const [wrapperSize, setWrapperSize] = useState({ width: 0, height: 0 });
+  const [transformKey, setTransformKey] = useState(0);
+  const previousScaleRef = useRef(1);
+  const previousEraRef = useRef(currentEra);
   
   // Update time every second for build progress
   useEffect(() => {
@@ -40,6 +45,33 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
       setHoveredPlaced(null);
     }
   }, [placedObjects, hoveredPlaced]);
+
+  // Track wrapper size so we can derive a zoom level that covers the viewport.
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const updateSize = () => {
+      const { clientWidth, clientHeight } = wrapper;
+      setWrapperSize((prev) => {
+        if (prev.width === clientWidth && prev.height === clientHeight) {
+          return prev;
+        }
+        return { width: clientWidth, height: clientHeight };
+      });
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => updateSize());
+      observer.observe(wrapper);
+      return () => observer.disconnect();
+    } else {
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+    }
+  }, []);
   
   // Calculate build progress for an object
   const getBuildProgress = (placed) => {
@@ -61,21 +93,36 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const canvasSize = ERA_SIZES[currentEra] || ERA_SIZES['Hunter-Gatherer'];
   const CANVAS_WIDTH = canvasSize.width;
   const CANVAS_HEIGHT = canvasSize.height;
-  
-  // Calculate initial scale to fit canvas nicely (with small padding)
-  // Assuming wrapper is around 1200px wide and 600px tall on average
-  const wrapperWidth = 1200;
-  const wrapperHeight = 600;
-  const scaleToFitWidth = wrapperWidth / (CANVAS_WIDTH * GRID_SIZE);
-  const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
-  const fitScale = Math.min(scaleToFitWidth, scaleToFitHeight);
-  
-  // Start with exactly the right zoom to fill the viewport with no white space
-  const initialScale = fitScale;
-  
-  // Calculate minimum scale to prevent empty space
-  // Canvas must always fill the viewport completely
-  const minScale = fitScale;
+  const contentWidth = CANVAS_WIDTH * GRID_SIZE;
+  const contentHeight = CANVAS_HEIGHT * GRID_SIZE;
+
+  let desiredScale = 1;
+  if (wrapperSize.width && wrapperSize.height) {
+    const widthRatio = wrapperSize.width / contentWidth;
+    const heightRatio = wrapperSize.height / contentHeight;
+    const needsWidthScale = contentWidth < wrapperSize.width;
+    const needsHeightScale = contentHeight < wrapperSize.height;
+
+    if (needsWidthScale || needsHeightScale) {
+      desiredScale = Math.max(
+        needsWidthScale ? widthRatio : 1,
+        needsHeightScale ? heightRatio : 1
+      );
+    }
+  }
+
+  const minScale = Math.max(Math.min(desiredScale * 0.5, 1), 0.2);
+
+  useEffect(() => {
+    const scaleChanged = Math.abs(desiredScale - previousScaleRef.current) > 0.01;
+    const eraChanged = previousEraRef.current !== currentEra;
+
+    if (scaleChanged || eraChanged) {
+      previousScaleRef.current = desiredScale;
+      previousEraRef.current = currentEra;
+      setTransformKey((prev) => prev + 1);
+    }
+  }, [desiredScale, currentEra]);
   
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -178,10 +225,11 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
         </div>
       </div>
       
-      <div className="canvas-wrapper">
+      <div className="canvas-wrapper" ref={wrapperRef}>
         <TransformWrapper
+          key={transformKey}
           ref={transformRef}
-          initialScale={initialScale}
+          initialScale={desiredScale}
           minScale={minScale}
           maxScale={10}
           centerOnInit={true}

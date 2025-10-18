@@ -9,7 +9,6 @@
   gap: 0.5rem;
   flex: 1;
   min-width: 500px;
-  max-height: 200px;
 }
 
 .crafting-header {
@@ -45,8 +44,8 @@
 }
 
 .craft-slot {
-  width: 90px;
-  height: 90px;
+  width: 135px;
+  height: 135px;
   background: var(--bg-primary);
   border: 2px dashed var(--border-color);
   border-radius: 12px;
@@ -81,11 +80,11 @@
 }
 
 .slot-icon {
-  font-size: 1.8rem;
+  font-size: 2.4rem;
 }
 
 .slot-placeholder span:last-child {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -94,7 +93,7 @@
   font-weight: 700;
   text-align: center;
   padding: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   line-height: 1.2;
 }
 
@@ -106,10 +105,10 @@
   color: white;
   border: none;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,8 +129,8 @@
 }
 
 .craft-result {
-  width: 90px;
-  height: 90px;
+  width: 135px;
+  height: 135px;
   background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
   border: 2px solid var(--accent-primary);
   border-radius: 12px;
@@ -150,7 +149,7 @@
 }
 
 .result-icon {
-  font-size: 2rem;
+  font-size: 2.6rem;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -166,7 +165,7 @@
 }
 
 .result-text {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--accent-primary);
 }
