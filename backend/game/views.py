@@ -22,7 +22,7 @@ from rest_framework.response import Response
 
 from .models import (
     GameObject, PlayerProfile, Discovery, PlacedObject,
-    CraftingRecipe, RateLimit, EraUnlock
+    CraftingRecipe, RateLimit, EraUnlock, UpgradeKey
 )
 from .serializers import (
     GameObjectSerializer, PlayerProfileSerializer, DiscoverySerializer,
@@ -100,17 +100,16 @@ def get_higher_era(era_a, era_b):
 # -----------------------------
 
 def get_daily_rate_limit(user):
-    """Get the daily rate limit for a user based on their tier."""
+    """Get the daily rate limit for a user based on their pro status."""
     # Admin always get their special limit
     if is_admin_user(user):
         return getattr(settings, "RATE_LIMIT_DAILY_ADMIN", 1000)
     
     profile = user.profile
-    tier = profile.rate_limit_tier or 'standard'
     
-    if tier == 'founder':
-        return getattr(settings, "RATE_LIMIT_DAILY_FOUNDER", 500)
-    else:  # standard or any other tier
+    if profile.is_pro:
+        return getattr(settings, "RATE_LIMIT_DAILY_PRO", 500)
+    else:
         return getattr(settings, "RATE_LIMIT_DAILY_STANDARD", 20)
 
 
@@ -728,14 +727,10 @@ def register(request):
 
     user = User.objects.create_user(username=username, password=password, email=email)
 
-    # Determine tier: first 5 users are founders, rest are standard
-    existing_profiles_count = PlayerProfile.objects.count()
-    tier = 'founder' if existing_profiles_count < 5 else 'standard'
-
     profile = PlayerProfile.objects.create(
         user=user,
         coins=getattr(settings, "STARTING_COINS", Decimal("0")),
-        rate_limit_tier=tier
+        is_pro=False
     )
 
     # Unlock first era
@@ -1231,3 +1226,43 @@ def import_game(request):
             EraUnlock.objects.create(player=profile, era_name=unlock["era_name"])
 
     return Response({"success": True})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def redeem_upgrade_key(request):
+    """Redeem an upgrade key to unlock pro status."""
+    key = request.data.get("key", "").strip()
+    
+    if not key:
+        return Response({"error": "Key is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    profile = request.user.profile
+    
+    # Check if user is already pro
+    if profile.is_pro:
+        return Response({"error": "You already have pro status"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        upgrade_key = UpgradeKey.objects.get(key=key)
+    except UpgradeKey.DoesNotExist:
+        return Response({"error": "Invalid key"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if upgrade_key.is_redeemed:
+        return Response({"error": "This key has already been redeemed"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Redeem the key
+    upgrade_key.is_redeemed = True
+    upgrade_key.redeemed_by = request.user
+    upgrade_key.redeemed_at = timezone.now()
+    upgrade_key.save()
+    
+    # Upgrade the user
+    profile.is_pro = True
+    profile.save()
+    
+    return Response({
+        "success": True,
+        "message": "Successfully upgraded to Pro! You now have 500 daily API calls.",
+        "profile": PlayerProfileSerializer(profile).data
+    }, status=status.HTTP_200_OK)

@@ -41,6 +41,9 @@ function App() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEraUnlockModal, setShowEraUnlockModal] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeKey, setUpgradeKey] = useState('');
+  const [upgradeError, setUpgradeError] = useState('');
   
   const longPressTimer = useRef(null);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -257,6 +260,21 @@ function App() {
     }
   };
 
+  const handleUpgradeSubmit = async (e) => {
+    e.preventDefault();
+    setUpgradeError('');
+    
+    try {
+      const response = await game.redeemUpgradeKey(upgradeKey);
+      showNotification(response.data.message, 'success');
+      setShowUpgradeModal(false);
+      setUpgradeKey('');
+      await loadGameState();
+    } catch (err) {
+      setUpgradeError(err.response?.data?.error || 'Failed to redeem key');
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -350,6 +368,15 @@ function App() {
           </div>
         </div>
         <div className="header-right">
+          {!gameState?.profile?.is_pro && (
+            <button 
+              onClick={() => setShowUpgradeModal(true)} 
+              className="btn-upgrade"
+              title="Upgrade to Pro"
+            >
+              ⭐ Upgrade
+            </button>
+          )}
           <button 
             onClick={handleThemeClick}
             onMouseDown={handleThemeMouseDown}
@@ -523,6 +550,41 @@ function App() {
               className="info-modal-content"
               dangerouslySetInnerHTML={{ __html: gameInfoContent }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="modal-overlay" onClick={() => setShowUpgradeModal(false)}>
+          <div className="modal upgrade-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowUpgradeModal(false)}>✕</button>
+            <h2>⭐ Upgrade to Pro</h2>
+            <p className="upgrade-description">
+              Unlock Pro status to get <strong>500 daily API calls</strong> instead of 20!
+            </p>
+            <form onSubmit={handleUpgradeSubmit}>
+              <input
+                type="text"
+                placeholder="Enter your upgrade key"
+                value={upgradeKey}
+                onChange={(e) => setUpgradeKey(e.target.value)}
+                className="upgrade-input"
+                required
+              />
+              {upgradeError && <div className="upgrade-error">{upgradeError}</div>}
+              <button type="submit" className="upgrade-submit-button">
+                Redeem Key
+              </button>
+            </form>
+            <div className="upgrade-info">
+              <h3>Pro Benefits:</h3>
+              <ul>
+                <li>✅ 500 daily API calls (vs 20 standard)</li>
+                <li>✅ More crafting opportunities per day</li>
+                <li>✅ Faster progression through eras</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}

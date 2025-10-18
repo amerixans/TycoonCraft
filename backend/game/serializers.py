@@ -32,7 +32,7 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
         model = PlayerProfile
         fields = [
             'id', 'user', 'coins', 'time_crystals', 'current_era',
-            'last_coin_update', 'created_at', 'updated_at'
+            'is_pro', 'last_coin_update', 'created_at', 'updated_at'
         ]
 
 

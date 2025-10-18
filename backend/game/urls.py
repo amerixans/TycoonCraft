@@ -22,6 +22,7 @@ def api_root(request):
             'unlock_era': '/api/unlock-era/',
             'export': '/api/export/',
             'import': '/api/import/',
+            'redeem_upgrade_key': '/api/redeem-upgrade-key/',
         }
     })
 
@@ -37,4 +38,5 @@ urlpatterns = [
     path('unlock-era/', views.unlock_era, name='unlock_era'),
     path('export/', views.export_game, name='export'),
     path('import/', views.import_game, name='import'),
+    path('redeem-upgrade-key/', views.redeem_upgrade_key, name='redeem_upgrade_key'),
 ]

@@ -234,7 +234,7 @@ body {
   align-items: center;
 }
 
-.btn-small, .btn-icon {
+.btn-small, .btn-icon, .btn-upgrade {
   background: var(--accent-primary);
   color: white;
   border: none;
@@ -257,13 +257,32 @@ body {
   width: 40px;
 }
 
-.btn-small:hover, .btn-icon:hover {
+.btn-upgrade {
+  background: linear-gradient(135deg, var(--accent-warning) 0%, var(--accent-primary) 100%);
+  font-weight: 700;
+  animation: upgradeGlow 2s ease-in-out infinite;
+}
+
+@keyframes upgradeGlow {
+  0%, 100% {
+    box-shadow: 0 2px 6px var(--shadow), 0 0 10px rgba(243, 156, 18, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 6px var(--shadow), 0 0 20px rgba(243, 156, 18, 0.6);
+  }
+}
+
+.btn-small:hover, .btn-icon:hover, .btn-upgrade:hover {
   background: var(--accent-secondary);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px var(--shadow-heavy);
 }
 
-.btn-small:active, .btn-icon:active {
+.btn-upgrade:hover {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-warning) 100%);
+}
+
+.btn-small:active, .btn-icon:active, .btn-upgrade:active {
   transform: translateY(0);
 }
 
@@ -1109,3 +1128,108 @@ body {
   transform: translateY(0) scale(1);
 }
 
+/* Upgrade Modal */
+.upgrade-modal {
+  max-width: 500px;
+}
+
+.upgrade-modal h2 {
+  color: var(--accent-primary);
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.upgrade-description {
+  text-align: center;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.upgrade-description strong {
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.upgrade-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upgrade-input {
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: monospace;
+  text-align: center;
+  transition: border 0.2s;
+}
+
+.upgrade-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.upgrade-error {
+  background: var(--accent-error);
+  color: white;
+  padding: 0.8rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.upgrade-submit-button {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.upgrade-submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--shadow-heavy);
+}
+
+.upgrade-submit-button:active {
+  transform: translateY(0);
+}
+
+.upgrade-info {
+  background: var(--bg-primary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+}
+
+.upgrade-info h3 {
+  color: var(--accent-secondary);
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.upgrade-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.upgrade-info li {
+  padding: 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+}

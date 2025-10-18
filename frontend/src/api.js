@@ -58,6 +58,8 @@ export const game = {
     api.get('/export/'),
   import: (data) => 
     api.post('/import/', data),
+  redeemUpgradeKey: (key) =>
+    api.post('/redeem-upgrade-key/', { key }),
 };
 
 export default api;

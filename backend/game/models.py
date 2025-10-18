@@ -73,8 +73,8 @@ class PlayerProfile(models.Model):
     
     last_coin_update = models.DateTimeField(default=timezone.now)
     
-    # Rate limiting tier: 'founder' (first 5), 'standard' (default), or None for legacy
-    rate_limit_tier = models.CharField(max_length=20, default='standard', blank=True)
+    # Pro status: True for upgraded users and admin, False for standard
+    is_pro = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -148,3 +148,21 @@ class EraUnlock(models.Model):
     
     def __str__(self):
         return f"{self.player.user.username} unlocked {self.era_name}"
+
+
+class UpgradeKey(models.Model):
+    """Stores upgrade keys that can be redeemed for pro status"""
+    key = models.CharField(max_length=100, unique=True)
+    is_redeemed = models.BooleanField(default=False)
+    redeemed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    redeemed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['key']),
+            models.Index(fields=['is_redeemed']),
+        ]
+    
+    def __str__(self):
+        return f"{self.key} - {'Redeemed' if self.is_redeemed else 'Available'}"

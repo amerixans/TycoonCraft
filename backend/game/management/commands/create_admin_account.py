@@ -33,7 +33,8 @@ class Command(BaseCommand):
             defaults={
                 'coins': Decimal('500'),
                 'time_crystals': Decimal('0'),
-                'current_era': 'Hunter-Gatherer'
+                'current_era': 'Hunter-Gatherer',
+                'is_pro': True
             }
         )
         
@@ -42,6 +43,7 @@ class Command(BaseCommand):
             profile.coins = Decimal('500')
             profile.time_crystals = Decimal('0')
             profile.current_era = 'Hunter-Gatherer'
+            profile.is_pro = True
             profile.save()
             self.stdout.write(self.style.SUCCESS('Updated existing profile'))
         else:
@@ -98,6 +100,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Total Discoveries: {Discovery.objects.filter(player=profile).count()}'))
         self.stdout.write(self.style.SUCCESS(f'Eras Unlocked: {EraUnlock.objects.filter(player=profile).count()}'))
         self.stdout.write(self.style.SUCCESS('Special Privileges:'))
+        self.stdout.write(self.style.SUCCESS('  - Pro status (1000 daily API calls)'))
         self.stdout.write(self.style.SUCCESS('  - Can go negative on coins when buying/crafting'))
         self.stdout.write(self.style.SUCCESS('  - Has access to all crafted items'))
         self.stdout.write(self.style.SUCCESS('  - Has access to all eras'))
