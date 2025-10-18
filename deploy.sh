@@ -44,6 +44,20 @@ if [[ "$SSL_OPTION" == "no-ssl" ]] || [[ "$SSL_OPTION" == "skip-ssl" ]]; then
     ENABLE_SSL=false
 fi
 
+if [ "$ENABLE_SSL" = true ]; then
+    DJANGO_DEBUG_VALUE="False"
+    API_PROTOCOL="https"
+    SESSION_COOKIE_SECURE_VALUE="True"
+    CSRF_COOKIE_SECURE_VALUE="True"
+    SECURE_SSL_REDIRECT_VALUE="True"
+else
+    DJANGO_DEBUG_VALUE="False"
+    API_PROTOCOL="http"
+    SESSION_COOKIE_SECURE_VALUE="False"
+    CSRF_COOKIE_SECURE_VALUE="False"
+    SECURE_SSL_REDIRECT_VALUE="False"
+fi
+
 # Version pinning for better reproducibility
 NODE_VERSION="18"  # Major version - allows minor updates
 BACKUP_RETENTION_DAYS=7
@@ -229,7 +243,7 @@ pip install gunicorn
 echo "Creating environment configuration..."
 cat > .env << EOF
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-DEBUG=False
+DEBUG=${DJANGO_DEBUG_VALUE}
 DB_NAME=tycooncraft
 DB_USER=tycooncraft
 DB_PASSWORD=${DB_PASSWORD}
@@ -242,6 +256,9 @@ DOMAIN=${DOMAIN}
 SERVER_IP=${SERVER_IP}
 CORS_ALLOWED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN},http://${SERVER_IP},https://${SERVER_IP}
 CSRF_TRUSTED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN},http://${SERVER_IP},https://${SERVER_IP}
+SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE_VALUE}
+CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE_VALUE}
+SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT_VALUE}
 EOF
 
 # Run Django migrations
@@ -335,11 +352,7 @@ if [ "$SHOULD_BUILD" = true ]; then
     # Ensure node_modules binaries are executable
     chmod +x node_modules/.bin/* 2>/dev/null || true
     
-    if [ "$ENABLE_SSL" = true ]; then
-        REACT_APP_API_URL=https://${DOMAIN}/api npm run build
-    else
-        REACT_APP_API_URL=http://${DOMAIN}/api npm run build
-    fi
+    REACT_APP_API_URL=${API_PROTOCOL}://${DOMAIN}/api npm run build
     
     # Store build info for next deployment
     cat > .last_build_info << EOF

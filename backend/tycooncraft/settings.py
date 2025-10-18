@@ -11,7 +11,15 @@ load_dotenv(dotenv_path=env_path)
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production')
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+def env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {'true', '1', 'yes', 'on'}
+
+
+DEBUG = env_bool('DEBUG', False)
 
 ALLOWED_HOSTS = ['*']
 
@@ -129,13 +137,15 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400 * 30  # 30 days
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = not DEBUG  # Only use secure cookies in production (HTTPS)
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', False)
+
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', not DEBUG)  # Only use secure cookies in production (HTTPS)
 SESSION_COOKIE_PATH = '/'  # Ensure cookies work across all paths
 SESSION_COOKIE_NAME = 'sessionid'  # Explicit session cookie name
 
 CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read it for the header
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = not DEBUG  # Only use secure cookies in production (HTTPS)
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', not DEBUG)  # Only use secure cookies in production (HTTPS)
 CSRF_COOKIE_PATH = '/'  # Ensure CSRF cookie accessible across all paths
 CSRF_COOKIE_NAME = 'csrftoken'  # Explicit CSRF cookie name
 CSRF_TRUSTED_ORIGINS = []
