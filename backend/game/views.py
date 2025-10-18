@@ -269,9 +269,28 @@ def update_player_coins(player):
         player=player,
         is_building=True,
         build_complete_at__lte=now
-    )
+    ).select_related("game_object")
     
     if completed_buildings.exists():
+        # Check for keystone objects that just finished building
+        for placed in completed_buildings:
+            if placed.game_object.is_keystone:
+                # Unlock the NEXT era
+                era_to_unlock = get_next_era(placed.game_object.era_name)
+                
+                if era_to_unlock:  # Make sure there is a next era
+                    # Check if not already unlocked
+                    if not EraUnlock.objects.filter(player=player, era_name=era_to_unlock).exists():
+                        # Unlock the era (no crystal cost when unlocking via keystone)
+                        EraUnlock.objects.create(player=player, era_name=era_to_unlock)
+                        player.current_era = era_to_unlock
+                        player.save()
+                        
+                        # Give starter objects for the newly unlocked era
+                        starter_objects = GameObject.objects.filter(is_starter=True, era_name=era_to_unlock)
+                        for obj in starter_objects:
+                            Discovery.objects.get_or_create(player=player, game_object=obj)
+        
         completed_buildings.update(
             is_building=False,
             is_operational=True
@@ -1080,28 +1099,7 @@ def place_object(request):
         is_operational=game_object.build_time_sec == 0,
     )
 
-    # Auto-unlock next era if this is a keystone object
     response_data = PlacedObjectSerializer(placed).data
-    if game_object.is_keystone:
-        # The keystone's era_name IS the era it unlocks
-        era_to_unlock = game_object.era_name
-        
-        # Check if not already unlocked
-        if not EraUnlock.objects.filter(player=profile, era_name=era_to_unlock).exists():
-            # Unlock the era (no crystal cost when unlocking via keystone)
-            EraUnlock.objects.create(player=profile, era_name=era_to_unlock)
-            profile.current_era = era_to_unlock
-            profile.save()
-            
-            # Give starter objects for the newly unlocked era
-            starter_objects = GameObject.objects.filter(is_starter=True, era_name=era_to_unlock)
-            for obj in starter_objects:
-                Discovery.objects.get_or_create(player=profile, game_object=obj)
-            
-            # Add unlock info to response
-            response_data['era_unlocked'] = era_to_unlock
-            response_data['message'] = f'Congratulations! You have unlocked the {era_to_unlock} era!'
-
     return Response(response_data, status=status.HTTP_201_CREATED)
 
 

@@ -446,11 +446,14 @@ function App() {
                       </div>
                     </div>
                     
-                    {selectedObject.is_keystone && (
-                      <div className="object-info-keystone">
-                        🔑 Keystone Object - Place to unlock <strong>{selectedObject.era_name}</strong> era!
-                      </div>
-                    )}
+                    {selectedObject.is_keystone && (() => {
+                      const nextEra = ERAS[ERAS.indexOf(selectedObject.era_name) + 1];
+                      return (
+                        <div className="object-info-keystone">
+                          🔑 Keystone Object - Place to unlock <strong>{nextEra || 'next era'}</strong>!
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ) : (

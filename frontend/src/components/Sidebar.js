@@ -8,6 +8,11 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
   const discoveredIds = new Set(discoveries.map(d => d.game_object.id));
   const unlockedEras = new Set(eraUnlocks.map(u => u.era_name));
   
+  const getNextEra = (era) => {
+    const index = eras.indexOf(era);
+    return index >= 0 && index < eras.length - 1 ? eras[index + 1] : null;
+  };
+  
   const objectsByEra = {};
   eras.forEach(era => {
     // Include objects that match this era OR are keystone objects (visible in all eras)
@@ -84,7 +89,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
               <div 
                 key={obj.id}
                 className={`object-item ${obj.is_keystone ? 'keystone' : ''}`}
-                title={obj.is_keystone ? `🔑 Keystone: Place to unlock ${obj.era_name}!` : 'Drag to craft or place'}
+                title={obj.is_keystone ? `🔑 Keystone: Place to unlock ${getNextEra(obj.era_name) || 'next era'}!` : 'Drag to craft or place'}
                 draggable={true}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'copy';
