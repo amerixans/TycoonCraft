@@ -605,13 +605,13 @@ def register(request):
         coins=getattr(settings, "STARTING_COINS", Decimal("0"))
     )
 
-    # Starter objects
-    starter_objects = GameObject.objects.filter(object_name__in=["Rock", "Stick", "Water", "Dirt"])
-    for obj in starter_objects:
-        Discovery.objects.create(player=profile, game_object=obj)
-
     # Unlock first era
     EraUnlock.objects.create(player=profile, era_name="Hunter-Gatherer")
+
+    # Give starter objects for Hunter-Gatherer era
+    starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
+    for obj in starter_objects:
+        Discovery.objects.create(player=profile, game_object=obj)
 
     login(request, user)
 
@@ -962,6 +962,11 @@ def place_object(request):
             profile.current_era = era_to_unlock
             profile.save()
             
+            # Give starter objects for the newly unlocked era
+            starter_objects = GameObject.objects.filter(is_starter=True, era_name=era_to_unlock)
+            for obj in starter_objects:
+                Discovery.objects.get_or_create(player=profile, game_object=obj)
+            
             # Add unlock info to response
             response_data['era_unlocked'] = era_to_unlock
             response_data['message'] = f'Congratulations! You have unlocked the {era_to_unlock} era!'
@@ -1017,6 +1022,11 @@ def unlock_era(request):
     profile.save()
 
     unlock = EraUnlock.objects.create(player=profile, era_name=era_name)
+
+    # Give starter objects for the newly unlocked era
+    starter_objects = GameObject.objects.filter(is_starter=True, era_name=era_name)
+    for obj in starter_objects:
+        Discovery.objects.get_or_create(player=profile, game_object=obj)
 
     return Response({
         "era_unlock": EraUnlockSerializer(unlock).data,

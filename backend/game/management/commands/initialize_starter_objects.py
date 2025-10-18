@@ -901,6 +901,9 @@ class Command(BaseCommand):
         ]
 
         for obj_data in starter_objects:
+            # Add is_starter=True to the data
+            obj_data['is_starter'] = True
+            
             obj, created = GameObject.objects.get_or_create(
                 object_name=obj_data['object_name'],
                 defaults=obj_data

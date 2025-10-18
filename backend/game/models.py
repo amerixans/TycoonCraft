@@ -8,6 +8,7 @@ class GameObject(models.Model):
     object_name = models.CharField(max_length=200, unique=True)
     era_name = models.CharField(max_length=50)
     is_keystone = models.BooleanField(default=False)
+    is_starter = models.BooleanField(default=False)
     category = models.CharField(max_length=50)
     quality_tier = models.CharField(max_length=50, default='common')
     
