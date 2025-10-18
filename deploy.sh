@@ -251,10 +251,14 @@ python manage.py migrate
 echo "Initializing starter objects..."
 python manage.py initialize_starter_objects
 
-# Create superuser
-echo "Creating superuser..."
+# Generate upgrade keys
+echo "Generating upgrade keys..."
+python manage.py generate_upgrade_keys
+
+# Create admin account with pro status
+echo "Creating admin account with pro status..."
 export DJANGO_SUPERUSER_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
-python manage.py createsuperuser --noinput --username admin --email "${ADMIN_EMAIL}" || true
+python manage.py create_admin_account
 
 # Collect static files
 echo "Collecting static files..."
