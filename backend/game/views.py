@@ -57,6 +57,9 @@ def update_player_coins(player):
 
     Optimized to cache operational objects and modifiers to reduce database queries
     from O(n²) to O(n).
+
+    Also handles retiring objects that have reached their retirement time, applies
+    retirement payouts, and removes them from the player's canvas.
     """
     now = timezone.now()
 
@@ -91,6 +94,27 @@ def update_player_coins(player):
             is_building=False,
             is_operational=True
         )
+
+    # **NEW: Check for retiring objects and apply payouts**
+    retiring_objects = PlacedObject.objects.filter(
+        player=player,
+        is_operational=True,
+        retire_at__lte=now
+    ).select_related("game_object")
+
+    for placed in retiring_objects:
+        # Calculate retirement payout
+        original_cost = placed.game_object.cost
+        retire_payout_pct = Decimal(str(placed.game_object.retire_payout_coins_pct))
+        retirement_payout = original_cost * retire_payout_pct
+
+        # Add payout to player coins
+        player.coins += retirement_payout
+
+        # Mark object as retired (set is_operational to False)
+        # This allows frontend to show retirement animation before deletion
+        placed.is_operational = False
+        placed.save()
 
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
