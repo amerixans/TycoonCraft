@@ -52,16 +52,16 @@ ERA_CRYSTAL_COSTS = {
 }
 
 ERA_CRAFTING_COSTS = {
-    "Hunter-Gatherer": 50,
-    "Agriculture": 250,
-    "Metallurgy": 1250,
-    "Steam & Industry": 6250,
-    "Electric Age": 31250,
-    "Computing": 156250,
-    "Futurism": 781250,
-    "Interstellar": 3906250,
-    "Arcana": 19531250,
-    "Beyond": 97656250,
+    "Hunter-Gatherer": 50*2,
+    "Agriculture": 250*3,
+    "Metallurgy": 1250*4,
+    "Steam & Industry": 6250*5,
+    "Electric Age": 31250*6,
+    "Computing": 156250*7,
+    "Futurism": 781250*8,
+    "Interstellar": 3906250*9,
+    "Arcana": 19531250*10,
+    "Beyond": 97656250*11,
 }
 
 # -----------------------------
