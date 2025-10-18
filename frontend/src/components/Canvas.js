@@ -5,17 +5,18 @@ import './Canvas.css';
 const GRID_SIZE = 50; // Pixels per grid tile
 
 // Era-based canvas sizes (height x width in tiles)
+// Starting at 3x9 for Hunter-Gatherer, doubling each era unlock
 const ERA_SIZES = {
-  'Hunter-Gatherer': { height: 5, width: 15 },
-  'Agriculture': { height: 10, width: 15 },
-  'Metallurgy': { height: 10, width: 30 },
-  'Steam & Industry': { height: 20, width: 30 },
-  'Electric Age': { height: 20, width: 60 },
-  'Computing': { height: 40, width: 60 },
-  'Futurism': { height: 40, width: 120 },
-  'Interstellar': { height: 80, width: 120 },
-  'Arcana': { height: 80, width: 240 },
-  'Beyond': { height: 160, width: 240 },
+  'Hunter-Gatherer': { height: 3, width: 9 },
+  'Agriculture': { height: 6, width: 18 },
+  'Metallurgy': { height: 12, width: 36 },
+  'Steam & Industry': { height: 24, width: 72 },
+  'Electric Age': { height: 48, width: 144 },
+  'Computing': { height: 96, width: 288 },
+  'Futurism': { height: 192, width: 576 },
+  'Interstellar': { height: 384, width: 1152 },
+  'Arcana': { height: 768, width: 2304 },
+  'Beyond': { height: 1536, width: 4608 },
 };
 
 function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
@@ -66,14 +67,14 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const wrapperHeight = 600;
   const scaleToFitWidth = wrapperWidth / (CANVAS_WIDTH * GRID_SIZE);
   const scaleToFitHeight = wrapperHeight / (CANVAS_HEIGHT * GRID_SIZE);
-  const fitScale = Math.min(scaleToFitWidth, scaleToFitHeight) * 0.95;
+  const fitScale = Math.min(scaleToFitWidth, scaleToFitHeight);
   
-  // Start significantly more zoomed in
-  const initialScale = fitScale + 0.5;
+  // Start with exactly the right zoom to fill the viewport with no white space
+  const initialScale = fitScale;
   
   // Calculate minimum scale to prevent empty space
   // Canvas must always fill the viewport completely
-  const minScale = Math.min(scaleToFitWidth, scaleToFitHeight);
+  const minScale = fitScale;
   
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -181,7 +182,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
           ref={transformRef}
           initialScale={initialScale}
           minScale={minScale}
-          maxScale={2}
+          maxScale={10}
           centerOnInit={true}
           wheel={{ step: 0.1 }}
           doubleClick={{ disabled: true }}
