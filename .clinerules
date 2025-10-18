@@ -25,7 +25,6 @@
 - Use existing context from environment_details when available instead of reading files
 
 ## Code Changes
-- Make targeted changes using `replace_in_file` over `write_to_file` when possible
 - Do NOT read entire files before making small edits
 - Trust the user's description of the codebase structure
 

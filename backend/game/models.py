@@ -73,6 +73,9 @@ class PlayerProfile(models.Model):
     
     last_coin_update = models.DateTimeField(default=timezone.now)
     
+    # Rate limiting tier: 'founder' (first 5), 'standard' (default), or None for legacy
+    rate_limit_tier = models.CharField(max_length=20, default='standard', blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

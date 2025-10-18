@@ -99,8 +99,117 @@ def get_higher_era(era_a, era_b):
 # Rate limiting helpers
 # -----------------------------
 
+def get_daily_rate_limit(user):
+    """Get the daily rate limit for a user based on their tier."""
+    # Admin always get their special limit
+    if is_admin_user(user):
+        return getattr(settings, "RATE_LIMIT_DAILY_ADMIN", 1000)
+    
+    profile = user.profile
+    tier = profile.rate_limit_tier or 'standard'
+    
+    if tier == 'founder':
+        return getattr(settings, "RATE_LIMIT_DAILY_FOUNDER", 500)
+    else:  # standard or any other tier
+        return getattr(settings, "RATE_LIMIT_DAILY_STANDARD", 20)
+
+
+def check_daily_rate_limit(user):
+    """Check if user has exceeded their daily rate limit."""
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Count discoveries made today
+    profile = user.profile
+    rate_limit, created = RateLimit.objects.get_or_create(
+        player=profile,
+        limit_type="daily_discoveries",
+        defaults={"window_start": today_start, "count": 0}
+    )
+    
+    # Reset if we're in a new day
+    if rate_limit.window_start.date() < today_start.date():
+        rate_limit.count = 0
+        rate_limit.window_start = today_start
+        rate_limit.save()
+    
+    max_limit = get_daily_rate_limit(user)
+    
+    if rate_limit.count >= max_limit:
+        return False, max_limit - rate_limit.count
+    
+    return True, max_limit - rate_limit.count
+
+
+def check_global_daily_rate_limit():
+    """Check if global daily API call limit has been exceeded."""
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Get global rate limit tracker (player=None for global)
+    rate_limit, created = RateLimit.objects.get_or_create(
+        player=None,
+        limit_type="global_daily_discoveries",
+        defaults={"window_start": today_start, "count": 0}
+    )
+    
+    # Reset if we're in a new day
+    if rate_limit.window_start.date() < today_start.date():
+        rate_limit.count = 0
+        rate_limit.window_start = today_start
+        rate_limit.save()
+    
+    max_limit = getattr(settings, "RATE_LIMIT_DAILY_GLOBAL", 4000)
+    
+    if rate_limit.count >= max_limit:
+        return False, max_limit - rate_limit.count
+    
+    return True, max_limit - rate_limit.count
+
+
+def increment_global_daily_rate_limit():
+    """Increment global daily rate limit counter."""
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    rate_limit, created = RateLimit.objects.get_or_create(
+        player=None,
+        limit_type="global_daily_discoveries",
+        defaults={"window_start": today_start, "count": 0}
+    )
+    
+    # Reset if we're in a new day
+    if rate_limit.window_start.date() < today_start.date():
+        rate_limit.count = 0
+        rate_limit.window_start = today_start
+    
+    rate_limit.count += 1
+    rate_limit.save()
+
+
+def increment_daily_rate_limit(user):
+    """Increment daily rate limit counter."""
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    profile = user.profile
+    rate_limit, created = RateLimit.objects.get_or_create(
+        player=profile,
+        limit_type="daily_discoveries",
+        defaults={"window_start": today_start, "count": 0}
+    )
+    
+    # Reset if we're in a new day
+    if rate_limit.window_start.date() < today_start.date():
+        rate_limit.count = 0
+        rate_limit.window_start = today_start
+    
+    rate_limit.count += 1
+    rate_limit.save()
+
+
 def check_rate_limit(player, limit_type):
-    """Check if rate limit is exceeded."""
+    """Check if rate limit is exceeded (legacy per-minute limit)."""
     now = timezone.now()
 
     rate_limit, _ = RateLimit.objects.get_or_create(
@@ -129,7 +238,7 @@ def check_rate_limit(player, limit_type):
 
 
 def increment_rate_limit(player, limit_type):
-    """Increment rate limit counter."""
+    """Increment rate limit counter (legacy per-minute limit)."""
     rate_limit, _ = RateLimit.objects.get_or_create(
         player=player if limit_type == "user_discovery" else None,
         limit_type=limit_type,
@@ -600,9 +709,14 @@ def register(request):
 
     user = User.objects.create_user(username=username, password=password, email=email)
 
+    # Determine tier: first 5 users are founders, rest are standard
+    existing_profiles_count = PlayerProfile.objects.count()
+    tier = 'founder' if existing_profiles_count < 5 else 'standard'
+
     profile = PlayerProfile.objects.create(
         user=user,
-        coins=getattr(settings, "STARTING_COINS", Decimal("0"))
+        coins=getattr(settings, "STARTING_COINS", Decimal("0")),
+        rate_limit_tier=tier
     )
 
     # Unlock first era
@@ -685,15 +799,30 @@ def craft_objects(request):
 
     profile = request.user.profile
 
-    # Check user rate limit
-    allowed, _ = check_rate_limit(profile, "user_discovery")
+    # Check daily user rate limit (tier-based)
+    allowed, remaining = check_daily_rate_limit(request.user)
     if not allowed:
-        return Response({"error": "Rate limit exceeded. Please wait."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        limit = get_daily_rate_limit(request.user)
+        return Response({
+            "error": f"You have reached your discovery limit for the day. It will reset tomorrow.",
+            "limit": limit,
+            "reset_at": "tomorrow at midnight UTC"
+        }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
-    # Check global rate limit
+    # Check global daily rate limit (4000 per day across all users)
+    allowed_global_daily, _ = check_global_daily_rate_limit()
+    if not allowed_global_daily:
+        global_limit = getattr(settings, "RATE_LIMIT_DAILY_GLOBAL", 4000)
+        return Response({
+            "error": f"Server has reached its daily discovery limit. Please try again tomorrow.",
+            "global_limit": global_limit,
+            "reset_at": "tomorrow at midnight UTC"
+        }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+    # Check legacy global rate limit (per-minute for system stability)
     allowed_global, _ = check_rate_limit(None, "global_api")
     if not allowed_global:
-        return Response({"error": "Server busy. Please try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        return Response({"error": "Server is temporarily busy. Please try again in a moment."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
     try:
         object_a = GameObject.objects.get(id=object_a_id)
@@ -762,6 +891,8 @@ def craft_objects(request):
     # New recipe → count, then call OpenAI OUTSIDE DB transaction
     increment_rate_limit(profile, "user_discovery")
     increment_rate_limit(None, "global_api")
+    increment_daily_rate_limit(request.user)
+    increment_global_daily_rate_limit()
 
     # Get player's era context
     unlocked_eras = get_unlocked_eras(profile)

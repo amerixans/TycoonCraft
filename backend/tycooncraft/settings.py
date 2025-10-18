@@ -103,8 +103,15 @@ REST_FRAMEWORK = {
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
+# Rate limiting - per minute (legacy, kept for backward compatibility)
 RATE_LIMIT_USER_DISCOVERIES = 4
 RATE_LIMIT_GLOBAL_API_CALLS = 50
-RATE_LIMIT_WINDOW = 60
+RATE_LIMIT_WINDOW = 60  # seconds
+
+# Daily rate limits by tier
+RATE_LIMIT_DAILY_STANDARD = 20  # Standard users
+RATE_LIMIT_DAILY_FOUNDER = 500  # First 5 users
+RATE_LIMIT_DAILY_ADMIN = 1000   # Admin users
+RATE_LIMIT_DAILY_GLOBAL = 4000  # Total API calls per day across all users
 
 STARTING_COINS = 500
