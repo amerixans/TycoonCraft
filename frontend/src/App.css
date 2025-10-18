@@ -1236,21 +1236,29 @@ body {
 
 /* Discovery Modal */
 .discovery-overlay {
-  background: rgba(0, 0, 0, 0.85);
+  background: transparent;
   animation: fadeIn 0.3s;
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 100px;
+  padding-right: 20px;
 }
 
 .discovery-modal {
   background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
   border: 5px solid var(--accent-primary);
   border-radius: 30px;
-  padding: 3rem;
-  max-width: 600px;
+  padding: 2rem;
+  max-width: 380px;
+  min-width: 320px;
   text-align: center;
   box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), 0 0 100px rgba(230, 126, 34, 0.3);
   animation: discoveryAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   position: relative;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .discovery-modal.discovery-existing {
@@ -1354,9 +1362,14 @@ body {
 }
 
 .discovery-icon {
-  font-size: 6rem;
+  font-size: 3.5rem;
   animation: discoveryIconBounce 1s ease-in-out infinite;
   display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.discovery-new .discovery-icon {
+  font-size: 5rem;
   margin-bottom: 1rem;
 }
 
@@ -1370,12 +1383,17 @@ body {
 }
 
 .discovery-title {
-  font-size: 2.5rem;
+  font-size: 1.6rem;
   font-weight: 900;
   color: var(--accent-primary);
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.8rem 0;
   text-shadow: 3px 3px 6px var(--shadow-heavy);
   animation: discoveryTitlePulse 1.5s ease-in-out infinite;
+}
+
+.discovery-new .discovery-title {
+  font-size: 2rem;
+  margin: 0 0 1rem 0;
 }
 
 @keyframes discoveryTitlePulse {
@@ -1388,9 +1406,9 @@ body {
 }
 
 .discovery-image-container {
-  width: 180px;
-  height: 180px;
-  margin: 0 auto 1.5rem auto;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1rem auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1404,6 +1422,8 @@ body {
 
 .discovery-new .discovery-image-container {
   animation: discoveryImageBounce 0.8s ease-in-out 0.3s;
+  width: 140px;
+  height: 140px;
 }
 
 @keyframes discoveryImageBounce {
@@ -1440,14 +1460,20 @@ body {
 }
 
 .discovery-name {
-  font-size: 2rem;
+  font-size: 1.3rem;
   font-weight: 900;
   background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 1rem 0;
+  margin: 0.6rem 0;
   animation: discoveryNameGlow 2s ease-in-out infinite;
+  line-height: 1.2;
+}
+
+.discovery-new .discovery-name {
+  font-size: 1.8rem;
+  margin: 1rem 0;
 }
 
 @keyframes discoveryNameGlow {
@@ -1460,11 +1486,17 @@ body {
 }
 
 .discovery-flavor {
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   font-style: italic;
   color: var(--text-secondary);
-  margin: 1rem 0;
-  line-height: 1.6;
+  margin: 0.5rem 0;
+  line-height: 1.5;
+  padding: 0 0.5rem;
+}
+
+.discovery-new .discovery-flavor {
+  font-size: 0.95rem;
+  margin: 0.8rem 0;
   padding: 0 1rem;
 }
 

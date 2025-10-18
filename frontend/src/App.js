@@ -3,6 +3,7 @@ import { auth, game } from './api';
 import Sidebar from './components/Sidebar';
 import CraftingArea from './components/CraftingArea';
 import CraftingQueue from './components/CraftingQueue';
+import CraftingResults from './components/CraftingResults';
 import Canvas from './components/Canvas';
 import { gameInfoContent } from './GameInfo';
 import { formatNumber } from './utils/formatNumber';
@@ -34,6 +35,7 @@ function App() {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [craftingOperations, setCraftingOperations] = useState([]); // Array of crafting ops
+  const [craftingResults, setCraftingResults] = useState([]); // Array of already-discovered results
   const [notification, setNotification] = useState(null);
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
@@ -138,7 +140,7 @@ function App() {
   const handleCraft = async (objectA, objectB) => {
     // Create a unique ID for this crafting operation
     const craftId = Date.now() + Math.random();
-    
+
     // Add to crafting operations
     setCraftingOperations(prev => [...prev, {
       id: craftId,
@@ -146,61 +148,66 @@ function App() {
       objectB,
       status: 'crafting'
     }]);
-    
+
     try {
       const response = await game.craft(objectA.id, objectB.id);
-      
+
       // Update the operation status
-      setCraftingOperations(prev => 
+      setCraftingOperations(prev =>
         prev.map(op => op.id === craftId ? { ...op, status: 'success', result: response.data } : op)
       );
-      
+
       if (response.data.newly_created || response.data.newly_discovered) {
-        // Show discovery modal
+        // Show discovery modal in top right for NEW discoveries
         setShowDiscoveryModal({
           object: response.data.object,
           isNew: response.data.newly_created || response.data.newly_discovered
         });
         setTimeout(() => setShowDiscoveryModal(null), 3500);
-        
+
         showNotification(
-          response.data.newly_created 
+          response.data.newly_created
             ? `🎉 New discovery! You created ${response.data.object.object_name}!`
             : `✨ You discovered ${response.data.object.object_name}!`,
           'success'
         );
       } else {
-        // Just show image briefly for already discovered
-        setShowDiscoveryModal({
-          object: response.data.object,
-          isNew: false
-        });
-        setTimeout(() => setShowDiscoveryModal(null), 2000);
-        
+        // Show in results box for already discovered items
+        const resultId = Date.now() + Math.random();
+        setCraftingResults(prev => [...prev, {
+          id: resultId,
+          object: response.data.object
+        }]);
+
         showNotification(
           `You already discovered ${response.data.object.object_name}`,
           'info'
         );
+
+        // Remove from results box after 2 seconds
+        setTimeout(() => {
+          setCraftingResults(prev => prev.filter(r => r.id !== resultId));
+        }, 2000);
       }
-      
+
       await loadGameState();
-      
+
       // Remove the operation after 2 seconds
       setTimeout(() => {
         setCraftingOperations(prev => prev.filter(op => op.id !== craftId));
       }, 2000);
-      
+
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Crafting failed';
-      
+
       // Update operation to failed
-      setCraftingOperations(prev => 
+      setCraftingOperations(prev =>
         prev.map(op => op.id === craftId ? { ...op, status: 'failed', error: errorMsg } : op)
       );
-      
+
       setError(errorMsg);
       showNotification(errorMsg, 'error');
-      
+
       // Remove failed operation after 3 seconds
       setTimeout(() => {
         setCraftingOperations(prev => prev.filter(op => op.id !== craftId));
@@ -528,15 +535,21 @@ function App() {
             {/* Crafting and Queue */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <CraftingArea 
+                <CraftingArea
                   discoveries={gameState.discoveries}
                   onCraft={handleCraft}
                   playerCoins={gameState.profile.coins}
                 />
-                
+
                 {craftingOperations.length > 0 && (
-                  <CraftingQueue 
+                  <CraftingQueue
                     craftingOperations={craftingOperations}
+                  />
+                )}
+
+                {craftingResults.length > 0 && (
+                  <CraftingResults
+                    craftingResults={craftingResults}
                   />
                 )}
               </div>
