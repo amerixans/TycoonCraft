@@ -8,16 +8,16 @@ const GRID_SIZE = 50; // Pixels per grid tile
 // Era-based canvas sizes (height x width in tiles)
 // Starting at 3x9 for Hunter-Gatherer, doubling each era unlock
 const ERA_SIZES = {
-  'Hunter-Gatherer': { height: 3, width: 9 },
-  'Agriculture': { height: 6, width: 18 },
-  'Metallurgy': { height: 12, width: 36 },
-  'Steam & Industry': { height: 24, width: 72 },
-  'Electric Age': { height: 48, width: 144 },
-  'Computing': { height: 96, width: 288 },
-  'Futurism': { height: 192, width: 576 },
-  'Interstellar': { height: 384, width: 1152 },
-  'Arcana': { height: 768, width: 2304 },
-  'Beyond': { height: 1536, width: 4608 },
+  'Hunter-Gatherer': { height: 5, width: 15 },
+  'Agriculture': { height: 10, width: 30 },
+  'Metallurgy': { height: 20, width: 60 },
+  'Steam & Industry': { height: 40, width: 120 },
+  'Electric Age': { height: 80, width: 240 },
+  'Computing': { height: 160, width: 480 },
+  'Futurism': { height: 320, width: 960 },
+  'Interstellar': { height: 640, width: 1920 },
+  'Arcana': { height: 1280, width: 3840 },
+  'Beyond': { height: 2560, width: 7680 },
 };
 
 function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {

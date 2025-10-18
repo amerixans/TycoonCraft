@@ -1233,3 +1233,256 @@ body {
   font-size: 1rem;
   line-height: 1.6;
 }
+
+/* Discovery Modal */
+.discovery-overlay {
+  background: rgba(0, 0, 0, 0.85);
+  animation: fadeIn 0.3s;
+}
+
+.discovery-modal {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border: 5px solid var(--accent-primary);
+  border-radius: 30px;
+  padding: 3rem;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), 0 0 100px rgba(230, 126, 34, 0.3);
+  animation: discoveryAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+}
+
+.discovery-modal.discovery-existing {
+  animation: discoveryFadeIn 0.3s ease-out;
+}
+
+@keyframes discoveryAppear {
+  0% {
+    transform: scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes discoveryFadeIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.discovery-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.discovery-sparkles span {
+  position: absolute;
+  font-size: 2.5rem;
+  animation: discoverySparkle 2s ease-in-out infinite;
+}
+
+.discovery-sparkles span:nth-child(1) {
+  top: 5%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.discovery-sparkles span:nth-child(2) {
+  top: 15%;
+  right: 15%;
+  animation-delay: 0.2s;
+}
+
+.discovery-sparkles span:nth-child(3) {
+  top: 45%;
+  left: 5%;
+  animation-delay: 0.4s;
+}
+
+.discovery-sparkles span:nth-child(4) {
+  top: 55%;
+  right: 8%;
+  animation-delay: 0.6s;
+}
+
+.discovery-sparkles span:nth-child(5) {
+  bottom: 25%;
+  left: 12%;
+  animation-delay: 0.8s;
+}
+
+.discovery-sparkles span:nth-child(6) {
+  bottom: 15%;
+  right: 10%;
+  animation-delay: 1s;
+}
+
+.discovery-sparkles span:nth-child(7) {
+  top: 30%;
+  left: 20%;
+  animation-delay: 1.2s;
+}
+
+.discovery-sparkles span:nth-child(8) {
+  bottom: 40%;
+  right: 18%;
+  animation-delay: 1.4s;
+}
+
+@keyframes discoverySparkle {
+  0%, 100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.discovery-icon {
+  font-size: 6rem;
+  animation: discoveryIconBounce 1s ease-in-out infinite;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+@keyframes discoveryIconBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.1);
+  }
+}
+
+.discovery-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--accent-primary);
+  margin: 0 0 1.5rem 0;
+  text-shadow: 3px 3px 6px var(--shadow-heavy);
+  animation: discoveryTitlePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes discoveryTitlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.discovery-image-container {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border: 4px solid var(--accent-secondary);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px var(--shadow-heavy);
+  animation: discoveryImagePulse 1.5s ease-in-out infinite;
+}
+
+.discovery-new .discovery-image-container {
+  animation: discoveryImageBounce 0.8s ease-in-out 0.3s;
+}
+
+@keyframes discoveryImageBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.15) rotate(5deg);
+  }
+  50% {
+    transform: scale(0.95) rotate(-5deg);
+  }
+  75% {
+    transform: scale(1.05) rotate(3deg);
+  }
+}
+
+@keyframes discoveryImagePulse {
+  0%, 100% {
+    box-shadow: 0 8px 24px var(--shadow-heavy);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(52, 152, 219, 0.5);
+  }
+}
+
+.discovery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.discovery-name {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 1rem 0;
+  animation: discoveryNameGlow 2s ease-in-out infinite;
+}
+
+@keyframes discoveryNameGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(230, 126, 34, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(230, 126, 34, 0.8));
+  }
+}
+
+.discovery-flavor {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin: 1rem 0;
+  line-height: 1.6;
+  padding: 0 1rem;
+}
+
+.discovery-existing .discovery-icon {
+  font-size: 4rem;
+  animation: none;
+}
+
+.discovery-existing .discovery-title {
+  font-size: 1.8rem;
+  animation: none;
+}
+
+.discovery-existing .discovery-image-container {
+  width: 140px;
+  height: 140px;
+}
+
+.discovery-existing .discovery-name {
+  font-size: 1.5rem;
+}

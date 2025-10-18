@@ -45,6 +45,7 @@ function App() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeKey, setUpgradeKey] = useState('');
   const [upgradeError, setUpgradeError] = useState('');
+  const [showDiscoveryModal, setShowDiscoveryModal] = useState(null);
   
   const longPressTimer = useRef(null);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -154,17 +155,28 @@ function App() {
         prev.map(op => op.id === craftId ? { ...op, status: 'success', result: response.data } : op)
       );
       
-      if (response.data.newly_created) {
+      if (response.data.newly_created || response.data.newly_discovered) {
+        // Show discovery modal
+        setShowDiscoveryModal({
+          object: response.data.object,
+          isNew: response.data.newly_created || response.data.newly_discovered
+        });
+        setTimeout(() => setShowDiscoveryModal(null), 3500);
+        
         showNotification(
-          `🎉 New discovery! You created ${response.data.object.object_name}!`,
-          'success'
-        );
-      } else if (response.data.newly_discovered) {
-        showNotification(
-          `✨ You discovered ${response.data.object.object_name}!`,
+          response.data.newly_created 
+            ? `🎉 New discovery! You created ${response.data.object.object_name}!`
+            : `✨ You discovered ${response.data.object.object_name}!`,
           'success'
         );
       } else {
+        // Just show image briefly for already discovered
+        setShowDiscoveryModal({
+          object: response.data.object,
+          isNew: false
+        });
+        setTimeout(() => setShowDiscoveryModal(null), 2000);
+        
         showNotification(
           `You already discovered ${response.data.object.object_name}`,
           'info'
@@ -369,15 +381,6 @@ function App() {
           </div>
         </div>
         <div className="header-right">
-          {!gameState?.profile?.is_pro && (
-            <button 
-              onClick={() => setShowUpgradeModal(true)} 
-              className="btn-upgrade"
-              title="Upgrade to Pro"
-            >
-              ⭐ Upgrade
-            </button>
-          )}
           <button 
             onClick={handleThemeClick}
             onMouseDown={handleThemeMouseDown}
@@ -390,6 +393,15 @@ function App() {
           >
             {theme === 'light' ? '🌙' : theme === 'dark' ? '☀️' : '🎨'}
           </button>
+          {!gameState?.profile?.is_pro && (
+            <button 
+              onClick={() => setShowUpgradeModal(true)} 
+              className="btn-upgrade"
+              title="Upgrade to Pro"
+            >
+              ⭐ Upgrade
+            </button>
+          )}
           <button onClick={handleExport} className="btn-small">💾 Export</button>
           <label className="btn-small">
             📂 Import
@@ -436,11 +448,11 @@ function App() {
                     <div className="object-info-stats">
                       <div className="object-info-stat">
                         <span className="object-info-stat-label">💰 Cost</span>
-                        <span className="object-info-stat-value">{formatNumber(selectedObject.cost)}</span>
+                        <span className="object-info-stat-value">{Math.floor(parseFloat(selectedObject.cost))}</span>
                       </div>
                       <div className="object-info-stat">
                         <span className="object-info-stat-label">📊 Income/sec</span>
-                        <span className="object-info-stat-value">{formatNumber(selectedObject.income_per_second)}</span>
+                        <span className="object-info-stat-value">{Math.floor(parseFloat(selectedObject.income_per_second))}</span>
                       </div>
                       {parseFloat(selectedObject.time_crystal_generation) > 0 && (
                         <div className="object-info-stat">
@@ -451,6 +463,18 @@ function App() {
                       <div className="object-info-stat">
                         <span className="object-info-stat-label">📐 Size</span>
                         <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">⭐ Quality</span>
+                        <span className="object-info-stat-value">{selectedObject.quality_tier || 'N/A'}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">🏛️ Era</span>
+                        <span className="object-info-stat-value">{selectedObject.era_name}</span>
+                      </div>
+                      <div className="object-info-stat">
+                        <span className="object-info-stat-label">📁 Category</span>
+                        <span className="object-info-stat-value">{selectedObject.category}</span>
                       </div>
                       {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
                         <div className="object-info-stat">
@@ -464,14 +488,24 @@ function App() {
                           <span className="object-info-stat-value">{selectedObject.operation_duration}s</span>
                         </div>
                       )}
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">🏛️ Era</span>
-                        <span className="object-info-stat-value">{selectedObject.era_name}</span>
-                      </div>
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">📁 Category</span>
-                        <span className="object-info-stat-value">{selectedObject.category}</span>
-                      </div>
+                      {selectedObject.retire_payout && parseFloat(selectedObject.retire_payout) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">💵 Retire Payout</span>
+                          <span className="object-info-stat-value">{Math.floor(parseFloat(selectedObject.retire_payout))}</span>
+                        </div>
+                      )}
+                      {selectedObject.sellback_percent && parseFloat(selectedObject.sellback_percent) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">♻️ Sellback</span>
+                          <span className="object-info-stat-value">{selectedObject.sellback_percent}%</span>
+                        </div>
+                      )}
+                      {selectedObject.cap_per_civ && parseFloat(selectedObject.cap_per_civ) > 0 && (
+                        <div className="object-info-stat">
+                          <span className="object-info-stat-label">🔢 Cap/Civ</span>
+                          <span className="object-info-stat-value">{selectedObject.cap_per_civ}</span>
+                        </div>
+                      )}
                     </div>
                     
                     {selectedObject.is_keystone && (() => {
@@ -617,6 +651,45 @@ function App() {
             >
               ⚡ Continue Your Journey!
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Discovery Modal */}
+      {showDiscoveryModal && (
+        <div className="modal-overlay discovery-overlay">
+          <div className={`discovery-modal ${showDiscoveryModal.isNew ? 'discovery-new' : 'discovery-existing'}`}>
+            {showDiscoveryModal.isNew && (
+              <div className="discovery-sparkles">
+                <span>✨</span>
+                <span>💫</span>
+                <span>⭐</span>
+                <span>🌟</span>
+                <span>✨</span>
+                <span>💫</span>
+                <span>⭐</span>
+                <span>🌟</span>
+              </div>
+            )}
+            <div className="discovery-icon">
+              {showDiscoveryModal.isNew ? '🎉' : '✅'}
+            </div>
+            <h2 className="discovery-title">
+              {showDiscoveryModal.isNew ? 'New Discovery!' : 'Crafted!'}
+            </h2>
+            {showDiscoveryModal.object.image_path && (
+              <div className="discovery-image-container">
+                <img 
+                  src={showDiscoveryModal.object.image_path} 
+                  alt={showDiscoveryModal.object.object_name}
+                  className="discovery-image"
+                />
+              </div>
+            )}
+            <div className="discovery-name">{showDiscoveryModal.object.object_name}</div>
+            {showDiscoveryModal.isNew && (
+              <div className="discovery-flavor">{showDiscoveryModal.object.flavor_text}</div>
+            )}
           </div>
         </div>
       )}
