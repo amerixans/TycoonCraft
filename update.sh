@@ -165,6 +165,15 @@ if ! systemctl list-unit-files tycooncraft.service &>/dev/null && ! [ -f /etc/sy
     exit 1
 fi
 
+# Validate the target branch exists on origin before stopping services
+cd /var/www/tycooncraft
+if ! sudo -u www-data git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+    echo "ERROR: Remote branch '$BRANCH' not found on origin."
+    echo "Aborting update to prevent downtime."
+    send_notification "❌ Update aborted: remote branch '$BRANCH' not found" "error" || true
+    exit 1
+fi
+
 # ============================================================================
 # BACKUP BEFORE UPDATE
 # ============================================================================
@@ -229,8 +238,11 @@ echo "Pulling latest changes from git ($BRANCH branch)..."
 # Stash any local changes first (shouldn't be any, but just in case)
 sudo -u www-data git stash save "Auto-stash before update $(date)" 2>/dev/null || true
 
-sudo -u www-data git fetch origin $BRANCH
-sudo -u www-data git reset --hard origin/$BRANCH
+# Ensure a remote-tracking ref exists for the target branch, not just FETCH_HEAD
+sudo -u www-data git fetch origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+
+# Reset working tree to the fetched remote-tracking branch
+sudo -u www-data git reset --hard "origin/$BRANCH"
 
 NEW_COMMIT=$(sudo -u www-data git rev-parse HEAD)
 echo "New commit: $NEW_COMMIT"
