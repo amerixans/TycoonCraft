@@ -840,7 +840,6 @@ function App() {
             onRemove={handleRemove}
             onMove={handleMove}
             currentEra={gameState.profile.current_era}
-            auraModifierMap={modifierMap}
           />
         </div>
       </div>

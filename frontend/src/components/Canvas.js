@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { formatNumber } from '../utils/formatNumber';
-import { hasAura, describeAuraModifier, calculateCategoryMultipliers } from '../utils/aura';
+import { hasAura, describeAuraModifier } from '../utils/aura';
 import './Canvas.css';
 
 const GRID_SIZE = 50; // Pixels per grid tile
@@ -21,7 +21,7 @@ const ERA_SIZES = {
   'Beyond': { height: 2560, width: 7680 },
 };
 
-function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra, auraModifierMap }) {
+function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
@@ -34,41 +34,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
   const [canvasMode, setCanvasMode] = useState('view'); // 'view', 'move', 'trash'
   const [movingObject, setMovingObject] = useState(null);
 
-  const formatDuration = (seconds) => {
-    const totalSeconds = Number(seconds);
-    if (Number.isNaN(totalSeconds) || totalSeconds <= 0) return '0s';
-    if (totalSeconds < 60) return `${Math.round(totalSeconds)}s`;
-    if (totalSeconds < 3600) return `${Math.round(totalSeconds / 60)}m`;
-    if (totalSeconds < 86400) return `${Math.round(totalSeconds / 3600)}h`;
-    return `${Math.round(totalSeconds / 86400)}d`;
-  };
-
-  const getPlacementPreview = (gameObject) => {
-    if (!gameObject) return null;
-
-    const category = gameObject.category;
-    const baseBuildTime = Number(gameObject.build_time_sec ?? gameObject.build_time ?? 0);
-    const baseDuration = Number(
-      gameObject.operation_duration_sec ?? gameObject.operation_duration ?? 0
-    );
-
-    const multipliers = calculateCategoryMultipliers(
-      auraModifierMap instanceof Map ? auraModifierMap : new Map(),
-      category
-    );
-
-    const buildMultiplier = Number(multipliers.build_time_multiplier ?? 1);
-    const durationMultiplier = Number(multipliers.operation_duration_multiplier ?? 1);
-
-    return {
-      baseBuildTime,
-      baseDuration,
-      effectiveBuildTime: Math.max(0, Math.round(baseBuildTime * buildMultiplier)),
-      effectiveDuration: Math.max(0, Math.round(baseDuration * durationMultiplier)),
-      buildMultiplier,
-      durationMultiplier,
-    };
-  };
   
   // Update time every second for build progress
   useEffect(() => {
@@ -535,7 +500,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                   
                   {/* Ghost preview during drag */}
                   {draggedObject && (() => {
-                    const preview = getPlacementPreview(draggedObject.obj);
                     return (
                       <div
                         className="placed-object ghost"
@@ -555,39 +519,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                         ) : (
                           <div className="object-placeholder">
                             {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
-                          </div>
-                        )}
-
-                        {preview && (
-                          <div className="placement-preview">
-                            {preview.baseBuildTime > 0 && (
-                              <div className="placement-preview-row">
-                                <span>🔨 Build</span>
-                                <span>
-                                  {formatDuration(preview.baseBuildTime)}
-                                  {preview.buildMultiplier !== 1 && (
-                                    <>
-                                      {' '}
-                                      → {formatDuration(preview.effectiveBuildTime)}
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-                            )}
-                            {preview.baseDuration > 0 && (
-                              <div className="placement-preview-row">
-                                <span>⏱️ Lifespan</span>
-                                <span>
-                                  {formatDuration(preview.baseDuration)}
-                                  {preview.durationMultiplier !== 1 && (
-                                    <>
-                                      {' '}
-                                      → {formatDuration(preview.effectiveDuration)}
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
