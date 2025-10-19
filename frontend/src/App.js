@@ -8,7 +8,7 @@ import Canvas from './components/Canvas';
 import AuraSummary from './components/AuraSummary';
 import { gameInfoContent } from './GameInfo';
 import { formatNumber } from './utils/formatNumber';
-import { ERAS } from './config';
+import { ERAS, loadEraConfig } from './config';
 import {
   hasAura,
   formatMultiplier,
@@ -72,6 +72,7 @@ function App() {
   const [upgradeError, setUpgradeError] = useState('');
   const [showDiscoveryModal, setShowDiscoveryModal] = useState(null);
   const [objectCatalog, setObjectCatalog] = useState(null);
+  const [eraConfig, setEraConfig] = useState(null);
   const [showAuraDetails, setShowAuraDetails] = useState(false);
   const [showAppliedBoosts, setShowAppliedBoosts] = useState(false);
 
@@ -401,6 +402,7 @@ function App() {
   useEffect(() => {
     loadGameState().finally(() => setLoading(false));
     loadObjectCatalog();
+    loadEraConfig().then(config => setEraConfig(config));
 
     // Auto-refresh game state every second to update coins
     const interval = setInterval(loadGameState, 1000);
@@ -782,6 +784,7 @@ function App() {
           eraUnlocks={gameState.era_unlocks}
           currentEra={gameState.profile.current_era}
           eras={ERAS}
+          eraConfig={eraConfig}
           onObjectInfo={handleSelectObject}
         />
         

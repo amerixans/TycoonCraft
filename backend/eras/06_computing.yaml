@@ -3,6 +3,7 @@
 order: 6
 name: "Computing"
 display_name: "Computing"
+unlock_message: "Craft Quantum Computer to unlock Futurism"
 
 crystal_unlock_cost: 6000
 crafting_cost: 1093750  # 156250 * 7

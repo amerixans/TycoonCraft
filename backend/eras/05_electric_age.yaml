@@ -3,6 +3,7 @@
 order: 5
 name: "Electric Age"
 display_name: "Electric Age"
+unlock_message: "Craft Analytical Engine to unlock Computing"
 
 crystal_unlock_cost: 1200
 crafting_cost: 187500  # 31250 * 6

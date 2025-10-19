@@ -3,7 +3,7 @@ import { formatNumber } from '../utils/formatNumber';
 import { hasAura, describeAuraModifier } from '../utils/aura';
 import './Sidebar.css';
 
-function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
+function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, eraConfig, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
   const [hoveredLockedEra, setHoveredLockedEra] = useState(null);
@@ -50,9 +50,16 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
     );
   };
 
-  // Filter objects based on search term
+  // Get unlock message for an era from eraConfig
+  const getUnlockMessage = (era) => {
+    if (!eraConfig || !eraConfig.eras) return null;
+    const eraData = eraConfig.eras.find(e => e.name === era);
+    return eraData ? eraData.unlock_message : null;
+  };
+
+  // Filter objects based on search term - now only within selected era
   const filteredObjects = searchTerm
-    ? discoveredObjects.filter(obj =>
+    ? (objectsByEra[selectedEra] || []).filter(obj =>
         obj.object_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : objectsByEra[selectedEra] || [];
@@ -102,10 +109,11 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
             );
           })}
           {hoveredLockedEra && (() => {
-            const keystone = getKeystoneForEra(hoveredLockedEra);
-            return keystone ? (
+            const unlockMsg = getUnlockMessage(hoveredLockedEra);
+            return unlockMsg ? (
               <div className="era-lock-hint">
-                Craft <strong>{keystone.object_name}</strong> to unlock this era
+                <div className="era-lock-hint-icon">🔒</div>
+                <div className="era-lock-hint-text">{unlockMsg}</div>
               </div>
             ) : null;
           })()}

@@ -3,6 +3,7 @@
 order: 8
 name: "Interstellar"
 display_name: "Interstellar"
+unlock_message: "Craft Spell Codex to unlock Arcana"
 
 crystal_unlock_cost: 150000
 crafting_cost: 35156250  # 3906250 * 9

@@ -3,6 +3,7 @@
 order: 9
 name: "Arcana"
 display_name: "Arcana"
+unlock_message: "Craft Reality Stone to unlock Beyond"
 
 crystal_unlock_cost: 800000
 crafting_cost: 195312500  # 19531250 * 10

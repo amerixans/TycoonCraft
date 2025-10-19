@@ -1416,6 +1416,7 @@ def era_config(request):
             "display_name": era.get('display_name', era['name']),
             "crystal_unlock_cost": era['crystal_unlock_cost'],
             "crafting_cost": era['crafting_cost'],
+            "unlock_message": era.get('unlock_message', ''),
         })
 
     return Response({

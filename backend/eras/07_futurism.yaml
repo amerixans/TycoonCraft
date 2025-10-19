@@ -3,6 +3,7 @@
 order: 7
 name: "Futurism"
 display_name: "Futurism"
+unlock_message: "Craft Warp Drive to unlock Interstellar"
 
 crystal_unlock_cost: 30000
 crafting_cost: 6250000  # 781250 * 8

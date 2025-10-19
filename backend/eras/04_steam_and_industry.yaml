@@ -4,6 +4,7 @@
 order: 4
 name: "Steam & Industry"
 display_name: "Steam & Industry"
+unlock_message: "Craft Telegraph to unlock Electric Age"
 
 crystal_unlock_cost: 250
 crafting_cost: 31250  # 6250 * 5
