@@ -30,6 +30,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const [transformKey, setTransformKey] = useState(0);
   const previousScaleRef = useRef(1);
   const previousEraRef = useRef(currentEra);
+  const [canvasMode, setCanvasMode] = useState('view'); // 'view', 'move', 'trash'
+  const [movingObject, setMovingObject] = useState(null);
   
   // Update time every second for build progress
   useEffect(() => {
@@ -159,76 +161,99 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-    
+
     const objectId = e.dataTransfer.getData('objectId');
-    if (!objectId) return;
-    
+    if (!objectId && !movingObject) return;
+
+    // Handle moving an existing object
+    if (movingObject) {
+      const transformState = transformRef.current?.instance?.transformState;
+      if (!transformState) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / transformState.scale;
+      const y = (e.clientY - rect.top) / transformState.scale;
+      const gridX = Math.floor(x / GRID_SIZE);
+      const gridY = Math.floor(y / GRID_SIZE);
+
+      setDraggedObject({ obj: movingObject.game_object, x: gridX, y: gridY });
+      return;
+    }
+
+    // Handle dragging from sidebar
     const obj = discoveries.find(d => d.game_object.id === parseInt(objectId))?.game_object;
     if (!obj) return;
-    
+
     // Get the transform component's current state
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
       return;
     }
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
-    
+
     // Calculate position accounting for zoom
     const x = (e.clientX - rect.left) / transformState.scale;
     const y = (e.clientY - rect.top) / transformState.scale;
-    
+
     // Convert to grid coordinates
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
-    
+
     setDraggedObject({ obj, x: gridX, y: gridY });
   };
   
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
+    // Handle moving an existing object
+    if (movingObject) {
+      handleMoveObjectDrop(e);
+      setDraggedObject(null);
+      return;
+    }
+
     const objectId = e.dataTransfer.getData('objectId');
-    
+
     if (!objectId) {
       setDraggedObject(null);
       return;
     }
-    
+
     const discovery = discoveries.find(d => d.game_object.id === parseInt(objectId));
-    
+
     if (!discovery || !discovery.game_object) {
       setDraggedObject(null);
       return;
     }
-    
+
     const obj = discovery.game_object;
-    
+
     // Get the transform component's current state
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
       setDraggedObject(null);
       return;
     }
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
-    
+
     // Calculate position accounting for zoom
     const x = (e.clientX - rect.left) / transformState.scale;
     const y = (e.clientY - rect.top) / transformState.scale;
-    
+
     // Convert to grid coordinates
     const gridX = Math.floor(x / GRID_SIZE);
     const gridY = Math.floor(y / GRID_SIZE);
-    
+
     // Check bounds
     if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_WIDTH || gridY + obj.footprint_h > CANVAS_HEIGHT) {
       alert('⚠️ Out of bounds! Place the object within the grid.');
       setDraggedObject(null);
       return;
     }
-    
+
     onPlace(obj.id, gridX, gridY);
     setDraggedObject(null);
   };
@@ -242,10 +267,49 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   
   const handlePlacedClick = (placed, e) => {
     e.stopPropagation();
-    if (window.confirm(`Remove ${placed.game_object.object_name}?`)) {
-      setHoveredPlaced(null); // Clear hover state before removing
+
+    if (canvasMode === 'trash') {
+      // Delete immediately without confirmation
+      setHoveredPlaced(null);
       onRemove(placed.id);
+    } else if (canvasMode === 'move') {
+      // Start moving the object
+      setMovingObject(placed);
     }
+    // In 'view' mode, do nothing on click
+  };
+
+  const handleMoveObjectDrop = (e) => {
+    if (!movingObject) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const transformState = transformRef.current?.instance?.transformState;
+    if (!transformState) {
+      setMovingObject(null);
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / transformState.scale;
+    const y = (e.clientY - rect.top) / transformState.scale;
+    const gridX = Math.floor(x / GRID_SIZE);
+    const gridY = Math.floor(y / GRID_SIZE);
+
+    const obj = movingObject.game_object;
+
+    // Check bounds
+    if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_WIDTH || gridY + obj.footprint_h > CANVAS_HEIGHT) {
+      alert('⚠️ Out of bounds! Place the object within the grid.');
+      setMovingObject(null);
+      return;
+    }
+
+    // Remove from old position and place at new position
+    onRemove(movingObject.id);
+    onPlace(obj.id, gridX, gridY);
+    setMovingObject(null);
   };
   
   return (
@@ -253,6 +317,36 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
       <div className="canvas-header">
         <h3>🗺️ World Map ({CANVAS_HEIGHT}×{CANVAS_WIDTH})</h3>
         <div className="canvas-controls">
+          <button
+            className={`mode-btn ${canvasMode === 'view' ? 'active' : ''}`}
+            onClick={() => {
+              setCanvasMode('view');
+              setMovingObject(null);
+            }}
+            title="View Mode"
+          >
+            👁️ View
+          </button>
+          <button
+            className={`mode-btn ${canvasMode === 'move' ? 'active' : ''}`}
+            onClick={() => {
+              setCanvasMode('move');
+              setMovingObject(null);
+            }}
+            title="Move Mode"
+          >
+            ✋ Move
+          </button>
+          <button
+            className={`mode-btn ${canvasMode === 'trash' ? 'active' : ''}`}
+            onClick={() => {
+              setCanvasMode('trash');
+              setMovingObject(null);
+            }}
+            title="Delete Mode"
+          >
+            🗑️ Trash
+          </button>
           <span className="control-hint">🖱️ Drag to pan • 🔍 Scroll to zoom</span>
         </div>
       </div>
@@ -282,7 +376,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                 wrapperStyle={{
                   width: '100%',
                   height: '100%',
-                  cursor: draggedObject ? 'crosshair' : 'grab'
+                  cursor: draggedObject || movingObject ? 'crosshair' : canvasMode === 'move' ? 'move' : canvasMode === 'trash' ? 'not-allowed' : 'grab'
                 }}
                 contentStyle={{
                   width: CANVAS_WIDTH * GRID_SIZE + 'px',
@@ -310,6 +404,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                         top: placed.y * GRID_SIZE + 'px',
                         width: placed.game_object.footprint_w * GRID_SIZE + 'px',
                         height: placed.game_object.footprint_h * GRID_SIZE + 'px',
+                        cursor: canvasMode === 'trash' ? 'not-allowed' : canvasMode === 'move' ? 'move' : 'pointer',
                       }}
                       onClick={(e) => handlePlacedClick(placed, e)}
                       onMouseEnter={() => setHoveredPlaced(placed)}
@@ -468,7 +563,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
               <span className="stat-value">{hoveredPlaced.game_object.footprint_w}×{hoveredPlaced.game_object.footprint_h}</span>
             </div>
           </div>
-          <div className="tooltip-hint">Click to remove</div>
         </div>
       )}
     </div>

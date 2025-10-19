@@ -30,6 +30,33 @@
   align-items: center;
 }
 
+.mode-btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+.mode-btn:hover {
+  background: var(--bg-primary);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px var(--shadow-heavy);
+}
+
+.mode-btn.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 12px rgba(230, 126, 34, 0.4);
+}
+
 .control-hint {
   color: var(--text-secondary);
   font-size: 0.9rem;
