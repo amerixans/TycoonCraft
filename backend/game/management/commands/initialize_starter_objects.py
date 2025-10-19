@@ -186,6 +186,74 @@ class Command(BaseCommand):
     'flavor_text': 'Plant strands for rope, cloth, and binding.',
     'image_path': '/media/objects/starter-fiber.png'
     },
+    {
+    'object_name': 'Village Notice Board',
+    'era_name': 'Agriculture',
+    'is_keystone': False,
+    'category': 'cultural',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('1600'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('18'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 60,
+    'operation_duration_sec': 3600,
+    'retire_payout_coins_pct': Decimal('0.25'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.0'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['farm', 'natural'],
+            'affected_tags': [],
+            'income_multiplier': 1.06,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.06,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Announcements keep the village humming and fields coordinated.',
+    'image_path': '/media/objects/starter-noticeboard.png'
+    },
+    {
+    'object_name': 'Storehouse Ledger',
+    'era_name': 'Agriculture',
+    'is_keystone': False,
+    'category': 'structure',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('1800'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('22'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 75,
+    'operation_duration_sec': 4000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.0'),
+    'global_modifiers': [
+        {
+            'active_when': 'placed',
+            'affected_categories': ['farm'],
+            'affected_tags': [],
+            'income_multiplier': 1.05,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 0.97,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Tidy grain counts shave hours off planting and harvest prep.',
+    'image_path': '/media/objects/starter-ledger.png'
+    },
     # Metallurgy starters
     {
     'object_name': 'Ore',
@@ -274,6 +342,74 @@ class Command(BaseCommand):
     'global_modifiers': [],
     'flavor_text': 'Leather lungs that breathe fire hotter.',
     'image_path': '/media/objects/starter-bellows.png'
+    },
+    {
+    'object_name': 'Foundry Banner',
+    'era_name': 'Metallurgy',
+    'is_keystone': False,
+    'category': 'cultural',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('12000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('120'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 90,
+    'operation_duration_sec': 5400,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.2'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['mine', 'factory'],
+            'affected_tags': [],
+            'income_multiplier': 1.08,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Raised above the forge, it keeps every crew pulling together.',
+    'image_path': '/media/objects/starter-foundrybanner.png'
+    },
+    {
+    'object_name': 'Forge Bell',
+    'era_name': 'Metallurgy',
+    'is_keystone': False,
+    'category': 'structure',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('14000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('130'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 110,
+    'operation_duration_sec': 5600,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.2'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['factory'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 0.95,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'A resonant cue that trims downtime across the workshop floor.',
+    'image_path': '/media/objects/starter-forgebell.png'
     },
     # Steam & Industry starters
     {
@@ -364,6 +500,74 @@ class Command(BaseCommand):
     'flavor_text': 'A lodestone with a pull on progress.',
     'image_path': '/media/objects/starter-magnet.png'
     },
+    {
+    'object_name': 'Shift Whistle',
+    'era_name': 'Steam & Industry',
+    'is_keystone': False,
+    'category': 'cultural',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('80000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('700'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 180,
+    'operation_duration_sec': 7200,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.5'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['factory', 'logistics'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 0.92,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'A piercing call snaps every line into motion on schedule.',
+    'image_path': '/media/objects/starter-shiftwhistle.png'
+    },
+    {
+    'object_name': 'Rail Milepost',
+    'era_name': 'Steam & Industry',
+    'is_keystone': False,
+    'category': 'logistics',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('90000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('750'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 200,
+    'operation_duration_sec': 7500,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.5'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['logistics'],
+            'affected_tags': [],
+            'income_multiplier': 1.08,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Perfectly spaced markers keep freight and passengers flowing.',
+    'image_path': '/media/objects/starter-railpost.png'
+    },
     # Electric Age starters
     {
     'object_name': 'Copper',
@@ -452,6 +656,74 @@ class Command(BaseCommand):
     'global_modifiers': [],
     'flavor_text': 'Stored spark, ready on demand.',
     'image_path': '/media/objects/starter-battery.png'
+    },
+    {
+    'object_name': 'Substation Signage',
+    'era_name': 'Electric Age',
+    'is_keystone': False,
+    'category': 'power',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('600000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('4000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 220,
+    'operation_duration_sec': 9000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.6'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['power'],
+            'affected_tags': [],
+            'income_multiplier': 1.08,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Clear routing placards keep every circuit humming efficiently.',
+    'image_path': '/media/objects/starter-substation.png'
+    },
+    {
+    'object_name': 'Insulator Yard',
+    'era_name': 'Electric Age',
+    'is_keystone': False,
+    'category': 'structure',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('650000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('4200'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 240,
+    'operation_duration_sec': 9500,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.7'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['power'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.08,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Spools and ceramic racks stretch grid uptime between shutdowns.',
+    'image_path': '/media/objects/starter-insulatoryard.png'
     },
     # Computing starters
     {
@@ -542,6 +814,74 @@ class Command(BaseCommand):
     'flavor_text': 'Light disciplined to a razor line.',
     'image_path': '/media/objects/starter-laser.png'
     },
+    {
+    'object_name': 'Cooling Stack',
+    'era_name': 'Computing',
+    'is_keystone': False,
+    'category': 'structure',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('3500000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('22000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 260,
+    'operation_duration_sec': 11000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.8'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['factory', 'research'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.10,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Heat sinks climb like towers, buying servers precious uptime.',
+    'image_path': '/media/objects/starter-coolingstack.png'
+    },
+    {
+    'object_name': 'Job Scheduler Board',
+    'era_name': 'Computing',
+    'is_keystone': False,
+    'category': 'cultural',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('3600000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('23000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 270,
+    'operation_duration_sec': 11200,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.6'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['research'],
+            'affected_tags': [],
+            'income_multiplier': 1.07,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Color-coded queues keep every automation job cycling smoothly.',
+    'image_path': '/media/objects/starter-schedulerboard.png'
+    },
     # Futurism starters
     {
     'object_name': 'Superconductor',
@@ -630,6 +970,74 @@ class Command(BaseCommand):
     'global_modifiers': [],
     'flavor_text': 'A pocket of captured lightning.',
     'image_path': '/media/objects/starter-energycell.png'
+    },
+    {
+    'object_name': 'Polymer Ledger',
+    'era_name': 'Futurism',
+    'is_keystone': False,
+    'category': 'structure',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('20000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('130000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 320,
+    'operation_duration_sec': 14000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('1.9'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['factory', 'power'],
+            'affected_tags': [],
+            'income_multiplier': 1.06,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Every batch run is logged, squeezing waste from high-tech fabs.',
+    'image_path': '/media/objects/starter-polymerledger.png'
+    },
+    {
+    'object_name': 'Composite Shielding',
+    'era_name': 'Futurism',
+    'is_keystone': False,
+    'category': 'structure',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('22000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('140000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 340,
+    'operation_duration_sec': 14500,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.0'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['factory'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.08,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Layered skins keep delicate fabrication lines running longer.',
+    'image_path': '/media/objects/starter-compositeshield.png'
     },
     # Interstellar starters
     {
@@ -720,6 +1128,74 @@ class Command(BaseCommand):
     'flavor_text': 'Push enough, and the stars get closer.',
     'image_path': '/media/objects/starter-thruster.png'
     },
+    {
+    'object_name': 'Tracking Beacon',
+    'era_name': 'Interstellar',
+    'is_keystone': False,
+    'category': 'logistics',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('150000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('900000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 420,
+    'operation_duration_sec': 18000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.1'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['logistics', 'research'],
+            'affected_tags': [],
+            'income_multiplier': 1.08,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 3
+        }
+    ],
+    'flavor_text': 'Relay chains whisper across the void, boosting every link in the network.',
+    'image_path': '/media/objects/starter-trackingbeacon.png'
+    },
+    {
+    'object_name': 'Waypoint Relay',
+    'era_name': 'Interstellar',
+    'is_keystone': False,
+    'category': 'logistics',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('160000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('920000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 440,
+    'operation_duration_sec': 18500,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.1'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['logistics'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 0.93,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Autonomous couriers pre-stage deliveries, trimming downtime between jumps.',
+    'image_path': '/media/objects/starter-waypointrelay.png'
+    },
     # Arcana starters
     {
     'object_name': 'Crystal',
@@ -809,7 +1285,143 @@ class Command(BaseCommand):
     'flavor_text': 'A boundary where rules may bend.',
     'image_path': '/media/objects/starter-chalkcircle.png'
     },
+    {
+    'object_name': 'Rune Circle',
+    'era_name': 'Arcana',
+    'is_keystone': False,
+    'category': 'magic',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('950000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('6000000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 460,
+    'operation_duration_sec': 21000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.2'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['magic'],
+            'affected_tags': [],
+            'income_multiplier': 1.10,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Sigils flare bright, amplifying every working in its radius.',
+    'image_path': '/media/objects/starter-runecircle.png'
+    },
+    {
+    'object_name': 'Ley Tuning Fork',
+    'era_name': 'Arcana',
+    'is_keystone': False,
+    'category': 'magic',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('980000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('6200000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 480,
+    'operation_duration_sec': 21500,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.3'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['magic'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.10,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Struck once, it keeps ley pulses resonant far longer than they should be.',
+    'image_path': '/media/objects/starter-leyfork.png'
+    },
     # Beyond starters
+    {
+    'object_name': 'Archive Mirror',
+    'era_name': 'Beyond',
+    'is_keystone': False,
+    'category': 'wonder',
+    'quality_tier': 'uncommon',
+    'cost': Decimal('7000000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('40000000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 520,
+    'operation_duration_sec': 24000,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.5'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['research'],
+            'affected_tags': [],
+            'income_multiplier': 1.07,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.0,
+            'stacking': 'multiplicative',
+            'max_stacks': 2
+        }
+    ],
+    'flavor_text': 'Parallel archives whisper answers forward, accelerating every breakthrough.',
+    'image_path': '/media/objects/starter-archivemirror.png'
+    },
+    {
+    'object_name': 'Convergence Anchor',
+    'era_name': 'Beyond',
+    'is_keystone': False,
+    'category': 'wonder',
+    'quality_tier': 'rare',
+    'cost': Decimal('7200000000'),
+    'time_crystal_cost': Decimal('0'),
+    'income_per_second': Decimal('41000000'),
+    'time_crystal_generation': Decimal('0'),
+    'build_time_sec': 540,
+    'operation_duration_sec': 24500,
+    'retire_payout_coins_pct': Decimal('0.2'),
+    'sellback_pct': Decimal('0.15'),
+    'cap_per_civ': None,
+    'footprint_w': 1,
+    'footprint_h': 1,
+    'size': Decimal('2.6'),
+    'global_modifiers': [
+        {
+            'active_when': 'operational',
+            'affected_categories': ['natural', 'structure', 'farm', 'mine', 'factory', 'power', 'logistics', 'research', 'cultural', 'housing', 'magic'],
+            'affected_tags': [],
+            'income_multiplier': 1.0,
+            'cost_multiplier': 1.0,
+            'build_time_multiplier': 1.0,
+            'operation_duration_multiplier': 1.10,
+            'stacking': 'multiplicative',
+            'max_stacks': 1
+        }
+    ],
+    'flavor_text': 'Locks in reality so layouts run longer before the fabric frays.',
+    'image_path': '/media/objects/starter-convergenceanchor.png'
+    },
     {
     'object_name': 'Quantum Core',
     'era_name': 'Beyond',

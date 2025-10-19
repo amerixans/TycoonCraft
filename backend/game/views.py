@@ -1,6 +1,7 @@
 # views.py
 
-from decimal import Decimal
+from collections import defaultdict
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import timedelta
 import base64
 import hashlib
@@ -77,6 +78,100 @@ def ensure_hunter_gatherer_starters(profile):
             Discovery.objects.get_or_create(player=profile, game_object=obj)
 
 
+def get_active_placed_objects(player):
+    """Return placed objects that are either operational or currently building."""
+    return list(
+        PlacedObject.objects
+        .filter(player=player)
+        .filter(Q(is_operational=True) | Q(is_building=True))
+        .select_related("game_object")
+    )
+
+
+def build_modifier_map(placed_objects):
+    """Build a category -> [modifier] map honoring active_when and max_stacks."""
+    modifier_map = defaultdict(list)
+    source_counts = defaultdict(int)
+
+    for placed in placed_objects:
+        game_object = placed.game_object
+        modifiers = game_object.global_modifiers or []
+        if not modifiers:
+            continue
+
+        for idx, modifier in enumerate(modifiers):
+            active_when = modifier.get("active_when", "operational")
+            if active_when not in {"operational", "placed"}:
+                continue
+
+            if active_when == "operational" and not placed.is_operational:
+                continue
+            if active_when == "placed" and not (placed.is_operational or placed.is_building):
+                continue
+
+            affected_categories = modifier.get("affected_categories", [])
+            if not affected_categories:
+                continue
+
+            try:
+                max_stacks = int(modifier.get("max_stacks", 1))
+            except (TypeError, ValueError):
+                max_stacks = 1
+
+            if max_stacks <= 0:
+                continue
+
+            source_key = (game_object.id, idx)
+            if source_counts[source_key] >= max_stacks:
+                continue
+            source_counts[source_key] += 1
+
+            stacking = modifier.get("stacking", "multiplicative")
+            if stacking not in {"multiplicative", "additive"}:
+                stacking = "multiplicative"
+
+            entry = {
+                "stacking": stacking,
+                "income_multiplier": Decimal(str(modifier.get("income_multiplier", 1))),
+                "cost_multiplier": Decimal(str(modifier.get("cost_multiplier", 1))),
+                "build_time_multiplier": Decimal(str(modifier.get("build_time_multiplier", 1))),
+                "operation_duration_multiplier": Decimal(str(modifier.get("operation_duration_multiplier", 1))),
+            }
+
+            for category in affected_categories:
+                modifier_map[category].append(entry)
+
+    return modifier_map
+
+
+def calculate_category_multiplier(modifier_map, category, field_name):
+    """Aggregate modifiers for a category/field into a single multiplier."""
+    modifiers = modifier_map.get(category)
+    if not modifiers:
+        return Decimal("1")
+
+    total = Decimal("1")
+    for modifier in modifiers:
+        value = modifier.get(field_name, Decimal("1"))
+        stacking = modifier["stacking"]
+        if stacking == "multiplicative":
+            total *= value
+        else:
+            total += (value - Decimal("1"))
+
+    # Prevent negative multipliers from cascading into runtime errors
+    if total < Decimal("0"):
+        total = Decimal("0")
+    return total
+
+
+def apply_time_multiplier(base_value, multiplier):
+    """Apply a multiplier to an integer time field and clamp to non-negative."""
+    result = (Decimal(base_value) * multiplier).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    adjusted = int(result)
+    return max(adjusted, 0)
+
+
 # -----------------------------
 # Player coin/tc updates
 # -----------------------------
@@ -147,48 +242,26 @@ def update_player_coins(player):
 
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
-    # Fetch all operational objects once and cache them
-    # Filter for objects that either haven't been assigned a retire_at time yet (NULL)
-    # or haven't reached their retirement time yet
-    operational_objects = list(
-        PlacedObject.objects
-        .filter(player=player, is_operational=True)
-        .filter(Q(retire_at__isnull=True) | Q(retire_at__gt=now))
-        .select_related("game_object")
-    )
+    active_objects = get_active_placed_objects(player)
+    modifier_map = build_modifier_map(active_objects)
 
     total_income = Decimal("0")
     total_crystals = Decimal("0")
-
-    # Build modifier map: for each category, collect all active modifiers
-    # This avoids looping through all objects for each object
-    modifier_map = {}  # category -> list of (income_multiplier, stacking_type)
-
-    for mod_obj in operational_objects:
-        modifiers = mod_obj.game_object.global_modifiers or []
-        for mod in modifiers:
-            if mod.get("active_when") == "operational":
-                affected_categories = mod.get("affected_categories", [])
-                income_mult = Decimal(str(mod.get("income_multiplier", 1)))
-                stacking = mod.get("stacking", "multiplicative")
-
-                for category in affected_categories:
-                    if category not in modifier_map:
-                        modifier_map[category] = []
-                    modifier_map[category].append((income_mult, stacking))
+    income_multiplier_cache = {}
 
     # Calculate income for each operational object, using the modifier map
-    for placed in operational_objects:
-        income_multiplier = Decimal("1")
+    for placed in active_objects:
+        if not placed.is_operational:
+            continue
+        if placed.retire_at is not None and placed.retire_at <= now:
+            continue
 
-        # Apply modifiers from the map for this object's category
-        if placed.game_object.category in modifier_map:
-            for income_mult, stacking in modifier_map[placed.game_object.category]:
-                if stacking == "multiplicative":
-                    income_multiplier *= income_mult
-                else:
-                    income_multiplier += (income_mult - Decimal("1"))
-
+        category = placed.game_object.category
+        if category not in income_multiplier_cache:
+            income_multiplier_cache[category] = calculate_category_multiplier(
+                modifier_map, category, "income_multiplier"
+            )
+        income_multiplier = income_multiplier_cache[category]
         total_income += placed.game_object.income_per_second * income_multiplier
         total_crystals += placed.game_object.time_crystal_generation
 
@@ -1041,14 +1114,30 @@ def place_object(request):
     if x < 0 or y < 0 or x + game_object.footprint_w > 1000 or y + game_object.footprint_h > 1000:
         return Response({"error": "Out of bounds"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Evaluate active modifiers impacting this placement
+    modifier_map = build_modifier_map(get_active_placed_objects(profile))
+    build_time_multiplier = calculate_category_multiplier(
+        modifier_map, game_object.category, "build_time_multiplier"
+    )
+    operation_duration_multiplier = calculate_category_multiplier(
+        modifier_map, game_object.category, "operation_duration_multiplier"
+    )
+
+    effective_build_time = apply_time_multiplier(game_object.build_time_sec, build_time_multiplier)
+    effective_operation_duration = apply_time_multiplier(
+        game_object.operation_duration_sec, operation_duration_multiplier
+    )
+    if effective_operation_duration <= 0:
+        effective_operation_duration = 1
+
     # Deduct cost
     profile.coins -= game_object.cost
     profile.time_crystals -= game_object.time_crystal_cost
     profile.save()
 
     now = timezone.now()
-    build_complete = now + timedelta(seconds=game_object.build_time_sec)
-    retire_at = build_complete + timedelta(seconds=game_object.operation_duration_sec)
+    build_complete = now + timedelta(seconds=effective_build_time)
+    retire_at = build_complete + timedelta(seconds=effective_operation_duration)
 
     placed = PlacedObject.objects.create(
         player=profile,
@@ -1058,8 +1147,8 @@ def place_object(request):
         placed_at=now,
         build_complete_at=build_complete,
         retire_at=retire_at,
-        is_building=game_object.build_time_sec > 0,
-        is_operational=game_object.build_time_sec == 0,
+        is_building=effective_build_time > 0,
+        is_operational=effective_build_time == 0,
     )
 
     response_data = PlacedObjectSerializer(placed).data

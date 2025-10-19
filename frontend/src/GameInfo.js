@@ -47,6 +47,8 @@ Every combination you try might unlock something new, and every object you place
   Electric Age → Computing → Futurism → Interstellar → Arcana → Beyond</li>
   <li>Each era has unique objects and a special <strong>keystone object</strong> (marked with 🔑)</li>
   <li><strong>NEW!</strong> Keystones automatically unlock new eras when you place them on the canvas!</li>
+  <li>New aura buildings arrive each era—look for icons that boost whole categories like farms, factories, or magic.</li>
+  <li>Keystone wonders are single-stack auras with the biggest bonuses; place them for both the unlock and the buff.</li>
   <li>Look for keystone combinations: Fire + Wood = Campfire (unlocks Agriculture)</li>
   <li>Keystones are powerful objects with limited placement (usually 1-3 per civilization)</li>
   <li>You can still manually unlock eras by spending time crystals (💎) if you prefer</li>

@@ -47,7 +47,22 @@
 "output": {
 "object_name": "Charcoal Kiln",
 "era_name": "Agriculture",
-"cost": 500000
+"cost": 500000,
+"category": "structure",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["farm"],
+    "affected_tags": [],
+    "income_multiplier": 1.08,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.05,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -82,7 +97,22 @@
 "output": {
 "object_name": "Boiler",
 "era_name": "Metallurgy",
-"cost": 18000000
+"cost": 18000000,
+"category": "factory",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["factory"],
+    "affected_tags": [],
+    "income_multiplier": 1.12,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -111,7 +141,22 @@
 "output": {
 "object_name": "Dynamo",
 "era_name": "Steam & Industry",
-"cost": 900000000
+"cost": 900000000,
+"category": "power",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["power"],
+    "affected_tags": [],
+    "income_multiplier": 1.12,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -140,7 +185,22 @@
 "output": {
 "object_name": "Transistor",
 "era_name": "Electric Age",
-"cost": 7200000000
+"cost": 7200000000,
+"category": "power",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["research"],
+    "affected_tags": [],
+    "income_multiplier": 1.10,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -175,7 +235,22 @@
 "output": {
 "object_name": "Lithography",
 "era_name": "Computing",
-"cost": 1440000000000
+"cost": 1440000000000,
+"category": "factory",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["factory"],
+    "affected_tags": [],
+    "income_multiplier": 1.12,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -222,7 +297,22 @@
 "output": {
 "object_name": "Fusion Core",
 "era_name": "Futurism",
-"cost": 288000000000000
+"cost": 288000000000000,
+"category": "power",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["power"],
+    "affected_tags": [],
+    "income_multiplier": 1.15,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -263,7 +353,22 @@
 "output": {
 "object_name": "Aether Array",
 "era_name": "Interstellar",
-"cost": 57600000000000000
+"cost": 57600000000000000,
+"category": "research",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["research"],
+    "affected_tags": [],
+    "income_multiplier": 1.15,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -316,7 +421,22 @@
 "output": {
 "object_name": "Reality Loom",
 "era_name": "Arcana",
-"cost": 1152000000000000000
+"cost": 1152000000000000000,
+"category": "magic",
+"cap_per_civ": 1,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["magic"],
+    "affected_tags": [],
+    "income_multiplier": 1.18,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 },
 
@@ -369,7 +489,23 @@
 "output": {
 "object_name": "Seed AI",
 "era_name": "Beyond",
-"cost": 230400000000000000000
+"cost": 230400000000000000000,
+"category": "wonder",
+"cap_per_civ": 1,
+"time_crystal_generation": 0.002,
+"global_modifiers": [
+  {
+    "active_when": "operational",
+    "affected_categories": ["natural", "structure", "farm", "mine", "factory", "power", "logistics", "research", "cultural", "housing", "magic", "wonder"],
+    "affected_tags": [],
+    "income_multiplier": 1.15,
+    "cost_multiplier": 1.0,
+    "build_time_multiplier": 1.0,
+    "operation_duration_multiplier": 1.0,
+    "stacking": "multiplicative",
+    "max_stacks": 1
+  }
+]
 }
 }
 ]
