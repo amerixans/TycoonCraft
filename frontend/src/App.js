@@ -190,7 +190,7 @@ function App() {
       }
 
       // TIER 2: First time player discovered it, but exists in database (database discovery)
-      // Show in crafting result box for 2 seconds
+      // Show in crafting result box for 4 seconds
       else if (response.data.newly_discovered && !response.data.newly_created) {
         const resultId = Date.now() + Math.random();
         setCraftingResults(prev => [...prev, {
@@ -203,20 +203,20 @@ function App() {
           'success'
         );
 
-        // Remove from results box after 2 seconds
+        // Remove from results box after 4 seconds
         setTimeout(() => {
           setCraftingResults(prev => prev.filter(r => r.id !== resultId));
-        }, 2000);
+        }, 4000);
       }
 
       // TIER 3: Brand new creation - first in the world! (OpenAI call, most exciting)
-      // Show discovery modal in top right for 4.5 seconds
+      // Show discovery modal in top right for 9 seconds
       else if (response.data.newly_created) {
         setShowDiscoveryModal({
           object: response.data.object,
           isNew: true
         });
-        setTimeout(() => setShowDiscoveryModal(null), 4500);
+        setTimeout(() => setShowDiscoveryModal(null), 9000);
 
         showNotification(
           `🎉 New discovery! You created ${response.data.object.object_name}!`,
