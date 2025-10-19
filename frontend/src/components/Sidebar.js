@@ -5,41 +5,41 @@ import './Sidebar.css';
 function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Update selectedEra when currentEra changes
   useEffect(() => {
     setSelectedEra(currentEra);
   }, [currentEra]);
-  
-  const discoveredIds = new Set(discoveries.map(d => d.game_object.id));
+
+  // Extract discovered objects directly from discoveries
+  const discoveredObjects = discoveries.map(d => d.game_object);
   const unlockedEras = new Set(eraUnlocks.map(u => u.era_name));
-  
+
   const getNextEra = (era) => {
     const index = eras.indexOf(era);
     return index >= 0 && index < eras.length - 1 ? eras[index + 1] : null;
   };
-  
+
   const objectsByEra = {};
   eras.forEach(era => {
     // Include objects that match this era OR are keystone objects (visible in all eras)
-    objectsByEra[era] = (allObjects || []).filter(obj =>
+    objectsByEra[era] = discoveredObjects.filter(obj =>
       obj.era_name === era || obj.is_keystone
     );
   });
-  
+
   const getEraStatus = (era) => {
     if (unlockedEras.has(era)) return 'unlocked';
     if (eras.indexOf(era) <= eras.indexOf(currentEra)) return 'available';
     return 'locked';
   };
-  
+
   // Filter objects based on search term
   const filteredObjects = searchTerm
-    ? (allObjects || []).filter(obj =>
-        obj.object_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        discoveredIds.has(obj.id)
+    ? discoveredObjects.filter(obj =>
+        obj.object_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : objectsByEra[selectedEra]?.filter(obj => discoveredIds.has(obj.id)) || [];
+    : objectsByEra[selectedEra] || [];
   
   const handleInfoClick = (obj, e) => {
     e.stopPropagation();

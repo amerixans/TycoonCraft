@@ -192,12 +192,6 @@ function App() {
             : `✨ You discovered ${response.data.object.object_name}!`,
           'success'
         );
-
-        // If a new object was created, invalidate the catalog cache
-        if (response.data.newly_created) {
-          sessionStorage.removeItem('objectCatalog');
-          await loadObjectCatalog();
-        }
       } else {
         // Show in results box for already discovered items
         const resultId = Date.now() + Math.random();
