@@ -11,7 +11,15 @@ load_dotenv(dotenv_path=env_path)
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production')
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+def env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {'true', '1', 'yes', 'on'}
+
+
+DEBUG = env_bool('DEBUG', False)
 
 ALLOWED_HOSTS = ['*']
 
@@ -94,11 +102,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if DEBUG:
     # Allow all origins in development
     CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
 else:
     # In production, only allow specific origins
-    CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
-    # Filter out empty strings from split
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
+    cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+    if cors_origins:
+        CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+    else:
+        # Fallback: construct from domain if CORS_ALLOWED_ORIGINS not set
+        domain = os.environ.get('DOMAIN', 'localhost')
+        server_ip = os.environ.get('SERVER_IP', '')
+        CORS_ALLOWED_ORIGINS = [
+            f'http://{domain}',
+            f'https://{domain}',
+            f'http://www.{domain}',
+            f'https://www.{domain}',
+        ]
+        if server_ip:
+            CORS_ALLOWED_ORIGINS.extend([f'http://{server_ip}', f'https://{server_ip}'])
+
+    CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -108,6 +131,46 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# Session and CSRF Cookie Configuration
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400 * 30  # 30 days
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', False)
+
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', not DEBUG)  # Only use secure cookies in production (HTTPS)
+SESSION_COOKIE_PATH = '/'  # Ensure cookies work across all paths
+SESSION_COOKIE_NAME = 'sessionid'  # Explicit session cookie name
+
+CSRF_COOKIE_HTTPONLY = False  # Frontend needs to read it for the header
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', not DEBUG)  # Only use secure cookies in production (HTTPS)
+CSRF_COOKIE_PATH = '/'  # Ensure CSRF cookie accessible across all paths
+CSRF_COOKIE_NAME = 'csrftoken'  # Explicit CSRF cookie name
+CSRF_TRUSTED_ORIGINS = []
+
+# Add domain to CSRF_TRUSTED_ORIGINS
+if not DEBUG:
+    # First check if CSRF_TRUSTED_ORIGINS is set in environment
+    csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+    if csrf_origins:
+        CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(',') if origin.strip()]
+    else:
+        # Fallback: construct from DOMAIN and SERVER_IP
+        domain = os.environ.get('DOMAIN', 'localhost')
+        server_ip = os.environ.get('SERVER_IP', '')
+        CSRF_TRUSTED_ORIGINS = [
+            f'https://{domain}',
+            f'https://www.{domain}',
+            f'http://{domain}',  # Allow HTTP in case HTTPS not configured
+            f'http://www.{domain}',
+        ]
+        if server_ip:
+            CSRF_TRUSTED_ORIGINS.extend([
+                f'https://{server_ip}',
+                f'http://{server_ip}',  # Allow HTTP for IP access
+            ])
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
@@ -123,3 +186,8 @@ RATE_LIMIT_DAILY_ADMIN = 1000   # Admin users
 RATE_LIMIT_DAILY_GLOBAL = 4000  # Total API calls per day across all users
 
 STARTING_COINS = 500
+
+# Image Compression Settings
+# Quality level: 0-95 (higher = better quality, larger file size)
+# 75-85 recommended for good quality/size tradeoff
+IMAGE_COMPRESSION_QUALITY = 85

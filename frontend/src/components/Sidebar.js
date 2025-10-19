@@ -22,7 +22,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
   const objectsByEra = {};
   eras.forEach(era => {
     // Include objects that match this era OR are keystone objects (visible in all eras)
-    objectsByEra[era] = allObjects.filter(obj => 
+    objectsByEra[era] = (allObjects || []).filter(obj =>
       obj.era_name === era || obj.is_keystone
     );
   });
@@ -35,7 +35,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
   
   // Filter objects based on search term
   const filteredObjects = searchTerm
-    ? allObjects.filter(obj => 
+    ? (allObjects || []).filter(obj =>
         obj.object_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
         discoveredIds.has(obj.id)
       )

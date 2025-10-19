@@ -102,6 +102,41 @@ Keystone policy (is_keystone)
 • Keystones should be thematically important milestones (e.g., Campfire, Fertilizer, Metal)
 • Otherwise set is_keystone: false and use cap_per_civ: null
 
+⚠️ AGRICULTURAL ITEMS SPECIAL MECHANICS ⚠️
+
+For items in Agriculture era and beyond that represent animals, crops, or plants:
+
+ANIMALS (e.g., Pig, Cow, Sheep, Chicken, Horse, Beehive):
+• CRITICAL: animals do NOT generate passive income while operational
+• income_per_second: MUST be 1 (minimum; represents growth/feeding cost, not revenue)
+• operation_duration_sec: SHORT (300-1200 seconds / 5-20 minutes typical)
+• retire_payout.coins_pct: HIGH (0.40-0.70; animal is sold/butchered for meat/goods)
+• Example: Pig costs 800 coins, generates 1 coin/sec for 10 minutes, then pays out 600 coins (75% refund)
+• Flavor: suggest "grown" or "fattened" or "ready for market"
+
+CROPS / HARVESTABLE PLANTS (e.g., Wheat, Corn, Pumpkin, Barley, Cabbage, Grapes):
+• CRITICAL: crops do NOT generate passive income; income only at harvest (retirement)
+• income_per_second: MUST be 1 (minimum; represents maintenance/watering cost)
+• operation_duration_sec: SHORT-MEDIUM (600-3600 seconds / 10-60 minutes typical for seasonal crops)
+• retire_payout.coins_pct: VERY HIGH (0.50-1.00; entire harvest/yield is the payout)
+• Example: Wheat costs 500 coins, generates 1 coin/sec for 30 minutes, then pays out 500-900 coins as harvest
+• Flavor: emphasize "ready to harvest" or "mature crop" or "full yield"
+
+FRUIT/NUT TREES (e.g., Apple Tree, Orange Tree, Walnut Tree, Olive Tree):
+• These are PERENNIAL and should behave differently from seasonal crops
+• income_per_second: MODERATE (5-50 coins/sec; continuous fruit/nut production)
+• operation_duration_sec: LONG (5000-20000 seconds / 1.4-5.5 hours; trees stay productive longer)
+• retire_payout.coins_pct: LOW-MODERATE (0.10-0.30; tree ages/becomes less productive, small salvage value)
+• Example: Apple Tree costs 2000 coins, generates 20 coins/sec for 3 hours, then pays out 300 coins
+• Flavor: suggest "aged" or "declining" or "salvage wood"
+
+GENERAL RULE FOR ALL AGRICULTURAL ITEMS:
+• If the item represents a living organism that would realistically "expire" or "be harvested",
+  use a FINITE operation_duration_sec and calculate payout as if it's being sold/harvested
+• Do NOT use null for operation_duration_sec; all agricultural items must retire naturally
+• Do NOT create agricultural items that generate high passive income indefinitely
+• Rare agricultural items (crops/animals) may have quality_tier of uncommon/rare and higher payouts
+
 Categories (enum for category)
 natural, structure, farm, mine, factory, power, logistics, research, cultural, housing, magic, wonder
 Choose the category that best matches the object's primary purpose. This powers global modifiers and UI grouping.

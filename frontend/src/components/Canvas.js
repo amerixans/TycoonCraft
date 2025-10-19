@@ -76,16 +76,33 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   // Calculate build progress for an object
   const getBuildProgress = (placed) => {
     if (!placed.is_building) return null;
-    
+
     const placedTime = new Date(placed.placed_at).getTime();
     const completeTime = new Date(placed.build_complete_at).getTime();
     const totalDuration = completeTime - placedTime;
     const elapsed = currentTime - placedTime;
     const remaining = Math.max(0, completeTime - currentTime);
-    
+
     return {
       percentage: Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)),
       remainingSeconds: Math.ceil(remaining / 1000)
+    };
+  };
+
+  // Calculate retirement progress for an operational object
+  const getRetirementProgress = (placed) => {
+    if (!placed.is_operational || placed.retire_at === null) return null;
+
+    const buildCompleteTime = new Date(placed.build_complete_at).getTime();
+    const retireTime = new Date(placed.retire_at).getTime();
+    const totalDuration = retireTime - buildCompleteTime;
+    const elapsed = currentTime - buildCompleteTime;
+    const remaining = Math.max(0, retireTime - currentTime);
+
+    return {
+      percentage: Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)),
+      remainingSeconds: Math.ceil(remaining / 1000),
+      isRetiring: remaining <= 0
     };
   };
   
@@ -272,7 +289,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                   {placedObjects.map(placed => (
                     <div
                       key={placed.id}
-                      className={`placed-object ${placed.is_building ? 'building' : ''} ${!placed.is_operational ? 'inactive' : ''}`}
+                      className={`placed-object ${placed.is_building ? 'building' : ''} ${!placed.is_operational ? 'retiring' : ''}`}
                       style={{
                         left: placed.x * GRID_SIZE + 'px',
                         top: placed.y * GRID_SIZE + 'px',
@@ -284,8 +301,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                       onMouseLeave={() => setHoveredPlaced(null)}
                     >
                       {placed.game_object.image_path ? (
-                        <img 
-                          src={placed.game_object.image_path} 
+                        <img
+                          src={placed.game_object.image_path}
                           alt={placed.game_object.object_name}
                           className="object-image"
                         />
@@ -294,11 +311,11 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                           {placed.game_object.object_name.substring(0, 3).toUpperCase()}
                         </div>
                       )}
-                      
+
                       {placed.is_building && (() => {
                         const progress = getBuildProgress(placed);
                         if (!progress) return null;
-                        
+
                         // Calculate circle size based on object footprint
                         const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
                         const circleSize = Math.min(minDimension * GRID_SIZE * 0.6, 60);
@@ -306,12 +323,12 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                         const radius = (circleSize - strokeWidth) / 2;
                         const circumference = 2 * Math.PI * radius;
                         const offset = circumference - (progress.percentage / 100) * circumference;
-                        
+
                         return (
                           <div className="building-overlay">
-                            <svg 
+                            <svg
                               className="building-progress-circle"
-                              width={circleSize} 
+                              width={circleSize}
                               height={circleSize}
                               style={{ width: circleSize, height: circleSize }}
                             >
@@ -341,6 +358,65 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                             </svg>
                             <div className="building-time" style={{ fontSize: `${Math.max(circleSize * 0.25, 10)}px` }}>
                               {progress.remainingSeconds}s
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {placed.is_operational && placed.retire_at && (() => {
+                        const retireProgress = getRetirementProgress(placed);
+                        if (!retireProgress) return null;
+
+                        // Calculate circle size based on object footprint
+                        const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
+                        const circleSize = Math.min(minDimension * GRID_SIZE * 0.6, 60);
+                        const strokeWidth = Math.max(circleSize * 0.15, 4);
+                        const radius = (circleSize - strokeWidth) / 2;
+                        const circumference = 2 * Math.PI * radius;
+                        const offset = circumference - (retireProgress.percentage / 100) * circumference;
+
+                        // Determine color: green when healthy, yellow when warning (25% left), red when critical (10% left)
+                        let circleColor = '#3498db'; // Blue for normal operation
+                        if (retireProgress.percentage >= 90) {
+                          circleColor = '#e74c3c'; // Red when critical (10% or less remaining)
+                        } else if (retireProgress.percentage >= 75) {
+                          circleColor = '#f39c12'; // Orange/Yellow when warning (25% or less remaining)
+                        }
+
+                        return (
+                          <div className="retirement-overlay">
+                            <svg
+                              className="retirement-progress-circle"
+                              width={circleSize}
+                              height={circleSize}
+                              style={{ width: circleSize, height: circleSize }}
+                            >
+                              {/* Background circle */}
+                              <circle
+                                cx={circleSize / 2}
+                                cy={circleSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke="rgba(255, 255, 255, 0.1)"
+                                strokeWidth={strokeWidth}
+                              />
+                              {/* Retirement progress circle */}
+                              <circle
+                                cx={circleSize / 2}
+                                cy={circleSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke={circleColor}
+                                strokeWidth={strokeWidth}
+                                strokeDasharray={circumference}
+                                strokeDashoffset={offset}
+                                strokeLinecap="round"
+                                transform={`rotate(-90 ${circleSize / 2} ${circleSize / 2})`}
+                                style={{ transition: 'stroke 0.2s ease, stroke-dashoffset 0.3s ease' }}
+                              />
+                            </svg>
+                            <div className="retirement-time" style={{ fontSize: `${Math.max(circleSize * 0.2, 8)}px` }}>
+                              ⏳ {retireProgress.remainingSeconds}s
                             </div>
                           </div>
                         );
@@ -398,15 +474,24 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
             <div className="stat-row">
               <span>📊 Status:</span>
               <span className={`stat-value ${hoveredPlaced.is_operational ? 'operational' : 'inactive'}`}>
-                {hoveredPlaced.is_building ? '🔨 Building' : hoveredPlaced.is_operational ? '✅ Active' : '⏸️ Inactive'}
+                {hoveredPlaced.is_building ? '🔨 Building' : hoveredPlaced.is_operational ? '✅ Active' : '⏸️ Retiring'}
               </span>
             </div>
             {hoveredPlaced.is_building && (() => {
               const progress = getBuildProgress(hoveredPlaced);
               return progress ? (
                 <div className="stat-row">
-                  <span>⏱️ Time Left:</span>
+                  <span>⏱️ Building:</span>
                   <span className="stat-value">{progress.remainingSeconds}s ({Math.round(progress.percentage)}%)</span>
+                </div>
+              ) : null;
+            })()}
+            {hoveredPlaced.is_operational && hoveredPlaced.retire_at && (() => {
+              const retireProgress = getRetirementProgress(hoveredPlaced);
+              return retireProgress ? (
+                <div className="stat-row">
+                  <span>⏳ Lifespan Left:</span>
+                  <span className="stat-value">{retireProgress.remainingSeconds}s ({Math.round(retireProgress.percentage)}%)</span>
                 </div>
               ) : null;
             })()}

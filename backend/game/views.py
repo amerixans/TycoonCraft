@@ -4,16 +4,20 @@ from decimal import Decimal
 from datetime import timedelta
 import base64
 import hashlib
+import io
 import json
 import os
 import time
 
 import requests
+from PIL import Image
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.db.models import Q
+from django.middleware.csrf import get_token
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -48,6 +52,31 @@ def get_unlocked_eras(profile):
     return list(era_unlocks)
 
 
+def ensure_hunter_gatherer_starters(profile):
+    """Ensure baseline era unlock and starter discoveries exist for the player."""
+    if not profile.current_era:
+        profile.current_era = "Hunter-Gatherer"
+        profile.save(update_fields=["current_era"])
+
+    _, _ = EraUnlock.objects.get_or_create(
+        player=profile,
+        era_name="Hunter-Gatherer"
+    )
+
+    starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
+    known_ids = set(
+        Discovery.objects.filter(
+            player=profile,
+            game_object__era_name="Hunter-Gatherer",
+            game_object__is_starter=True
+        ).values_list("game_object_id", flat=True)
+    )
+
+    for obj in starter_objects:
+        if obj.id not in known_ids:
+            Discovery.objects.get_or_create(player=profile, game_object=obj)
+
+
 # -----------------------------
 # Player coin/tc updates
 # -----------------------------
@@ -57,6 +86,9 @@ def update_player_coins(player):
 
     Optimized to cache operational objects and modifiers to reduce database queries
     from O(n²) to O(n).
+
+    Also handles retiring objects that have reached their retirement time, applies
+    retirement payouts, and removes them from the player's canvas.
     """
     now = timezone.now()
 
@@ -92,12 +124,36 @@ def update_player_coins(player):
             is_operational=True
         )
 
+    # **NEW: Check for retiring objects and apply payouts**
+    retiring_objects = PlacedObject.objects.filter(
+        player=player,
+        is_operational=True,
+        retire_at__lte=now
+    ).select_related("game_object")
+
+    for placed in retiring_objects:
+        # Calculate retirement payout
+        original_cost = placed.game_object.cost
+        retire_payout_pct = Decimal(str(placed.game_object.retire_payout_coins_pct))
+        retirement_payout = original_cost * retire_payout_pct
+
+        # Add payout to player coins
+        player.coins += retirement_payout
+
+        # Mark object as retired (set is_operational to False)
+        # This allows frontend to show retirement animation before deletion
+        placed.is_operational = False
+        placed.save()
+
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
     # Fetch all operational objects once and cache them
+    # Filter for objects that either haven't been assigned a retire_at time yet (NULL)
+    # or haven't reached their retirement time yet
     operational_objects = list(
         PlacedObject.objects
-        .filter(player=player, is_operational=True, retire_at__gt=now)
+        .filter(player=player, is_operational=True)
+        .filter(Q(retire_at__isnull=True) | Q(retire_at__gt=now))
         .select_related("game_object")
     )
 
@@ -477,10 +533,47 @@ CRITICAL ERA ASSIGNMENT RULES:
     return parsed
 
 
+def _compress_image(image_bytes):
+    """
+    Compress image bytes using PIL while maintaining quality.
+
+    Uses the IMAGE_COMPRESSION_QUALITY setting from settings.py.
+    Returns compressed image as PNG bytes.
+    """
+    try:
+        from PIL import Image
+        import io
+
+        # Load image from bytes
+        img = Image.open(io.BytesIO(image_bytes))
+
+        # Convert RGBA to RGB if needed (PNG to PNG with quality setting)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            # Create white background for transparency
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+            img = background
+
+        # Get compression quality from settings
+        quality = getattr(settings, 'IMAGE_COMPRESSION_QUALITY', 85)
+
+        # Compress and save to bytes
+        output = io.BytesIO()
+        img.save(output, format='PNG', optimize=True, quality=quality)
+        return output.getvalue()
+    except ImportError:
+        # If PIL not available, return original bytes
+        return image_bytes
+
+
 def call_openai_image(object_name):
     """
     Call OpenAI Images API with gpt-image-1-mini.
     Uses POST /v1/images (returns base64 in data[0].b64_json).
+
+    Image is automatically compressed after generation using settings.IMAGE_COMPRESSION_QUALITY.
     """
 
     prompts_dir = os.path.join(settings.BASE_DIR, "prompts")
@@ -509,7 +602,12 @@ def call_openai_image(object_name):
     b64 = data[0].get("b64_json")
     if not b64:
         raise Exception("Image API: missing b64_json in response")
-    return base64.b64decode(b64)
+
+    image_bytes = base64.b64decode(b64)
+
+    # Compress the image before returning
+    compressed_bytes = _compress_image(image_bytes)
+    return compressed_bytes
 
 
 # -----------------------------
@@ -538,13 +636,7 @@ def register(request):
         is_pro=False
     )
 
-    # Unlock first era
-    EraUnlock.objects.create(player=profile, era_name="Hunter-Gatherer")
-
-    # Give starter objects for Hunter-Gatherer era
-    starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
-    for obj in starter_objects:
-        Discovery.objects.create(player=profile, game_object=obj)
+    ensure_hunter_gatherer_starters(profile)
 
     login(request, user)
 
@@ -557,7 +649,7 @@ def register(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_view(request):
-    """Login user."""
+    """Login user and ensure CSRF cookie is set."""
     username = request.data.get("username")
     password = request.data.get("password")
 
@@ -566,12 +658,38 @@ def login_view(request):
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
     login(request, user)
-    profile, _ = PlayerProfile.objects.get_or_create(user=user)
+    profile, created = PlayerProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            "coins": getattr(settings, "STARTING_COINS", Decimal("0")),
+            "is_pro": False,
+        },
+    )
 
-    return Response({
+    # Ensure the player has the initial era unlock and starter discoveries
+    ensure_hunter_gatherer_starters(profile)
+
+    # Explicitly ensure CSRF cookie is set for subsequent requests
+    # get_token() forces Django to set the csrftoken cookie
+    csrf_token = get_token(request)
+
+    response = Response({
         "user": UserSerializer(user).data,
-        "profile": PlayerProfileSerializer(profile).data
+        "profile": PlayerProfileSerializer(profile).data,
+        "csrfToken": csrf_token  # Include in response for debugging
     })
+
+    # Ensure the CSRF cookie is set in the response
+    response.set_cookie(
+        'csrftoken',
+        csrf_token,
+        max_age=31449600,  # 1 year
+        httponly=False,  # Must be False so JavaScript can read it
+        samesite='Lax',
+        secure=not settings.DEBUG  # Only use secure cookie in production (HTTPS)
+    )
+
+    return response
 
 
 @api_view(["POST"])
@@ -608,9 +726,9 @@ def game_state(request):
     Optimized to exclude the large all_objects catalog which is served
     separately and can be cached by the client.
     """
-    update_player_coins(request.user.profile)
-
     profile = request.user.profile
+    ensure_hunter_gatherer_starters(profile)
+    update_player_coins(profile)
     discoveries = Discovery.objects.filter(player=profile).select_related("game_object")
     placed_objects = PlacedObject.objects.filter(player=profile).select_related("game_object")
     era_unlocks = EraUnlock.objects.filter(player=profile)
