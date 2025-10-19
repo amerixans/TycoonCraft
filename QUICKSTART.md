@@ -1,105 +1,143 @@
-# TycoonCraft – Quick Start
+# TycoonCraft - Quick Start Guide
 
-Bring up the full stack locally with a few commands. This guide mirrors the actual project layout and tooling in this repository.
+Get TycoonCraft running in 5 minutes!
 
-## Prerequisites
+## Option 1: Automated Setup (Recommended)
 
-- Python 3.8 or newer
-- Node.js 16 or newer (includes `npm`)
-- PostgreSQL (running locally with a role that can create databases)
-- OpenAI API key with access to `gpt-5-mini` and `gpt-image-1-mini`
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL installed and running
 
-> Tip: If PostgreSQL is using a password, make sure the credentials in your `.env` file match your local setup.
+### Steps
 
-## 1. Database
-
-Create a database for TycoonCraft. The backend defaults to `tycooncraft` with user `postgres` and password `postgres`; adjust to your environment if different.
-
+1. **Create Database**
 ```bash
 createdb tycooncraft
 ```
 
-## 2. Backend Setup
+2. **Run Setup Script**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
 
+3. **Add OpenAI API Key**
+Edit `backend/.env` and replace `your_openai_api_key_here` with your actual key.
+
+4. **Start Backend** (Terminal 1)
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Create `backend/.env` (or edit if it already exists):
-
-```
-DJANGO_SECRET_KEY=replace-me
-DEBUG=True
-OPENAI_API_KEY=sk-...
-DB_NAME=tycooncraft
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=localhost
-DB_PORT=5432
-# Optional in production:
-# CORS_ALLOWED_ORIGINS=https://app.tycooncraft.com,https://admin.tycooncraft.com
-```
-
-Run migrations and seed initial content:
-
-```bash
-python manage.py migrate
-python manage.py initialize_starter_objects
-python manage.py generate_upgrade_keys    # optional: seeds 1000 upgrade keys into backend/upgrade_keys.txt
-DJANGO_SUPERUSER_PASSWORD=your-strong-password python manage.py create_admin_account     # optional: creates admin superuser
-```
-
-Finally, start the Django API:
-
-```bash
+source venv/bin/activate
 python manage.py runserver
 ```
 
-## 3. Frontend Setup
+5. **Start Frontend** (Terminal 2)
+```bash
+cd frontend
+npm start
+```
 
+6. **Play!**
+Open http://localhost:3000 in your browser
+
+## Option 2: Manual Setup
+
+### Backend Setup
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Create .env file with your settings
+echo "OPENAI_API_KEY=your_key_here" > .env
+echo "DJANGO_SECRET_KEY=change-me" >> .env
+echo "DEBUG=True" >> .env
+
+python manage.py migrate
+python manage.py initialize_starter_objects
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+### Frontend Setup
 ```bash
 cd frontend
 npm install
 npm start
 ```
 
-The React dev server proxies API calls to `http://localhost:8000` (configured in `package.json`). If your backend lives elsewhere, create `frontend/.env.local` with:
+## First Time Playing
 
-```
-REACT_APP_API_URL=http://your-backend-host/api
-```
+1. **Register**: Create an account on the login screen
+2. **Start Crafting**: You begin with Rock, Stick, Water, and Dirt
+3. **Combine Objects**: Drag one object onto another in the crafting area
+4. **Discover**: Watch as AI generates new objects!
+5. **Place Objects**: Drag discovered objects to the canvas to generate income
+6. **Progress**: Use time crystals to unlock new eras
 
-## 4. Use the App
+## Default Login
 
-- Frontend: http://localhost:3000
-- Backend API root: http://localhost:8000/api/
-- Django admin (if created): http://localhost:8000/admin/
-  - Credentials come from `DJANGO_SUPERUSER_USERNAME`/`DJANGO_SUPERUSER_PASSWORD` (defaults to `admin` / value you export)
+If you ran the setup script, there's an admin account:
+- Username: `admin`
+- Password: `admin`
 
-Log in or register from the landing screen, craft your starter objects (Rock, Stick, Water, Dry Grass), and begin combining discoveries. Keystone placements will unlock new eras automatically; you can also unlock eras via the sidebar using time crystals.
+Change this immediately for production!
 
 ## Troubleshooting
 
-- **`OPENAI_API_KEY is not configured`** – Ensure `backend/.env` contains your key and restart the server.
-- **`OperationalError: database ... does not exist`** – Rerun `createdb tycooncraft` (or update the DB settings in `.env`).
-- **`Insufficient coins` during crafting** – Earn more by placing income-generating objects; admin accounts may go negative.
-- **Frontend fails to start** – Remove `node_modules` and the lockfile, then reinstall:
-  ```bash
-  cd frontend
-  rm -rf node_modules package-lock.json
-  npm install
-  ```
-- **Port already in use** – Free up the port:
-  ```bash
-  lsof -ti:8000 | xargs kill -9    # backend
-  lsof -ti:3000 | xargs kill -9    # frontend
-  ```
+### "Port already in use"
+Kill the process using port 8000 or 3000:
+```bash
+# Kill backend
+lsof -ti:8000 | xargs kill -9
 
-## Next Steps
+# Kill frontend
+lsof -ti:3000 | xargs kill -9
+```
 
-- Review the full [README.md](README.md) for deep dives into systems, API endpoints, and architecture.
-- Check [deployment.md](deployment.md) and `deploy.sh`/`update.sh` for production workflows.
-- Explore the seeded upgrade keys in `backend/upgrade_keys.txt` to test Pro-tier accounts.
+### "Database does not exist"
+```bash
+createdb tycooncraft
+```
+
+### "Module not found"
+Make sure virtual environment is activated and dependencies are installed:
+```bash
+cd backend
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Frontend won't start
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## What's Next?
+
+- Read the full [README.md](README.md) for detailed documentation
+- Check [deployment.md](deployment.md) for production deployment
+- Explore the Django admin at http://localhost:8000/admin
+
+## Game Tips
+
+1. **Experiment**: Try combining everything!
+2. **Read Descriptions**: Hover over objects to see their stats
+3. **Plan Placement**: Objects need space on the grid
+4. **Watch Resources**: Keep an eye on coins and crystals
+5. **Unlock Eras**: Find keystone objects to progress
+6. **Be Patient**: AI generation takes a few seconds
+
+## Support
+
+If you encounter issues:
+1. Check the console for error messages
+2. Look at Django logs: `backend/*.log`
+3. Verify PostgreSQL is running: `pg_isready`
+4. Ensure ports 3000 and 8000 are free
+
+Enjoy crafting your civilization! 🎮

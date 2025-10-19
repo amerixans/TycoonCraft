@@ -137,10 +137,7 @@ function App() {
       }
       
       setUser(response.data.user);
-      await Promise.all([
-        loadGameState(),
-        loadObjectCatalog()
-      ]);
+      await loadGameState();
       showNotification('🎮 Welcome to TycoonCraft!', 'success');
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed');
@@ -152,7 +149,6 @@ function App() {
       await auth.logout();
       setUser(null);
       setGameState(null);
-      sessionStorage.removeItem('objectCatalog');
     } catch (err) {
       console.error('Logout failed:', err);
     }
@@ -374,7 +370,7 @@ function App() {
     );
   }
 
-  if (!gameState || !objectCatalog) {
+  if (!gameState) {
     return <div className="loading-screen"><div className="loader"></div></div>;
   }
 
@@ -443,9 +439,9 @@ function App() {
       </div>
 
       <div className="game-container">
-        <Sidebar
+        <Sidebar 
           discoveries={gameState.discoveries}
-          allObjects={objectCatalog?.all_objects || []}
+          allObjects={gameState.all_objects}
           eraUnlocks={gameState.era_unlocks}
           currentEra={gameState.profile.current_era}
           eras={ERAS}

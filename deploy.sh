@@ -44,20 +44,6 @@ if [[ "$SSL_OPTION" == "no-ssl" ]] || [[ "$SSL_OPTION" == "skip-ssl" ]]; then
     ENABLE_SSL=false
 fi
 
-if [ "$ENABLE_SSL" = true ]; then
-    DJANGO_DEBUG_VALUE="False"
-    API_PROTOCOL="https"
-    SESSION_COOKIE_SECURE_VALUE="True"
-    CSRF_COOKIE_SECURE_VALUE="True"
-    SECURE_SSL_REDIRECT_VALUE="True"
-else
-    DJANGO_DEBUG_VALUE="False"
-    API_PROTOCOL="http"
-    SESSION_COOKIE_SECURE_VALUE="False"
-    CSRF_COOKIE_SECURE_VALUE="False"
-    SECURE_SSL_REDIRECT_VALUE="False"
-fi
-
 # Version pinning for better reproducibility
 NODE_VERSION="18"  # Major version - allows minor updates
 BACKUP_RETENTION_DAYS=7
@@ -69,7 +55,7 @@ BACKUP_RETENTION_DAYS=7
 echo "Validating environment..."
 
 # Required environment variables
-required_vars=("DB_PASSWORD" "OPENAI_API_KEY" "DJANGO_ADMIN_PASSWORD")
+required_vars=("DB_PASSWORD" "OPENAI_API_KEY")
 for var in "${required_vars[@]}"; do
     if [ -z "${!var:-}" ]; then
         echo "ERROR: $var environment variable is required"
@@ -77,10 +63,9 @@ for var in "${required_vars[@]}"; do
         echo "Required variables:"
         echo "  - DB_PASSWORD: Database password"
         echo "  - OPENAI_API_KEY: OpenAI API key"
-        echo "  - DJANGO_ADMIN_PASSWORD: Password assigned to the admin account"
         echo ""
         echo "Optional variables:"
-        echo "  - DJANGO_SUPERUSER_USERNAME: Admin username (defaults to 'admin')"
+        echo "  - DJANGO_ADMIN_PASSWORD: Admin password (defaults to DB_PASSWORD)"
         echo "  - SERVER_IP: Server IP address"
         echo "  - DOMAIN: Domain name"
         echo "  - ADMIN_EMAIL: Admin email"
@@ -93,8 +78,7 @@ done
 SERVER_IP="${SERVER_IP:-159.65.255.82}"
 DOMAIN="${DOMAIN:-tycooncraft.com}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@tycooncraft.com}"
-DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
-DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
+DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-$DB_PASSWORD}"  # Separate admin password
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-}"
 
 # Validate domain format
@@ -245,7 +229,7 @@ pip install gunicorn
 echo "Creating environment configuration..."
 cat > .env << EOF
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-DEBUG=${DJANGO_DEBUG_VALUE}
+DEBUG=False
 DB_NAME=tycooncraft
 DB_USER=tycooncraft
 DB_PASSWORD=${DB_PASSWORD}
@@ -254,16 +238,6 @@ DB_PORT=5432
 CONN_MAX_AGE=600
 OPENAI_API_KEY=${OPENAI_API_KEY}
 ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN},127.0.0.1,localhost,${SERVER_IP}
-DOMAIN=${DOMAIN}
-SERVER_IP=${SERVER_IP}
-CORS_ALLOWED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN},http://${SERVER_IP},https://${SERVER_IP}
-CSRF_TRUSTED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN},http://${SERVER_IP},https://${SERVER_IP}
-SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE_VALUE}
-CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE_VALUE}
-SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT_VALUE}
-DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD}
-DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
-DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
 EOF
 
 # Run Django migrations
@@ -284,7 +258,6 @@ python manage.py generate_upgrade_keys
 # Create admin account with pro status
 echo "Creating admin account with pro status..."
 export DJANGO_SUPERUSER_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
-export DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME}"
 python manage.py create_admin_account
 
 # Collect static files
@@ -358,7 +331,11 @@ if [ "$SHOULD_BUILD" = true ]; then
     # Ensure node_modules binaries are executable
     chmod +x node_modules/.bin/* 2>/dev/null || true
     
-    REACT_APP_API_URL=${API_PROTOCOL}://${DOMAIN}/api npm run build
+    if [ "$ENABLE_SSL" = true ]; then
+        REACT_APP_API_URL=https://${DOMAIN}/api npm run build
+    else
+        REACT_APP_API_URL=http://${DOMAIN}/api npm run build
+    fi
     
     # Store build info for next deployment
     cat > .last_build_info << EOF
@@ -714,8 +691,8 @@ else
 fi
 echo ""
 echo "👤 Admin credentials:"
-echo "  Username: ${DJANGO_SUPERUSER_USERNAME}"
-echo "  Password: (value from DJANGO_ADMIN_PASSWORD environment variable)"
+echo "  Username: admin"
+echo "  Password: [DJANGO_ADMIN_PASSWORD]"
 echo ""
 echo "📊 Monitoring:"
 echo "  sudo journalctl -u tycooncraft -f"
