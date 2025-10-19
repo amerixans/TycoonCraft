@@ -178,22 +178,20 @@ function App() {
         prev.map(op => op.id === craftId ? { ...op, status: 'success', result: response.data } : op)
       );
 
-      if (response.data.newly_created || response.data.newly_discovered) {
-        // Show discovery modal in top right for NEW discoveries
-        setShowDiscoveryModal({
-          object: response.data.object,
-          isNew: response.data.newly_created || response.data.newly_discovered
-        });
-        setTimeout(() => setShowDiscoveryModal(null), 3500);
+      // Three-tier notification system based on discovery type:
 
+      // TIER 1: Player already discovered this (most common, least exciting)
+      // Show simple notification only
+      if (!response.data.newly_created && !response.data.newly_discovered) {
         showNotification(
-          response.data.newly_created
-            ? `🎉 New discovery! You created ${response.data.object.object_name}!`
-            : `✨ You discovered ${response.data.object.object_name}!`,
-          'success'
+          `You already discovered ${response.data.object.object_name}`,
+          'info'
         );
-      } else {
-        // Show in results box for already discovered items
+      }
+
+      // TIER 2: First time player discovered it, but exists in database (database discovery)
+      // Show in crafting result box for 2 seconds
+      else if (response.data.newly_discovered && !response.data.newly_created) {
         const resultId = Date.now() + Math.random();
         setCraftingResults(prev => [...prev, {
           id: resultId,
@@ -201,14 +199,29 @@ function App() {
         }]);
 
         showNotification(
-          `You already discovered ${response.data.object.object_name}`,
-          'info'
+          `✨ You discovered ${response.data.object.object_name}!`,
+          'success'
         );
 
         // Remove from results box after 2 seconds
         setTimeout(() => {
           setCraftingResults(prev => prev.filter(r => r.id !== resultId));
         }, 2000);
+      }
+
+      // TIER 3: Brand new creation - first in the world! (OpenAI call, most exciting)
+      // Show discovery modal in top right for 4.5 seconds
+      else if (response.data.newly_created) {
+        setShowDiscoveryModal({
+          object: response.data.object,
+          isNew: true
+        });
+        setTimeout(() => setShowDiscoveryModal(null), 4500);
+
+        showNotification(
+          `🎉 New discovery! You created ${response.data.object.object_name}!`,
+          'success'
+        );
       }
 
       await loadGameState();

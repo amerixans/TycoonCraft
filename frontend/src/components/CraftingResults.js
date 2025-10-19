@@ -8,7 +8,7 @@ function CraftingResults({ craftingResults }) {
 
   return (
     <div className="crafting-results-panel">
-      <h4>✅ Results</h4>
+      <h4>✨ Discovered!</h4>
       <div className="results-list">
         {craftingResults.map((result) => (
           <div key={result.id} className="result-item">
@@ -20,6 +20,9 @@ function CraftingResults({ craftingResults }) {
               />
             )}
             <div className="result-name">{result.object.object_name}</div>
+            {result.object.flavor_text && (
+              <div className="result-flavor">{result.object.flavor_text}</div>
+            )}
           </div>
         ))}
       </div>
