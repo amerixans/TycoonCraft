@@ -372,7 +372,31 @@ function App() {
   const loadGameState = useCallback(async () => {
     try {
       const response = await game.getState();
-      setGameState(response.data);
+      const newGameState = response.data;
+
+      // Check if a new era was unlocked by comparing to previous state
+      if (gameState && newGameState) {
+        const prevEraCount = gameState.era_unlocks.length;
+        const newEraCount = newGameState.era_unlocks.length;
+
+        if (newEraCount > prevEraCount) {
+          // Find the newly unlocked era
+          const prevEraNames = new Set(gameState.era_unlocks.map(e => e.era_name));
+          const newlyUnlocked = newGameState.era_unlocks.find(e => !prevEraNames.has(e.era_name));
+
+          if (newlyUnlocked && eraConfig) {
+            const eraData = eraConfig.eras.find(e => e.name === newlyUnlocked.era_name);
+            const message = eraData?.unlock_message || `Welcome to ${newlyUnlocked.era_name}!`;
+
+            setShowEraUnlockModal({
+              era: newlyUnlocked.era_name,
+              message: message
+            });
+          }
+        }
+      }
+
+      setGameState(newGameState);
       setError(null);
     } catch (err) {
       console.error('Failed to load game state:', err);
@@ -380,7 +404,7 @@ function App() {
         setUser(null);
       }
     }
-  }, []);
+  }, [gameState, eraConfig]);
 
   const loadObjectCatalog = useCallback(async () => {
     // Check if catalog is already cached in sessionStorage
@@ -848,7 +872,16 @@ function App() {
             onPlace={handlePlace}
             onRemove={handleRemove}
             onMove={handleMove}
-            currentEra={gameState.profile.current_era}
+            currentEra={(() => {
+              // Find the highest unlocked era by ERAS order
+              const unlockedEraNames = gameState.era_unlocks.map(u => u.era_name);
+              for (let i = ERAS.length - 1; i >= 0; i--) {
+                if (unlockedEraNames.includes(ERAS[i])) {
+                  return ERAS[i];
+                }
+              }
+              return gameState.profile.current_era;
+            })()}
           />
         </div>
       </div>
@@ -926,8 +959,8 @@ function App() {
 
       {/* Era Unlock Celebration Modal */}
       {showEraUnlockModal && (
-        <div className="modal-overlay era-unlock-overlay">
-          <div className="era-unlock-modal">
+        <div className="modal-overlay era-unlock-overlay" onClick={() => setShowEraUnlockModal(null)}>
+          <div className="era-unlock-modal" onClick={(e) => e.stopPropagation()}>
             <div className="era-unlock-animation">
               <div className="era-unlock-icon">🎉</div>
               <div className="era-unlock-sparkles">
