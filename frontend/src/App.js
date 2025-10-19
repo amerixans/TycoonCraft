@@ -70,6 +70,8 @@ function App() {
   const [upgradeError, setUpgradeError] = useState('');
   const [showDiscoveryModal, setShowDiscoveryModal] = useState(null);
   const [objectCatalog, setObjectCatalog] = useState(null);
+  const [showAuraDetails, setShowAuraDetails] = useState(false);
+  const [showAppliedBoosts, setShowAppliedBoosts] = useState(false);
 
   const longPressTimer = useRef(null);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -142,62 +144,66 @@ function App() {
 
     const renderAuraEffects = () => {
       if (!hasAura(selectedObject)) {
-        return (
-          <div className="object-info-auras object-info-auras-empty">
-            <span>No aura effects.</span>
-          </div>
-        );
+        return null;
       }
 
       return (
-        <div className="object-info-auras">
-          <div className="object-info-auras-title">✨ Aura Effects</div>
-          <div className="object-info-auras-list">
-            {auraModifiers.map((modifier, index) => {
-              const categories = (modifier?.affected_categories || []).join(', ');
-              const effects = [];
+        <div className="object-info-section">
+          <button
+            className="object-info-section-toggle"
+            onClick={() => setShowAuraDetails(!showAuraDetails)}
+          >
+            <span>✨ Aura Effects ({auraModifiers.length})</span>
+            <span className="toggle-icon">{showAuraDetails ? '▼' : '▶'}</span>
+          </button>
+          {showAuraDetails && (
+            <div className="object-info-auras-list">
+              {auraModifiers.map((modifier, index) => {
+                const categories = (modifier?.affected_categories || []).join(', ');
+                const effects = [];
 
-              const pushEffect = (label, value) => {
-                const numeric = Number(value ?? 1);
-                if (Number.isNaN(numeric) || Math.abs(numeric - 1) < 0.001) {
-                  return;
-                }
-                effects.push(`${label} ${formatMultiplier(numeric, Math.abs(numeric - 1) < 0.1 ? 1 : 0)}`);
-              };
+                const pushEffect = (label, value) => {
+                  const numeric = Number(value ?? 1);
+                  if (Number.isNaN(numeric) || Math.abs(numeric - 1) < 0.001) {
+                    return;
+                  }
+                  effects.push(`${label} ${formatMultiplier(numeric, Math.abs(numeric - 1) < 0.1 ? 1 : 0)}`);
+                };
 
-              pushEffect('Income', modifier?.income_multiplier);
-              pushEffect('Build time', modifier?.build_time_multiplier);
-              pushEffect('Lifespan', modifier?.operation_duration_multiplier);
-              pushEffect('Cost', modifier?.cost_multiplier);
+                pushEffect('Income', modifier?.income_multiplier);
+                pushEffect('Build time', modifier?.build_time_multiplier);
+                pushEffect('Lifespan', modifier?.operation_duration_multiplier);
+                pushEffect('Cost', modifier?.cost_multiplier);
 
-              const stacking = modifier?.stacking === 'additive' ? 'additive' : 'multiplicative';
-              const maxStacks = Number(modifier?.max_stacks ?? 1);
-              const activation = modifier?.active_when === 'placed' ? 'while placed' : 'while operational';
+                const stacking = modifier?.stacking === 'additive' ? 'additive' : 'multiplicative';
+                const maxStacks = Number(modifier?.max_stacks ?? 1);
+                const activation = modifier?.active_when === 'placed' ? 'while placed' : 'while operational';
 
-              return (
-                <div key={index} className="object-info-aura">
-                  <div className="object-info-aura-heading">
-                    <span className="object-info-aura-categories">{categories || 'All categories'}</span>
-                    <span className="object-info-aura-activation">Active {activation}</span>
+                return (
+                  <div key={index} className="object-info-aura">
+                    <div className="object-info-aura-heading">
+                      <span className="object-info-aura-categories">{categories || 'All categories'}</span>
+                      <span className="object-info-aura-activation">Active {activation}</span>
+                    </div>
+                    {effects.length > 0 ? (
+                      <ul className="object-info-aura-effects">
+                        {effects.map((effect, i) => (
+                          <li key={i}>{effect}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="object-info-aura-none">No stat modifiers</div>
+                    )}
+                    <div className="object-info-aura-stacking">
+                      {maxStacks > 1
+                        ? `Stacks up to ${maxStacks} (${stacking})`
+                        : 'Single-stack aura'}
+                    </div>
                   </div>
-                  {effects.length > 0 ? (
-                    <ul className="object-info-aura-effects">
-                      {effects.map((effect, i) => (
-                        <li key={i}>{effect}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="object-info-aura-none">No stat modifiers</div>
-                  )}
-                  <div className="object-info-aura-stacking">
-                    {maxStacks > 1
-                      ? `Stacks up to ${maxStacks} (${stacking})`
-                      : 'Single-stack aura'}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       );
     };
@@ -315,19 +321,27 @@ function App() {
           })()}
 
           {hasAppliedBoosts && (
-            <div className="object-info-applied">
-              <div className="object-info-applied-title">Current aura impact</div>
-              <ul>
-                {Math.abs((appliedCategoryMultipliers.income_multiplier ?? 1) - 1) >= 0.001 && (
-                  <li>Income {formatMultiplier(appliedCategoryMultipliers.income_multiplier, 1)}</li>
-                )}
-                {Math.abs((appliedCategoryMultipliers.build_time_multiplier ?? 1) - 1) >= 0.001 && (
-                  <li>Build time {formatMultiplier(appliedCategoryMultipliers.build_time_multiplier, 1)}</li>
-                )}
-                {Math.abs((appliedCategoryMultipliers.operation_duration_multiplier ?? 1) - 1) >= 0.001 && (
-                  <li>Lifespan {formatMultiplier(appliedCategoryMultipliers.operation_duration_multiplier, 1)}</li>
-                )}
-              </ul>
+            <div className="object-info-section">
+              <button
+                className="object-info-section-toggle"
+                onClick={() => setShowAppliedBoosts(!showAppliedBoosts)}
+              >
+                <span>Current aura impact</span>
+                <span className="toggle-icon">{showAppliedBoosts ? '▼' : '▶'}</span>
+              </button>
+              {showAppliedBoosts && (
+                <ul className="object-info-applied-list">
+                  {Math.abs((appliedCategoryMultipliers.income_multiplier ?? 1) - 1) >= 0.001 && (
+                    <li>Income {formatMultiplier(appliedCategoryMultipliers.income_multiplier, 1)}</li>
+                  )}
+                  {Math.abs((appliedCategoryMultipliers.build_time_multiplier ?? 1) - 1) >= 0.001 && (
+                    <li>Build time {formatMultiplier(appliedCategoryMultipliers.build_time_multiplier, 1)}</li>
+                  )}
+                  {Math.abs((appliedCategoryMultipliers.operation_duration_multiplier ?? 1) - 1) >= 0.001 && (
+                    <li>Lifespan {formatMultiplier(appliedCategoryMultipliers.operation_duration_multiplier, 1)}</li>
+                  )}
+                </ul>
+              )}
             </div>
           )}
 

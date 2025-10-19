@@ -444,19 +444,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                 >
                   {/* Placed objects */}
                   {placedObjects.map(placed => {
-                    const auraTooltip = auraActive
-                      ? placed.game_object.global_modifiers
-                          .map((modifier) => {
-                            const details = describeAuraModifier(modifier);
-                            const effectText =
-                              details.effects.length > 0
-                                ? details.effects.join(', ')
-                                : 'No stat changes';
-                            return `${details.categories}: ${effectText} (${details.activation})`;
-                          })
-                          .join('\\n')
-                      : '';
-
                     return (
                     <div
                       key={placed.id}

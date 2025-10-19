@@ -804,9 +804,11 @@ body {
   box-shadow: 0 4px 16px var(--shadow);
   min-width: 360px;
   max-width: 420px;
+  max-height: 500px;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  overflow: hidden;
 }
 
 .object-info-panel h3 {
@@ -828,6 +830,8 @@ body {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
+  overflow-y: auto;
+  max-height: calc(500px - 3rem);
 }
 
 .object-info-image-container {
@@ -913,67 +917,55 @@ body {
   margin-top: 0.3rem;
 }
 
-.object-info-applied {
-  background: rgba(0, 0, 0, 0.35);
+.object-info-section {
+  margin-top: 0.6rem;
+}
+
+.object-info-section-toggle {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 0.6rem;
-  margin-top: 0.4rem;
-  color: var(--text-primary);
-  font-size: 0.78rem;
-}
-
-.object-info-applied-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
   font-weight: 700;
-  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
   color: var(--accent-secondary);
+  transition: all 0.2s;
 }
 
-.object-info-applied ul {
-  margin: 0;
+.object-info-section-toggle:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-secondary);
+}
+
+.toggle-icon {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.object-info-applied-list {
+  margin: 0.4rem 0 0 0;
   padding-left: 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  color: var(--text-primary);
+  font-size: 0.78rem;
 }
 
-.object-info-applied li {
+.object-info-applied-list li {
   list-style: disc;
-}
-
-.object-info-auras {
-  margin-top: 0.6rem;
-  padding: 0.6rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 2px dashed rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.object-info-auras-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--accent-secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.object-info-auras-title::before {
-  content: '🌀';
 }
 
 .object-info-auras-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.object-info-auras-empty {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-style: italic;
+  margin-top: 0.4rem;
 }
 
 .object-info-aura {
