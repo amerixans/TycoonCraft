@@ -409,7 +409,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                   {placedObjects.map(placed => (
                     <div
                       key={placed.id}
-                      className={`placed-object ${placed.is_building ? 'building' : ''} ${!placed.is_operational ? 'retiring' : getOperationalStatus(placed)}`}
+                      className={`placed-object ${placed.is_building ? 'building' : (!placed.is_operational ? 'retiring' : getOperationalStatus(placed))}`}
                       style={{
                         left: placed.x * GRID_SIZE + 'px',
                         top: placed.y * GRID_SIZE + 'px',
