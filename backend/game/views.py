@@ -1093,6 +1093,48 @@ def remove_object(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+def move_object(request):
+    """Move a placed object to a new position on the canvas."""
+    placed_id = request.data.get("placed_id")
+    new_x = request.data.get("x")
+    new_y = request.data.get("y")
+
+    if placed_id is None or new_x is None or new_y is None:
+        return Response({"error": "placed_id, x, and y required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    profile = request.user.profile
+
+    try:
+        placed = PlacedObject.objects.get(id=placed_id, player=profile)
+    except PlacedObject.DoesNotExist:
+        return Response({"error": "Placed object not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    obj = placed.game_object
+
+    # Check bounds
+    if new_x < 0 or new_y < 0 or new_x + obj.footprint_w > 1000 or new_y + obj.footprint_h > 1000:
+        return Response({"error": "Position out of bounds"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for collisions with other placed objects (excluding the one being moved)
+    other_placed = PlacedObject.objects.filter(player=profile).exclude(id=placed_id)
+    for other in other_placed:
+        # Simple AABB collision detection
+        if not (new_x + obj.footprint_w <= other.x or
+                new_x >= other.x + other.game_object.footprint_w or
+                new_y + obj.footprint_h <= other.y or
+                new_y >= other.y + other.game_object.footprint_h):
+            return Response({"error": "Object collision detected"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Update position
+    placed.x = new_x
+    placed.y = new_y
+    placed.save()
+
+    return Response({"success": True, "x": new_x, "y": new_y})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def unlock_era(request):
     """Unlock the next era."""
     era_name = request.data.get("era_name")

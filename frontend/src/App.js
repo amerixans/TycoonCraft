@@ -283,6 +283,18 @@ function App() {
     }
   };
 
+  const handleMove = async (placedId, x, y) => {
+    try {
+      await game.move(placedId, x, y);
+      await loadGameState();
+      showNotification('✅ Object moved!', 'success');
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Move failed';
+      setError(errorMsg);
+      showNotification(errorMsg, 'error');
+    }
+  };
+
   const handleExport = async () => {
     try {
       const response = await game.export();
@@ -599,11 +611,12 @@ function App() {
             </div>
           </div>
           
-          <Canvas 
+          <Canvas
             placedObjects={gameState.placed_objects}
             discoveries={gameState.discoveries}
             onPlace={handlePlace}
             onRemove={handleRemove}
+            onMove={handleMove}
             currentEra={gameState.profile.current_era}
           />
         </div>

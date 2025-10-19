@@ -144,11 +144,9 @@
 
 @keyframes building {
   0%, 100% {
-    opacity: 1;
     border-color: var(--accent-warning);
   }
   50% {
-    opacity: 0.8;
     border-color: var(--accent-secondary);
   }
 }

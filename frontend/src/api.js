@@ -54,6 +54,8 @@ export const game = {
     api.post('/place/', { object_id: objectId, x, y }),
   remove: (placedId) =>
     api.post('/remove/', { placed_id: placedId }),
+  move: (placedId, x, y) =>
+    api.post('/move/', { placed_id: placedId, x, y }),
   unlockEra: (eraName) =>
     api.post('/unlock-era/', { era_name: eraName }),
   export: () =>

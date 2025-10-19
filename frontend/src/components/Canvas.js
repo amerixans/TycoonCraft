@@ -20,7 +20,7 @@ const ERA_SIZES = {
   'Beyond': { height: 2560, width: 7680 },
 };
 
-function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
+function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
@@ -310,9 +310,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
       return;
     }
 
-    // Remove from old position and place at new position
-    onRemove(movingObject.id);
-    onPlace(obj.id, gridX, gridY);
+    // Use the move endpoint to preserve object state (build progress, etc.)
+    onMove(movingObject.id, gridX, gridY);
     setMovingObject(null);
     setDraggedObject(null);
   };
@@ -495,9 +494,17 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                         height: draggedObject.obj.footprint_h * GRID_SIZE + 'px',
                       }}
                     >
-                      <div className="object-placeholder">
-                        {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
-                      </div>
+                      {draggedObject.obj.image_path ? (
+                        <img
+                          src={draggedObject.obj.image_path}
+                          alt={draggedObject.obj.object_name}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                      ) : (
+                        <div className="object-placeholder">
+                          {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -508,8 +515,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
       </div>
       
       {/* Enhanced hover tooltip - fixed position */}
-      {hoveredPlaced && (
-        <div 
+      {hoveredPlaced && canvasMode === 'view' && (
+        <div
           className="hover-tooltip"
           style={{
             position: 'fixed',
