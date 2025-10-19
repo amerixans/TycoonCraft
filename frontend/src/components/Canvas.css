@@ -132,19 +132,49 @@
 }
 
 .placed-object.retiring {
-  opacity: 0.5;
   border-color: #e74c3c;
   animation: retiring-pulse 0.8s ease-in-out infinite;
 }
 
 @keyframes retiring-pulse {
   0%, 100% {
-    opacity: 0.5;
     box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
   }
   50% {
-    opacity: 0.7;
     box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+  }
+}
+
+/* Operational object border color transitions based on time remaining */
+.placed-object.operational-healthy {
+  border-color: var(--accent-secondary);
+}
+
+.placed-object.operational-warning {
+  border-color: #f39c12;
+  animation: warning-pulse 2s ease-in-out infinite;
+}
+
+.placed-object.operational-critical {
+  border-color: #e74c3c;
+  animation: critical-pulse 1s ease-in-out infinite;
+}
+
+@keyframes warning-pulse {
+  0%, 100% {
+    border-color: #f39c12;
+  }
+  50% {
+    border-color: #e67e22;
+  }
+}
+
+@keyframes critical-pulse {
+  0%, 100% {
+    border-color: #e74c3c;
+  }
+  50% {
+    border-color: #c0392b;
   }
 }
 
@@ -209,33 +239,6 @@
   line-height: 1;
 }
 
-.retirement-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(231, 76, 60, 0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  pointer-events: none;
-}
-
-.retirement-progress-circle {
-  filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.6));
-}
-
-.retirement-time {
-  color: #e74c3c;
-  font-weight: 700;
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.9);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  line-height: 1;
-  white-space: nowrap;
-}
 
 /* Enhanced Tooltip */
 .hover-tooltip {

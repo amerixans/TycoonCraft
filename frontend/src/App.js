@@ -510,16 +510,25 @@ function App() {
                           <span className="object-info-stat-value">{selectedObject.build_time}s</span>
                         </div>
                       )}
-                      {selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (
+{selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (() => {
+                        const duration = parseFloat(selectedObject.operation_duration);
+                        const formatDuration = (seconds) => {
+                          if (seconds < 60) return `${seconds}s`;
+                          if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+                          const hours = Math.floor(seconds / 3600);
+                          return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
+                        };
+                        return (
+                          <div className="object-info-stat">
+                            <span className="object-info-stat-label">⏱️ Lifespan</span>
+                            <span className="object-info-stat-value">{formatDuration(duration)}</span>
+                          </div>
+                        );
+                      })()}
+                      {selectedObject.retire_payout_coins_pct && parseFloat(selectedObject.retire_payout_coins_pct) > 0 && (
                         <div className="object-info-stat">
-                          <span className="object-info-stat-label">⏱️ Duration</span>
-                          <span className="object-info-stat-value">{selectedObject.operation_duration}s</span>
-                        </div>
-                      )}
-                      {selectedObject.retire_payout && parseFloat(selectedObject.retire_payout) > 0 && (
-                        <div className="object-info-stat">
-                          <span className="object-info-stat-label">💵 Retire Payout</span>
-                          <span className="object-info-stat-value">{Math.floor(parseFloat(selectedObject.retire_payout))}</span>
+                          <span className="object-info-stat-label">💰 Retirement</span>
+                          <span className="object-info-stat-value">{parseFloat(selectedObject.retire_payout_coins_pct)}% of earned coins</span>
                         </div>
                       )}
                       {selectedObject.sellback_percent && parseFloat(selectedObject.sellback_percent) > 0 && (
