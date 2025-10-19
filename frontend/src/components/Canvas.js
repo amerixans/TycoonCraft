@@ -477,6 +477,58 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                         </div>
                       )}
 
+                      {/* Building progress circle */}
+                      {placed.is_building && (() => {
+                        const progress = getBuildProgress(placed);
+                        if (!progress) return null;
+
+                        // Calculate circle size based on object footprint
+                        const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
+                        const circleSize = Math.min(minDimension * GRID_SIZE * 0.6, 60);
+                        const strokeWidth = Math.max(circleSize * 0.15, 4);
+                        const radius = (circleSize - strokeWidth) / 2;
+                        const circumference = 2 * Math.PI * radius;
+                        const offset = circumference - (progress.percentage / 100) * circumference;
+
+                        return (
+                          <div className="building-overlay">
+                            <svg
+                              className="building-progress-circle"
+                              width={circleSize}
+                              height={circleSize}
+                              style={{ width: circleSize, height: circleSize }}
+                            >
+                              {/* Background circle */}
+                              <circle
+                                cx={circleSize / 2}
+                                cy={circleSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke="rgba(255, 255, 255, 0.2)"
+                                strokeWidth={strokeWidth}
+                              />
+                              {/* Progress circle */}
+                              <circle
+                                cx={circleSize / 2}
+                                cy={circleSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke="#27ae60"
+                                strokeWidth={strokeWidth}
+                                strokeDasharray={circumference}
+                                strokeDashoffset={offset}
+                                strokeLinecap="round"
+                                transform={`rotate(-90 ${circleSize / 2} ${circleSize / 2})`}
+                                style={{ transition: 'stroke-dashoffset 0.3s ease' }}
+                              />
+                            </svg>
+                            <div className="building-time" style={{ fontSize: `${Math.max(circleSize * 0.25, 10)}px` }}>
+                              {progress.remainingSeconds}s
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                     </div>
                   );
                   })}
