@@ -11,15 +11,16 @@ class Command(BaseCommand):
     help = 'Creates an admin testing account with special privileges'
 
     def handle(self, *args, **options):
-        username = os.getenv("DJANGO_SUPERUSER_USERNAME", "admin")
+        username = os.getenv("GAME_ADMIN_USERNAME", "admin")
         password = (
-            os.getenv("DJANGO_SUPERUSER_PASSWORD")
+            os.getenv("GAME_ADMIN_PASSWORD")
             or os.getenv("DJANGO_ADMIN_PASSWORD")
+            or os.getenv("DJANGO_SUPERUSER_PASSWORD")
         )
 
         if not password:
             raise CommandError(
-                "Admin password not provided. Set DJANGO_SUPERUSER_PASSWORD or "
+                "Admin password not provided. Set GAME_ADMIN_PASSWORD or "
                 "DJANGO_ADMIN_PASSWORD before running this command."
             )
         

@@ -69,7 +69,7 @@ BACKUP_RETENTION_DAYS=7
 echo "Validating environment..."
 
 # Required environment variables
-required_vars=("DB_PASSWORD" "OPENAI_API_KEY" "DJANGO_ADMIN_PASSWORD")
+required_vars=("DB_PASSWORD" "OPENAI_API_KEY" "DJANGO_ADMIN_PASSWORD" "DJANGO_SUPERUSER_USERNAME" "DJANGO_SUPERUSER_PASSWORD")
 for var in "${required_vars[@]}"; do
     if [ -z "${!var:-}" ]; then
         echo "ERROR: $var environment variable is required"
@@ -77,10 +77,14 @@ for var in "${required_vars[@]}"; do
         echo "Required variables:"
         echo "  - DB_PASSWORD: Database password"
         echo "  - OPENAI_API_KEY: OpenAI API key"
-        echo "  - DJANGO_ADMIN_PASSWORD: Password assigned to the admin account"
+        echo "  - DJANGO_ADMIN_PASSWORD: Password assigned to the in-game admin account"
+        echo "  - DJANGO_SUPERUSER_USERNAME: Username for Django admin access"
+        echo "  - DJANGO_SUPERUSER_PASSWORD: Password for Django admin access"
         echo ""
         echo "Optional variables:"
-        echo "  - DJANGO_SUPERUSER_USERNAME: Admin username (defaults to 'admin')"
+        echo "  - GAME_ADMIN_USERNAME: In-game admin username (defaults to 'admin')"
+        echo "  - GAME_ADMIN_PASSWORD: In-game admin password (defaults to DJANGO_ADMIN_PASSWORD)"
+        echo "  - DJANGO_SUPERUSER_EMAIL: Email for Django admin user (defaults to ADMIN_EMAIL)"
         echo "  - SERVER_IP: Server IP address"
         echo "  - DOMAIN: Domain name"
         echo "  - ADMIN_EMAIL: Admin email"
@@ -94,8 +98,15 @@ SERVER_IP="${SERVER_IP:-159.65.255.82}"
 DOMAIN="${DOMAIN:-tycooncraft.com}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@tycooncraft.com}"
 DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
-DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
+DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME}"
+DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD}"
+DJANGO_SUPERUSER_EMAIL="${DJANGO_SUPERUSER_EMAIL:-${ADMIN_EMAIL}}"
+GAME_ADMIN_USERNAME="${GAME_ADMIN_USERNAME:-admin}"
+GAME_ADMIN_PASSWORD="${GAME_ADMIN_PASSWORD:-${DJANGO_ADMIN_PASSWORD}}"
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-}"
+
+export DJANGO_ADMIN_PASSWORD DJANGO_SUPERUSER_USERNAME DJANGO_SUPERUSER_PASSWORD \
+       DJANGO_SUPERUSER_EMAIL GAME_ADMIN_USERNAME GAME_ADMIN_PASSWORD
 
 # Validate domain format
 if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
@@ -263,7 +274,10 @@ CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE_VALUE}
 SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT_VALUE}
 DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD}
 DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
-DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
+DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
+GAME_ADMIN_USERNAME=${GAME_ADMIN_USERNAME}
+GAME_ADMIN_PASSWORD=${GAME_ADMIN_PASSWORD}
 EOF
 
 # Run Django migrations
@@ -281,10 +295,38 @@ python manage.py initialize_starter_objects
 echo "Generating upgrade keys..."
 python manage.py generate_upgrade_keys
 
+# Create Django superuser for admin panel access
+echo "Creating Django superuser account..."
+python manage.py shell <<'PYTHON'
+import os
+from django.contrib.auth import get_user_model
+
+username = os.environ["DJANGO_SUPERUSER_USERNAME"]
+password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
+email = os.environ.get("DJANGO_SUPERUSER_EMAIL") or ""
+
+User = get_user_model()
+defaults = {}
+if email:
+    defaults["email"] = email
+
+user, created = User.objects.get_or_create(username=username, defaults=defaults)
+
+if not created and email and user.email != email:
+    user.email = email
+
+user.is_staff = True
+user.is_superuser = True
+user.set_password(password)
+user.save()
+
+print(f"{'Created' if created else 'Updated'} Django superuser '{username}'.")
+PYTHON
+
 # Create admin account with pro status
-echo "Creating admin account with pro status..."
-export DJANGO_SUPERUSER_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
-export DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME}"
+echo "Creating game admin account with pro status..."
+export GAME_ADMIN_USERNAME="${GAME_ADMIN_USERNAME}"
+export GAME_ADMIN_PASSWORD="${GAME_ADMIN_PASSWORD}"
 python manage.py create_admin_account
 
 # Collect static files
@@ -713,8 +755,11 @@ else
     echo "📡 API: http://${DOMAIN}/api"
 fi
 echo ""
-echo "👤 Admin credentials:"
+echo "👤 Django superuser:"
 echo "  Username: ${DJANGO_SUPERUSER_USERNAME}"
+echo "  Password: (value from DJANGO_SUPERUSER_PASSWORD environment variable)"
+echo "🎮 Game admin account:"
+echo "  Username: ${GAME_ADMIN_USERNAME}"
 echo "  Password: (value from DJANGO_ADMIN_PASSWORD environment variable)"
 echo ""
 echo "📊 Monitoring:"
