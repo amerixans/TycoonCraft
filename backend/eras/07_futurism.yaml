@@ -182,64 +182,46 @@ starters:
     flavor_text: "A pocket of captured lightning."
     image_path: "/media/objects/starter-energycell.png"
 
-  - object_name: "Polymer Ledger"
+  - object_name: "Graphene Sheet"
     era_name: "Futurism"
     is_keystone: false
     is_starter: true
-    category: "structure"
+    category: "natural"
     quality_tier: "uncommon"
-    cost: 20000000
+    cost: 5000000
     time_crystal_cost: 0
-    income_per_second: 130000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 320
-    operation_duration_sec: 14000
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.9
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["factory", "power"]
-        affected_tags: []
-        income_multiplier: 1.06
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Every batch run is logged, squeezing waste from high-tech fabs."
-    image_path: "/media/objects/starter-polymerledger.png"
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Atom-thin lattice with impossible strength."
+    image_path: "/media/objects/starter-graphenesheet.png"
 
-  - object_name: "Composite Shielding"
+  - object_name: "Field Projector"
     era_name: "Futurism"
     is_keystone: false
     is_starter: true
-    category: "structure"
+    category: "power"
     quality_tier: "uncommon"
-    cost: 22000000
+    cost: 5000000
     time_crystal_cost: 0
-    income_per_second: 140000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 340
-    operation_duration_sec: 14500
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 2.0
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["factory"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.08
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "Layered skins keep delicate fabrication lines running longer."
-    image_path: "/media/objects/starter-compositeshield.png"
+    size: 0.8
+    global_modifiers: []
+    flavor_text: "Emitters that sculpt force like clay."
+    image_path: "/media/objects/starter-fieldprojector.png"

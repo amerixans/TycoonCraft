@@ -197,64 +197,46 @@ starters:
     flavor_text: "Leather lungs that breathe fire hotter."
     image_path: "/media/objects/starter-bellows.png"
 
-  - object_name: "Foundry Banner"
+  - object_name: "Anvil"
     era_name: "Metallurgy"
     is_keystone: false
     is_starter: true
-    category: "cultural"
-    quality_tier: "uncommon"
-    cost: 12000
+    category: "factory"
+    quality_tier: "common"
+    cost: 1000
     time_crystal_cost: 0
-    income_per_second: 120
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 90
-    operation_duration_sec: 5400
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.2
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["mine", "factory"]
-        affected_tags: []
-        income_multiplier: 1.08
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Raised above the forge, it keeps every crew pulling together."
-    image_path: "/media/objects/starter-foundrybanner.png"
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Heavy edge that shapes every ingot."
+    image_path: "/media/objects/starter-anvil.png"
 
-  - object_name: "Forge Bell"
+  - object_name: "Flux Stone"
     era_name: "Metallurgy"
     is_keystone: false
     is_starter: true
-    category: "structure"
-    quality_tier: "uncommon"
-    cost: 14000
+    category: "natural"
+    quality_tier: "common"
+    cost: 1000
     time_crystal_cost: 0
-    income_per_second: 130
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 110
-    operation_duration_sec: 5600
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.2
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["factory"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 0.95
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "A resonant cue that trims downtime across the workshop floor."
-    image_path: "/media/objects/starter-forgebell.png"
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Mineral mix that coaxes impurities to melt away."
+    image_path: "/media/objects/starter-fluxstone.png"

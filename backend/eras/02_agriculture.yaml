@@ -228,64 +228,46 @@ starters:
     flavor_text: "Plant strands for rope, cloth, and binding."
     image_path: "/media/objects/starter-fiber.png"
 
-  - object_name: "Village Notice Board"
+  - object_name: "Cat"
     era_name: "Agriculture"
     is_keystone: false
     is_starter: true
-    category: "cultural"
-    quality_tier: "uncommon"
-    cost: 1600
+    category: "farm"
+    quality_tier: "common"
+    cost: 100
     time_crystal_cost: 0
-    income_per_second: 18
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 60
-    operation_duration_sec: 3600
-    retire_payout_coins_pct: 0.25
-    sellback_pct: 0.15
-    cap_per_civ: null
-    footprint_w: 1
-    footprint_h: 1
-    size: 1.0
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["farm", "natural"]
-        affected_tags: []
-        income_multiplier: 1.06
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.06
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Announcements keep the village humming and fields coordinated."
-    image_path: "/media/objects/starter-noticeboard.png"
-
-  - object_name: "Storehouse Ledger"
-    era_name: "Agriculture"
-    is_keystone: false
-    is_starter: true
-    category: "structure"
-    quality_tier: "uncommon"
-    cost: 1800
-    time_crystal_cost: 0
-    income_per_second: 22
-    time_crystal_generation: 0
-    build_time_sec: 75
-    operation_duration_sec: 4000
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.0
-    global_modifiers:
-      - active_when: "placed"
-        affected_categories: ["farm"]
-        affected_tags: []
-        income_multiplier: 1.05
-        cost_multiplier: 1.0
-        build_time_multiplier: 0.97
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "Tidy grain counts shave hours off planting and harvest prep."
-    image_path: "/media/objects/starter-ledger.png"
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Quiet paws that keep grain stores clear."
+    image_path: "/media/objects/starter-cat.png"
+
+  - object_name: "Compost Heap"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "farm"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Layered scraps that feed the fields."
+    image_path: "/media/objects/starter-compostheap.png"

@@ -205,13 +205,13 @@ starters:
     flavor_text: "Memory made monument."
     image_path: "/media/objects/starter-archive.png"
 
-  - object_name: "Dataset"
+  - object_name: "Entropy Sink"
     era_name: "Beyond"
     is_keystone: false
     is_starter: true
-    category: "research"
+    category: "power"
     quality_tier: "epic"
-    cost: 5000000000
+    cost: 7000000000
     time_crystal_cost: 0
     income_per_second: 0
     time_crystal_generation: 0
@@ -222,18 +222,18 @@ starters:
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 0.8
+    size: 1.8
     global_modifiers: []
-    flavor_text: "Curated truths awaiting a mind."
-    image_path: "/media/objects/starter-dataset.png"
+    flavor_text: "Bleeds waste heat into the void, stretching every uptime cycle."
+    image_path: "/media/objects/starter-entropysink.png"
 
-  - object_name: "Simulator"
+  - object_name: "Manifold Bridge"
     era_name: "Beyond"
     is_keystone: false
     is_starter: true
-    category: "research"
-    quality_tier: "epic"
-    cost: 5000000000
+    category: "wonder"
+    quality_tier: "rare"
+    cost: 7200000000
     time_crystal_cost: 0
     income_per_second: 0
     time_crystal_generation: 0
@@ -244,7 +244,7 @@ starters:
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.0
+    size: 2.4
     global_modifiers: []
-    flavor_text: "A sandbox for possible worlds."
-    image_path: "/media/objects/starter-simulator.png"
+    flavor_text: "Connects parallel timelines so insights collide on demand."
+    image_path: "/media/objects/starter-manifoldbridge.png"

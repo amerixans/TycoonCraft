@@ -178,64 +178,46 @@ starters:
     flavor_text: "Push enough, and the stars get closer."
     image_path: "/media/objects/starter-thruster.png"
 
-  - object_name: "Tracking Beacon"
+  - object_name: "Cryogenic Tank"
     era_name: "Interstellar"
     is_keystone: false
     is_starter: true
     category: "logistics"
     quality_tier: "uncommon"
-    cost: 150000000
+    cost: 50000000
     time_crystal_cost: 0
-    income_per_second: 900000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 420
-    operation_duration_sec: 18000
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 2.1
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["logistics", "research"]
-        affected_tags: []
-        income_multiplier: 1.08
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Relay chains whisper across the void, boosting every link in the network."
-    image_path: "/media/objects/starter-trackingbeacon.png"
+    size: 0.9
+    global_modifiers: []
+    flavor_text: "Super-chilled storage that keeps propellant dense and ready."
+    image_path: "/media/objects/starter-cryogenictank.png"
 
-  - object_name: "Waypoint Relay"
+  - object_name: "Radiation Shielding"
     era_name: "Interstellar"
     is_keystone: false
     is_starter: true
-    category: "logistics"
+    category: "structure"
     quality_tier: "uncommon"
-    cost: 160000000
+    cost: 50000000
     time_crystal_cost: 0
-    income_per_second: 920000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 440
-    operation_duration_sec: 18500
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 2.1
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["logistics"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 0.93
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "Autonomous couriers pre-stage deliveries, trimming downtime between jumps."
-    image_path: "/media/objects/starter-waypointrelay.png"
+    size: 1.1
+    global_modifiers: []
+    flavor_text: "Layered plating that keeps habitats calm under cosmic rain."
+    image_path: "/media/objects/starter-radiationshielding.png"

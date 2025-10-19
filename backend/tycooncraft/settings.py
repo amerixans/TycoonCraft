@@ -183,7 +183,7 @@ RATE_LIMIT_WINDOW = 60  # seconds
 
 # Daily rate limits by tier
 RATE_LIMIT_DAILY_STANDARD = 20  # Standard users
-RATE_LIMIT_DAILY_PRO = 500      # Pro users (with upgrade key)
+RATE_LIMIT_DAILY_PRO = 200      # Pro users (with upgrade key)
 RATE_LIMIT_DAILY_ADMIN = 1000   # Admin users
 RATE_LIMIT_DAILY_GLOBAL = 4000  # Total API calls per day across all users
 

@@ -890,7 +890,7 @@ function App() {
             <button className="modal-close" onClick={() => setShowUpgradeModal(false)}>✕</button>
             <h2>⭐ Upgrade to Pro</h2>
             <p className="upgrade-description">
-              Unlock Pro status to get <strong>500 daily API calls</strong> instead of 20!
+              Unlock Pro status to get <strong>200 daily discoveries</strong> instead of 20!
             </p>
             <form onSubmit={handleUpgradeSubmit}>
               <input
@@ -909,7 +909,7 @@ function App() {
             <div className="upgrade-info">
               <h3>Pro Benefits:</h3>
               <ul>
-                <li>✅ 500 daily API calls (vs 20 standard)</li>
+                <li>✅ 200 daily discoveries (vs 20 standard)</li>
                 <li>✅ More crafting opportunities per day</li>
                 <li>✅ Faster progression through eras</li>
               </ul>

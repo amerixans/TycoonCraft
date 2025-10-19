@@ -170,64 +170,46 @@ starters:
     flavor_text: "Stored spark, ready on demand."
     image_path: "/media/objects/starter-battery.png"
 
-  - object_name: "Substation Signage"
+  - object_name: "Transformer Coil"
     era_name: "Electric Age"
     is_keystone: false
     is_starter: true
     category: "power"
-    quality_tier: "uncommon"
-    cost: 600000
+    quality_tier: "common"
+    cost: 100000
     time_crystal_cost: 0
-    income_per_second: 4000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 220
-    operation_duration_sec: 9000
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.6
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["power"]
-        affected_tags: []
-        income_multiplier: 1.08
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Clear routing placards keep every circuit humming efficiently."
-    image_path: "/media/objects/starter-substation.png"
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Coiled copper that tames voltage swings."
+    image_path: "/media/objects/starter-transformercoil.png"
 
-  - object_name: "Insulator Yard"
+  - object_name: "Vacuum Tube"
     era_name: "Electric Age"
     is_keystone: false
     is_starter: true
-    category: "structure"
-    quality_tier: "uncommon"
-    cost: 650000
+    category: "research"
+    quality_tier: "common"
+    cost: 100000
     time_crystal_cost: 0
-    income_per_second: 4200
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 240
-    operation_duration_sec: 9500
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.7
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["power"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.08
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "Spools and ceramic racks stretch grid uptime between shutdowns."
-    image_path: "/media/objects/starter-insulatoryard.png"
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "Glowing glass that switches and amplifies."
+    image_path: "/media/objects/starter-vacuumtube.png"

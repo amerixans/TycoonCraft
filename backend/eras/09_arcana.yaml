@@ -186,64 +186,46 @@ starters:
     flavor_text: "A boundary where rules may bend."
     image_path: "/media/objects/starter-chalkcircle.png"
 
-  - object_name: "Rune Circle"
+  - object_name: "Spellbook"
     era_name: "Arcana"
     is_keystone: false
     is_starter: true
-    category: "magic"
-    quality_tier: "uncommon"
-    cost: 950000000
+    category: "cultural"
+    quality_tier: "rare"
+    cost: 500000000
     time_crystal_cost: 0
-    income_per_second: 6000000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 460
-    operation_duration_sec: 21000
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 2.2
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["magic"]
-        affected_tags: []
-        income_multiplier: 1.10
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "Sigils flare bright, amplifying every working in its radius."
-    image_path: "/media/objects/starter-runecircle.png"
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Pages inked with centuries of compiled workings."
+    image_path: "/media/objects/starter-spellbook.png"
 
-  - object_name: "Ley Tuning Fork"
+  - object_name: "Crystal Focus Lens"
     era_name: "Arcana"
     is_keystone: false
     is_starter: true
     category: "magic"
-    quality_tier: "uncommon"
-    cost: 980000000
+    quality_tier: "rare"
+    cost: 500000000
     time_crystal_cost: 0
-    income_per_second: 6200000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 480
-    operation_duration_sec: 21500
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 2.3
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["magic"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.10
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "Struck once, it keeps ley pulses resonant far longer than they should be."
-    image_path: "/media/objects/starter-leyfork.png"
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Prismatic glass that channels raw mana into a needlepoint."
+    image_path: "/media/objects/starter-crystalfocuslens.png"

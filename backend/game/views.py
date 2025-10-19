@@ -1379,7 +1379,7 @@ def redeem_upgrade_key(request):
     
     return Response({
         "success": True,
-        "message": "Successfully upgraded to Pro! You now have 500 daily API calls.",
+        "message": "Successfully upgraded to Pro! You now have 200 daily discoveries.",
         "profile": PlayerProfileSerializer(profile).data
     }, status=status.HTTP_200_OK)
 

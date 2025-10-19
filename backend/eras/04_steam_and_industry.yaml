@@ -171,64 +171,46 @@ starters:
     flavor_text: "A lodestone with a pull on progress."
     image_path: "/media/objects/starter-magnet.png"
 
-  - object_name: "Shift Whistle"
+  - object_name: "Boiler Plate"
     era_name: "Steam & Industry"
     is_keystone: false
     is_starter: true
-    category: "cultural"
-    quality_tier: "uncommon"
-    cost: 80000
+    category: "factory"
+    quality_tier: "common"
+    cost: 10000
     time_crystal_cost: 0
-    income_per_second: 700
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 180
-    operation_duration_sec: 7200
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.5
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["factory", "logistics"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 0.92
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 2
-    flavor_text: "A piercing call snaps every line into motion on schedule."
-    image_path: "/media/objects/starter-shiftwhistle.png"
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Rolled steel ready to wrap a pressure vessel."
+    image_path: "/media/objects/starter-boilerplate.png"
 
-  - object_name: "Rail Milepost"
+  - object_name: "Flywheel"
     era_name: "Steam & Industry"
     is_keystone: false
     is_starter: true
-    category: "logistics"
-    quality_tier: "uncommon"
-    cost: 90000
+    category: "power"
+    quality_tier: "common"
+    cost: 10000
     time_crystal_cost: 0
-    income_per_second: 750
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 200
-    operation_duration_sec: 7500
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.5
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["logistics"]
-        affected_tags: []
-        income_multiplier: 1.08
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Perfectly spaced markers keep freight and passengers flowing."
-    image_path: "/media/objects/starter-railpost.png"
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Spinning mass that smooths every stroke of the engine."
+    image_path: "/media/objects/starter-flywheel.png"

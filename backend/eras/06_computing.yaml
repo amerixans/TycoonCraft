@@ -174,64 +174,46 @@ starters:
     flavor_text: "Light disciplined to a razor line."
     image_path: "/media/objects/starter-laser.png"
 
-  - object_name: "Cooling Stack"
+  - object_name: "Transistor"
     era_name: "Computing"
     is_keystone: false
     is_starter: true
-    category: "structure"
-    quality_tier: "uncommon"
-    cost: 3500000
+    category: "research"
+    quality_tier: "common"
+    cost: 500000
     time_crystal_cost: 0
-    income_per_second: 22000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 260
-    operation_duration_sec: 11000
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.8
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["factory", "research"]
-        affected_tags: []
-        income_multiplier: 1.0
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.10
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Heat sinks climb like towers, buying servers precious uptime."
-    image_path: "/media/objects/starter-coolingstack.png"
+    size: 0.2
+    global_modifiers: []
+    flavor_text: "A single switch that scales to billions."
+    image_path: "/media/objects/starter-transistor.png"
 
-  - object_name: "Job Scheduler Board"
+  - object_name: "Printed Circuit Board"
     era_name: "Computing"
     is_keystone: false
     is_starter: true
-    category: "cultural"
-    quality_tier: "uncommon"
-    cost: 3600000
+    category: "factory"
+    quality_tier: "common"
+    cost: 500000
     time_crystal_cost: 0
-    income_per_second: 23000
+    income_per_second: 0
     time_crystal_generation: 0
-    build_time_sec: 270
-    operation_duration_sec: 11200
+    build_time_sec: 0
+    operation_duration_sec: 300
     retire_payout_coins_pct: 0.2
-    sellback_pct: 0.15
+    sellback_pct: 0.2
     cap_per_civ: null
     footprint_w: 1
     footprint_h: 1
-    size: 1.6
-    global_modifiers:
-      - active_when: "operational"
-        affected_categories: ["research"]
-        affected_tags: []
-        income_multiplier: 1.07
-        cost_multiplier: 1.0
-        build_time_multiplier: 1.0
-        operation_duration_multiplier: 1.0
-        stacking: "multiplicative"
-        max_stacks: 3
-    flavor_text: "Color-coded queues keep every automation job cycling smoothly."
-    image_path: "/media/objects/starter-schedulerboard.png"
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Etched traces ready for population."
+    image_path: "/media/objects/starter-pcb.png"
