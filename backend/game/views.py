@@ -535,10 +535,10 @@ CRITICAL ERA ASSIGNMENT RULES:
 
 def _compress_image(image_bytes):
     """
-    Compress image bytes using PIL while maintaining quality.
+    Compress image bytes using PIL while maintaining quality and transparency.
 
     Uses the IMAGE_COMPRESSION_QUALITY setting from settings.py.
-    Returns compressed image as PNG bytes.
+    Returns compressed image as PNG bytes with alpha channel preserved.
     """
     try:
         from PIL import Image
@@ -547,21 +547,19 @@ def _compress_image(image_bytes):
         # Load image from bytes
         img = Image.open(io.BytesIO(image_bytes))
 
-        # Convert RGBA to RGB if needed (PNG to PNG with quality setting)
-        if img.mode in ('RGBA', 'LA', 'P'):
-            # Create white background for transparency
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            if img.mode == 'P':
-                img = img.convert('RGBA')
-            background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
-            img = background
+        # Ensure image is in RGBA mode to preserve transparency
+        if img.mode in ('P', 'LA'):
+            img = img.convert('RGBA')
+        elif img.mode not in ('RGBA', 'RGB'):
+            img = img.convert('RGBA')
 
         # Get compression quality from settings
         quality = getattr(settings, 'IMAGE_COMPRESSION_QUALITY', 85)
 
         # Compress and save to bytes
         output = io.BytesIO()
-        img.save(output, format='PNG', optimize=True, quality=quality)
+        # PNG compression: optimize=True reduces file size, quality is ignored for PNG but kept for consistency
+        img.save(output, format='PNG', optimize=True)
         return output.getvalue()
     except ImportError:
         # If PIL not available, return original bytes
