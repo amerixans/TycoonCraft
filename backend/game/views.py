@@ -52,6 +52,31 @@ def get_unlocked_eras(profile):
     return list(era_unlocks)
 
 
+def ensure_hunter_gatherer_starters(profile):
+    """Ensure baseline era unlock and starter discoveries exist for the player."""
+    if not profile.current_era:
+        profile.current_era = "Hunter-Gatherer"
+        profile.save(update_fields=["current_era"])
+
+    _, _ = EraUnlock.objects.get_or_create(
+        player=profile,
+        era_name="Hunter-Gatherer"
+    )
+
+    starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
+    known_ids = set(
+        Discovery.objects.filter(
+            player=profile,
+            game_object__era_name="Hunter-Gatherer",
+            game_object__is_starter=True
+        ).values_list("game_object_id", flat=True)
+    )
+
+    for obj in starter_objects:
+        if obj.id not in known_ids:
+            Discovery.objects.get_or_create(player=profile, game_object=obj)
+
+
 # -----------------------------
 # Player coin/tc updates
 # -----------------------------
@@ -611,13 +636,7 @@ def register(request):
         is_pro=False
     )
 
-    # Unlock first era
-    EraUnlock.objects.create(player=profile, era_name="Hunter-Gatherer")
-
-    # Give starter objects for Hunter-Gatherer era
-    starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
-    for obj in starter_objects:
-        Discovery.objects.create(player=profile, game_object=obj)
+    ensure_hunter_gatherer_starters(profile)
 
     login(request, user)
 
@@ -648,18 +667,7 @@ def login_view(request):
     )
 
     # Ensure the player has the initial era unlock and starter discoveries
-    _, era_created = EraUnlock.objects.get_or_create(
-        player=profile,
-        era_name="Hunter-Gatherer"
-    )
-    if created or era_created or not Discovery.objects.filter(
-        player=profile,
-        game_object__is_starter=True,
-        game_object__era_name="Hunter-Gatherer"
-    ).exists():
-        starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
-        for obj in starter_objects:
-            Discovery.objects.get_or_create(player=profile, game_object=obj)
+    ensure_hunter_gatherer_starters(profile)
 
     # Explicitly ensure CSRF cookie is set for subsequent requests
     # get_token() forces Django to set the csrftoken cookie
@@ -718,9 +726,9 @@ def game_state(request):
     Optimized to exclude the large all_objects catalog which is served
     separately and can be cached by the client.
     """
-    update_player_coins(request.user.profile)
-
     profile = request.user.profile
+    ensure_hunter_gatherer_starters(profile)
+    update_player_coins(profile)
     discoveries = Discovery.objects.filter(player=profile).select_related("game_object")
     placed_objects = PlacedObject.objects.filter(player=profile).select_related("game_object")
     era_unlocks = EraUnlock.objects.filter(player=profile)
