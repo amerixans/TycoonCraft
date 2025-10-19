@@ -26,6 +26,7 @@ def api_root(request):
             'export': '/api/export/',
             'import': '/api/import/',
             'redeem_upgrade_key': '/api/redeem-upgrade-key/',
+            'add_coin': '/api/add-coin/',
         }
     })
 
@@ -45,4 +46,5 @@ urlpatterns = [
     path('export/', views.export_game, name='export'),
     path('import/', views.import_game, name='import'),
     path('redeem-upgrade-key/', views.redeem_upgrade_key, name='redeem_upgrade_key'),
+    path('add-coin/', views.add_coin, name='add_coin'),
 ]

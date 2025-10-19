@@ -6,6 +6,7 @@ import './Sidebar.css';
 function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
+  const [hoveredLockedEra, setHoveredLockedEra] = useState(null);
 
   // Update selectedEra when currentEra changes
   useEffect(() => {
@@ -23,9 +24,9 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
 
   const objectsByEra = {};
   eras.forEach(era => {
-    // Include objects that match this era OR are keystone objects (visible in all eras)
+    // Include only objects that match this era (keystones belong to their own era)
     objectsByEra[era] = discoveredObjects.filter(obj =>
-      obj.era_name === era || obj.is_keystone
+      obj.era_name === era
     );
   });
 
@@ -33,6 +34,20 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
     if (unlockedEras.has(era)) return 'unlocked';
     if (eras.indexOf(era) <= eras.indexOf(currentEra)) return 'available';
     return 'locked';
+  };
+
+  // Get the keystone object needed to unlock a specific era
+  const getKeystoneForEra = (targetEra) => {
+    const eraIndex = eras.indexOf(targetEra);
+    if (eraIndex <= 0) return null; // First era has no keystone
+
+    // Keystone belongs to the previous era
+    const previousEra = eras[eraIndex - 1];
+
+    // Find the keystone object in the previous era that unlocks the target era
+    return allObjects.find(obj =>
+      obj.era_name === previousEra && obj.is_keystone
+    );
   };
 
   // Filter objects based on search term
@@ -65,17 +80,35 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
         <div className="era-tabs">
           {eras.map(era => {
             const status = getEraStatus(era);
+            const keystone = status === 'locked' ? getKeystoneForEra(era) : null;
+            const hintText = keystone
+              ? `Craft ${keystone.object_name} to unlock this era`
+              : status === 'locked'
+              ? 'Unlock previous eras first'
+              : '';
+
             return (
               <button
                 key={era}
                 className={`era-tab ${status} ${selectedEra === era ? 'active' : ''}`}
                 onClick={() => setSelectedEra(era)}
                 disabled={status === 'locked'}
+                onMouseEnter={() => status === 'locked' && setHoveredLockedEra(era)}
+                onMouseLeave={() => setHoveredLockedEra(null)}
+                title={hintText}
               >
                 {era.split(' ')[0]}
               </button>
             );
           })}
+          {hoveredLockedEra && (() => {
+            const keystone = getKeystoneForEra(hoveredLockedEra);
+            return keystone ? (
+              <div className="era-lock-hint">
+                Craft <strong>{keystone.object_name}</strong> to unlock this era
+              </div>
+            ) : null;
+          })()}
         </div>
       )}
       

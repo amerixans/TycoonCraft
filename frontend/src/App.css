@@ -832,6 +832,31 @@ body {
   align-items: flex-start;
   overflow-y: auto;
   max-height: calc(500px - 3rem);
+  position: relative;
+}
+
+.object-info-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--accent-secondary);
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.object-info-close:hover {
+  background: var(--accent-primary);
+  transform: scale(1.1);
 }
 
 .object-info-image-container {

@@ -56,8 +56,19 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
   };
   
   const clearSlot = (slot) => {
-    if (slot === 'A') setSlotA(null);
-    else setSlotB(null);
+    if (slot === 'A') {
+      setSlotA(null);
+      // Reset era mismatch if we're clearing a slot
+      if (slotB) {
+        setEraMismatch(false);
+      }
+    } else {
+      setSlotB(null);
+      // Reset era mismatch if we're clearing a slot
+      if (slotA) {
+        setEraMismatch(false);
+      }
+    }
   };
   
   const canAffordCraft = playerCoins >= craftingCost;

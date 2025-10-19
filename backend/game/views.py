@@ -906,19 +906,21 @@ def craft_objects(request):
             # Continue to generation below (fall through to create new recipe)
         else:
             # Recipe exists and matches predefined specs (or no predefined specs)
-            # Deduct crafting cost
-            profile.coins -= crafting_cost
-            profile.save()
-            
             # Check if player already discovered this
             discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
-            
+
+            # Only deduct cost if this is a new discovery for the player
+            actual_cost = crafting_cost if created else Decimal('0')
+            if actual_cost > 0:
+                profile.coins -= actual_cost
+                profile.save()
+
             # Return the existing recipe result without calling OpenAI
             return Response({
                 "object": GameObjectSerializer(result_obj).data,
                 "newly_discovered": created,
                 "newly_created": False,
-                "crafting_cost": float(crafting_cost),
+                "crafting_cost": float(actual_cost),
                 "used_existing_recipe": True,
             })
 
@@ -948,10 +950,7 @@ def craft_objects(request):
         already_discovered = Discovery.objects.filter(player=profile, game_object=existing_obj).exists()
         
         if already_discovered:
-            # Player already knows this object - just inform them and save the recipe
-            profile.coins -= crafting_cost
-            profile.save()
-            
+            # Player already knows this object - no cost to craft again
             # Create recipe linking these inputs to the existing result (if not already exists)
             CraftingRecipe.objects.get_or_create(
                 object_a=object_a,
@@ -961,13 +960,13 @@ def craft_objects(request):
                     "discovered_by": request.user,
                 }
             )
-            
+
             return Response({
                 "object": GameObjectSerializer(existing_obj).data,
                 "newly_discovered": False,
                 "newly_created": False,
                 "message": f"That combination creates {existing_obj.object_name}, which you have already discovered!",
-                "crafting_cost": float(crafting_cost),
+                "crafting_cost": 0,
             })
         else:
             # Player hasn't discovered it yet - link recipe and mark as discovered
@@ -1382,6 +1381,20 @@ def redeem_upgrade_key(request):
         "success": True,
         "message": "Successfully upgraded to Pro! You now have 500 daily API calls.",
         "profile": PlayerProfileSerializer(profile).data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_coin(request):
+    """Add one coin to the player's account."""
+    profile = request.user.profile
+    profile.coins += 1
+    profile.save()
+
+    return Response({
+        "success": True,
+        "coins": float(profile.coins)
     }, status=status.HTTP_200_OK)
 
 

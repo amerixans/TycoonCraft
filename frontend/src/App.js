@@ -114,6 +114,10 @@ function App() {
       );
     }
 
+    const handleClose = () => {
+      setSelectedObject(null);
+    };
+
     const cost = Number(selectedObject.cost ?? 0);
     const incomePerSecond = Number(selectedObject.income_per_second ?? 0);
     const crystalGeneration = Number(selectedObject.time_crystal_generation ?? 0);
@@ -210,6 +214,13 @@ function App() {
 
     return (
       <div className="object-info-content">
+        <button
+          className="object-info-close"
+          onClick={handleClose}
+          title="Close"
+        >
+          ✕
+        </button>
         {selectedObject.image_path && (
           <div className="object-info-image-container">
             <img
@@ -399,9 +410,8 @@ function App() {
     loadGameState().finally(() => setLoading(false));
     loadObjectCatalog();
 
-    // Auto-refresh game state less frequently (every 5 seconds instead of 1)
-    // to reduce database load and network traffic
-    const interval = setInterval(loadGameState, 5000);
+    // Auto-refresh game state every second to update coins
+    const interval = setInterval(loadGameState, 1000);
     return () => clearInterval(interval);
   }, [loadGameState, loadObjectCatalog]);
 
@@ -625,7 +635,7 @@ function App() {
   const handleUpgradeSubmit = async (e) => {
     e.preventDefault();
     setUpgradeError('');
-    
+
     try {
       const response = await game.redeemUpgradeKey(upgradeKey);
       showNotification(response.data.message, 'success');
@@ -634,6 +644,16 @@ function App() {
       await loadGameState();
     } catch (err) {
       setUpgradeError(err.response?.data?.error || 'Failed to redeem key');
+    }
+  };
+
+  const handleCoinClick = async () => {
+    try {
+      await game.addCoin();
+      await loadGameState();
+      showNotification('+1 coin!', 'success');
+    } catch (err) {
+      console.error('Failed to add coin:', err);
     }
   };
 
@@ -718,15 +738,15 @@ function App() {
           </div>
         </div>
         <div className="header-center">
-          <div className="resource">
+          <div
+            className="resource"
+            onClick={handleCoinClick}
+            style={{ cursor: 'pointer' }}
+            title="Click to get +1 coin!"
+          >
             <span className="resource-icon">💰</span>
             <span className="resource-value">{formatNumber(gameState.profile.coins)}</span>
             <span className="resource-label">Coins</span>
-          </div>
-          <div className="resource">
-            <span className="resource-icon">💎</span>
-            <span className="resource-value">{formatNumber(gameState.profile.time_crystals)}</span>
-            <span className="resource-label">Crystals</span>
           </div>
         </div>
         <div className="header-right">

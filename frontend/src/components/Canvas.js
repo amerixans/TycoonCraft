@@ -278,8 +278,13 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
   };
   
   const handleDragLeave = (e) => {
-    // Only clear if we're leaving the canvas entirely
-    if (e.currentTarget === e.target) {
+    // Only clear if we're leaving the canvas container (not when moving over placed objects)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Check if mouse is outside the canvas bounds
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setDraggedObject(null);
     }
   };
