@@ -1,0 +1,215 @@
+# Era Definition: Futurism
+
+order: 7
+name: "Futurism"
+display_name: "Futurism"
+unlock_message: "Craft Warp Drive to unlock Interstellar"
+
+crystal_unlock_cost: 30000
+crafting_cost: 6250000  # 781250 * 8
+
+stat_ranges:
+  cost:
+    min: 15000000
+    max: 150000000
+  income_per_second:
+    min: 75000
+    max: 1200000
+  build_time_sec:
+    min: 0
+    max: 500
+  operation_duration_sec:
+    min: 7000
+    max: 50000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 15
+  size_min: 0.4
+  size_max: 12.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.01
+
+prompt_description: |
+  Futurism
+  • Unique Mechanic (applies to items in/after this era): Synthetics — efficiency auras (factory/power income 1.05–1.10) with cost_multiplier locked at 1.00.
+  • Keystone to Unlock: Fusion Core (Fusion Prototype + Superconductor)
+  • Cost Range: 15,000,000–150,000,000 coins
+  • Income Range: 75,000–1,200,000 coins/second
+  • Core Examples: Drone Bay, Fusion Prototype, Quantum Lab, Nanites
+
+keystone:
+  recipe_chain:
+    - comment: "FUT-1"
+      input_a: "Magnetic Coil"
+      input_b: "Energy Cell"
+      output_name: "Charged Coil"
+    - comment: "FUT-2"
+      input_a: "Charged Coil"
+      input_b: "Field Projector"
+      output_name: "Containment Grid"
+    - comment: "FUT-3"
+      input_a: "Containment Grid"
+      input_b: "Superconductor"
+      output_name: "Stabilized Field"
+    - comment: "FUT-4 (Keystone)"
+      input_a: "Stabilized Field"
+      input_b: "Assembler"
+      output_name: "Fusion Core"
+      is_keystone: true
+      overrides:
+        era_name: "Futurism"
+        cost: 288000000000000
+        category: "power"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["power"]
+            affected_tags: []
+            income_multiplier: 1.15
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Superconductor"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "uncommon"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Resistance falls to zero; dreams don't."
+    image_path: "/media/objects/starter-superconductor.png"
+
+  - object_name: "Assembler"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.0
+    global_modifiers: []
+    flavor_text: "A small cell that builds bigger things."
+    image_path: "/media/objects/starter-assembler.png"
+
+  - object_name: "Magnetic Coil"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "uncommon"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Field lines wound tight as springs."
+    image_path: "/media/objects/starter-magneticcoil.png"
+
+  - object_name: "Energy Cell"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "common"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "A pocket of captured lightning."
+    image_path: "/media/objects/starter-energycell.png"
+
+  - object_name: "Graphene Sheet"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "uncommon"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Atom-thin lattice with impossible strength."
+    image_path: "/media/objects/starter-graphenesheet.png"
+
+  - object_name: "Field Projector"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "uncommon"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.8
+    global_modifiers: []
+    flavor_text: "Emitters that sculpt force like clay."
+    image_path: "/media/objects/starter-fieldprojector.png"

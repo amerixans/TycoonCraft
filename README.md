@@ -194,7 +194,7 @@ Run from the `backend` directory:
   - `crafting_recipe.txt` – Prompt template for crafting requests (filled with capsules and era context).
   - `object_capsule.json` & `object_schema.json` – Structured schema definitions consumed by the Responses API.
   - `image_prompt.txt` – Prompt for image generation.
-  - `predefined_recipes.json` – Hard-coded overrides for specific combinations (enforces deterministic outputs).
+  - Keystone recipe overrides now live inside each era YAML under `backend/eras/` (`keystone.recipe_chain` blocks).
 - Generated images are saved as hashed filenames under `media/objects/`. Starter art ships in the repo so seeded items display immediately.
 
 ## Troubleshooting

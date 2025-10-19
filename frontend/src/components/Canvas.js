@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { formatNumber } from '../utils/formatNumber';
+import { hasAura, describeAuraModifier } from '../utils/aura';
 import './Canvas.css';
 
 const GRID_SIZE = 50; // Pixels per grid tile
@@ -32,6 +33,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
   const previousEraRef = useRef(currentEra);
   const [canvasMode, setCanvasMode] = useState('view'); // 'view', 'move', 'trash'
   const [movingObject, setMovingObject] = useState(null);
+
   
   // Update time every second for build progress
   useEffect(() => {
@@ -241,8 +243,13 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
   };
   
   const handleDragLeave = (e) => {
-    // Only clear if we're leaving the canvas entirely
-    if (e.currentTarget === e.target) {
+    // Only clear if we're leaving the canvas container (not when moving over placed objects)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Check if mouse is outside the canvas bounds
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setDraggedObject(null);
     }
   };
@@ -406,7 +413,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                   }}
                 >
                   {/* Placed objects */}
-                  {placedObjects.map(placed => (
+                  {placedObjects.map(placed => {
+                    return (
                     <div
                       key={placed.id}
                       className={`placed-object ${placed.is_building ? 'building' : (!placed.is_operational ? 'retiring' : getOperationalStatus(placed))}`}
@@ -434,6 +442,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                         </div>
                       )}
 
+                      {/* Building progress circle */}
                       {placed.is_building && (() => {
                         const progress = getBuildProgress(placed);
                         if (!progress) return null;
@@ -486,32 +495,35 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                       })()}
 
                     </div>
-                  ))}
+                  );
+                  })}
                   
                   {/* Ghost preview during drag */}
-                  {draggedObject && (
-                    <div
-                      className="placed-object ghost"
-                      style={{
-                        left: draggedObject.x * GRID_SIZE + 'px',
-                        top: draggedObject.y * GRID_SIZE + 'px',
-                        width: draggedObject.obj.footprint_w * GRID_SIZE + 'px',
-                        height: draggedObject.obj.footprint_h * GRID_SIZE + 'px',
-                      }}
-                    >
-                      {draggedObject.obj.image_path ? (
-                        <img
-                          src={draggedObject.obj.image_path}
-                          alt={draggedObject.obj.object_name}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      ) : (
-                        <div className="object-placeholder">
-                          {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {draggedObject && (() => {
+                    return (
+                      <div
+                        className="placed-object ghost"
+                        style={{
+                          left: draggedObject.x * GRID_SIZE + 'px',
+                          top: draggedObject.y * GRID_SIZE + 'px',
+                          width: draggedObject.obj.footprint_w * GRID_SIZE + 'px',
+                          height: draggedObject.obj.footprint_h * GRID_SIZE + 'px',
+                        }}
+                      >
+                        {draggedObject.obj.image_path ? (
+                          <img
+                            src={draggedObject.obj.image_path}
+                            alt={draggedObject.obj.object_name}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        ) : (
+                          <div className="object-placeholder">
+                            {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </TransformComponent>
             </>
@@ -592,6 +604,22 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                     : formatNumber(hoveredPlaced.game_object.cost * hoveredPlaced.game_object.retire_payout_coins_pct)
                   } coins
                 </span>
+              </div>
+            )}
+            {hasAura(hoveredPlaced.game_object) && (
+              <div className="tooltip-auras">
+                <div className="tooltip-auras-title">Aura Effects</div>
+                <ul>
+                  {hoveredPlaced.game_object.global_modifiers.map((modifier, idx) => {
+                    const details = describeAuraModifier(modifier);
+                    const effects = details.effects.length > 0
+                      ? details.effects.join(', ')
+                      : 'No stat changes';
+                    return (
+                      <li key={idx}>{details.categories}: {effects}</li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
           </div>

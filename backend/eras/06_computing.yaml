@@ -1,0 +1,215 @@
+# Era Definition: Computing
+
+order: 6
+name: "Computing"
+display_name: "Computing"
+unlock_message: "Craft Quantum Computer to unlock Futurism"
+
+crystal_unlock_cost: 6000
+crafting_cost: 1093750  # 156250 * 7
+
+stat_ranges:
+  cost:
+    min: 2000000
+    max: 20000000
+  income_per_second:
+    min: 10000
+    max: 180000
+  build_time_sec:
+    min: 0
+    max: 400
+  operation_duration_sec:
+    min: 5000
+    max: 35000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 12
+  size_min: 0.2
+  size_max: 10.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.005
+
+prompt_description: |
+  Computing
+  • Unique Mechanic (applies to items in/after this era): Scheduler Nodes — uptime auras (operation_duration 1.05–1.15) for factory/research with light income (1.05–1.08); cost multipliers stay 1.00.
+  • Keystone to Unlock: Lithography (Laser + Computer)
+  • Cost Range: 2,000,000–20,000,000 coins
+  • Income Range: 10,000–180,000 coins/second
+  • Core Examples: Computer, Router, Data Center, Server, Processor
+
+keystone:
+  recipe_chain:
+    - comment: "COMP-1"
+      input_a: "Code"
+      input_b: "Memory"
+      output_name: "Program"
+    - comment: "COMP-2"
+      input_a: "Program"
+      input_b: "Circuit"
+      output_name: "Test Board"
+    - comment: "COMP-3"
+      input_a: "Test Board"
+      input_b: "Laser"
+      output_name: "Mask"
+    - comment: "COMP-4 (Keystone)"
+      input_a: "Mask"
+      input_b: "Circuit"
+      output_name: "Lithography"
+      is_keystone: true
+      overrides:
+        era_name: "Computing"
+        cost: 1440000000000
+        category: "factory"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["factory"]
+            affected_tags: []
+            income_multiplier: 1.12
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Circuit"
+    era_name: "Computing"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 500000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Patterns that teach electrons to behave."
+    image_path: "/media/objects/starter-circuit.png"
+
+  - object_name: "Code"
+    era_name: "Computing"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "common"
+    cost: 500000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.2
+    global_modifiers: []
+    flavor_text: "Instructions that organize thought."
+    image_path: "/media/objects/starter-code.png"
+
+  - object_name: "Memory"
+    era_name: "Computing"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "uncommon"
+    cost: 500000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "Bits kept close for quick recall."
+    image_path: "/media/objects/starter-memory.png"
+
+  - object_name: "Laser"
+    era_name: "Computing"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "uncommon"
+    cost: 500000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Light disciplined to a razor line."
+    image_path: "/media/objects/starter-laser.png"
+
+  - object_name: "Transistor"
+    era_name: "Computing"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "common"
+    cost: 500000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.2
+    global_modifiers: []
+    flavor_text: "A single switch that scales to billions."
+    image_path: "/media/objects/starter-transistor.png"
+
+  - object_name: "Printed Circuit Board"
+    era_name: "Computing"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 500000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Etched traces ready for population."
+    image_path: "/media/objects/starter-pcb.png"

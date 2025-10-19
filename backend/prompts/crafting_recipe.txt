@@ -11,75 +11,7 @@ Game context (authoritative)
 
 Eras (AUTHORITATIVE: enum + details; use these exact names for era_name)
 
-Hunter-Gatherer
-• Unique Mechanic (applies to items in/after this era): Decay — basic items "burn out" after a short operation window, yielding salvage.
-• Keystone to Unlock: Hearth (Stone + Fire)
-• Cost Range: 50–1,000 coins
-• Income Range: 1–10 coins/second
-• Core Examples: Berry Patch, Stone Tool, Flint Knife, Bark Shelter
-
-Agriculture
-• Unique Mechanic (applies to items in/after this era): Growth — farmables can be replanted to extend operation (choice: cash out vs. regrow).
-• Keystone to Unlock: Charcoal Kiln (Clay + Wood)
-• Cost Range: 800–8,000 coins
-• Income Range: 5–80 coins/second
-• Core Examples: Farm, Granary, Well, Plow, Barn
-
-Metallurgy
-• Unique Mechanic (applies to items in/after this era): Extraction Chains — Mines output Ore; smelters convert to Ingots (intermediate goods).
-• Keystone to Unlock: Boiler (Metal + Water)
-• Cost Range: 5,000–50,000 coins
-• Income Range: 30–500 coins/second
-• Core Examples: Mine, Furnace, Anvil, Forge, Sword
-
-Steam & Industry
-• Unique Mechanic (applies to items in/after this era): Throughput — buildings have input buffers; upgrades increase buffers (fewer deadtimes).
-• Keystone to Unlock: Dynamo (Steam Engine + Magnet)
-• Cost Range: 40,000–400,000 coins
-• Income Range: 200–3,000 coins/second
-• Core Examples: Steam Engine, Factory, Rail, Locomotive, Warehouse
-
-Electric Age
-• Unique Mechanic (applies to items in/after this era): Power Grid — powered buildings gain % income; overdraw causes brownouts (temporary debuffs).
-• Keystone to Unlock: Transistor (Silicon + Battery)
-• Cost Range: 300,000–3,000,000 coins
-• Income Range: 1,500–25,000 coins/second
-• Core Examples: Dynamo, Power Lines, Lightbulb, Telegraph, Battery
-
-Computing
-• Unique Mechanic (applies to items in/after this era): Automation — craft queues auto-repeat; bot slots reduce cooldowns.
-• Keystone to Unlock: Lithography (Laser + Computer)
-• Cost Range: 2,000,000–20,000,000 coins
-• Income Range: 10,000–180,000 coins/second
-• Core Examples: Computer, Router, Data Center, Server, Processor
-
-Futurism
-• Unique Mechanic (applies to items in/after this era): Synthesis — fabricators convert raw inputs to any tagged intermediate at an efficiency loss.
-• Keystone to Unlock: Fusion Core (Fusion Prototype + Superconductor)
-• Cost Range: 15,000,000–150,000,000 coins
-• Income Range: 75,000–1,200,000 coins/second
-• Core Examples: Drone Bay, Fusion Prototype, Quantum Lab, Nanites
-
-Interstellar
-• Unique Mechanic (applies to items in/after this era): Logistics Lanes — routes between districts add global multipliers; congestion penalties apply.
-• Keystone to Unlock: Aether Array (Orbital Telescope + Quantum Lab)
-• Cost Range: 100,000,000–1,000,000,000 coins
-• Income Range: 500,000–8,000,000 coins/second
-• Core Examples: Orbital Farm, Asteroid Mine, Starport, Warp Gate
-
-Arcana
-• Unique Mechanic (applies to items in/after this era): Enchantment — socket runes to items for additive/multiplicative bonuses; runes wear over time.
-• Keystone to Unlock: Reality Loom (Arcane Tower + Rune Forge)
-• Cost Range: 800,000,000–8,000,000,000 coins
-• Income Range: 4,000,000–60,000,000 coins/second
-• Core Examples: Mana Well, Transmutation Lab, Arcane Tower, Rune Forge
-
-Beyond
-• Unique Mechanic (applies to items in/after this era): Sim Layers — instantiate "simulated duplicates" of a layout for burst yield, with cooldown.
-• Keystone to Unlock: Seed AI (Quantum Core + Archive)
-• Cost Range: 6,000,000,000–60,000,000,000 coins
-• Income Range: 30,000,000–500,000,000 coins/second
-• Core Examples: World Forge, Reality Printer, Singularity Core, Time Weaver
+{{ERA_DESCRIPTIONS}}
 
 ⚠️ CRITICAL ERA ASSIGNMENT RULES ⚠️
 
@@ -90,52 +22,11 @@ For KEYSTONE objects (is_keystone: true):
 • Placing the keystone unlocks the NEXT era for the player
 • Keystones should have cap_per_civ of 1–3 and be thematically significant
 
-For REGULAR objects (is_keystone: false):
-• MUST be assigned to the higher era of the two input objects
-• Example: Hunter-Gatherer + Agriculture → result is "Agriculture" era
-• Example: Agriculture + Agriculture → result is "Agriculture" era
-• NEVER assign beyond the higher input era for regular objects
-
 Keystone policy (is_keystone)
 • Set is_keystone: true if and only if the object's name matches the era's "Keystone to Unlock" above
 • When true, always use cap_per_civ of 1–3 (keystones are rare and powerful)
 • Keystones should be thematically important milestones (e.g., Campfire, Fertilizer, Metal)
 • Otherwise set is_keystone: false and use cap_per_civ: null
-
-⚠️ AGRICULTURAL ITEMS SPECIAL MECHANICS ⚠️
-
-For items in Agriculture era and beyond that represent animals, crops, or plants:
-
-ANIMALS (e.g., Pig, Cow, Sheep, Chicken, Horse, Beehive):
-• CRITICAL: animals do NOT generate passive income while operational
-• income_per_second: MUST be 1 (minimum; represents growth/feeding cost, not revenue)
-• operation_duration_sec: SHORT (300-1200 seconds / 5-20 minutes typical)
-• retire_payout.coins_pct: HIGH (0.40-0.70; animal is sold/butchered for meat/goods)
-• Example: Pig costs 800 coins, generates 1 coin/sec for 10 minutes, then pays out 600 coins (75% refund)
-• Flavor: suggest "grown" or "fattened" or "ready for market"
-
-CROPS / HARVESTABLE PLANTS (e.g., Wheat, Corn, Pumpkin, Barley, Cabbage, Grapes):
-• CRITICAL: crops do NOT generate passive income; income only at harvest (retirement)
-• income_per_second: MUST be 1 (minimum; represents maintenance/watering cost)
-• operation_duration_sec: SHORT-MEDIUM (600-3600 seconds / 10-60 minutes typical for seasonal crops)
-• retire_payout.coins_pct: VERY HIGH (0.50-1.00; entire harvest/yield is the payout)
-• Example: Wheat costs 500 coins, generates 1 coin/sec for 30 minutes, then pays out 500-900 coins as harvest
-• Flavor: emphasize "ready to harvest" or "mature crop" or "full yield"
-
-FRUIT/NUT TREES (e.g., Apple Tree, Orange Tree, Walnut Tree, Olive Tree):
-• These are PERENNIAL and should behave differently from seasonal crops
-• income_per_second: MODERATE (5-50 coins/sec; continuous fruit/nut production)
-• operation_duration_sec: LONG (5000-20000 seconds / 1.4-5.5 hours; trees stay productive longer)
-• retire_payout.coins_pct: LOW-MODERATE (0.10-0.30; tree ages/becomes less productive, small salvage value)
-• Example: Apple Tree costs 2000 coins, generates 20 coins/sec for 3 hours, then pays out 300 coins
-• Flavor: suggest "aged" or "declining" or "salvage wood"
-
-GENERAL RULE FOR ALL AGRICULTURAL ITEMS:
-• If the item represents a living organism that would realistically "expire" or "be harvested",
-  use a FINITE operation_duration_sec and calculate payout as if it's being sold/harvested
-• Do NOT use null for operation_duration_sec; all agricultural items must retire naturally
-• Do NOT create agricultural items that generate high passive income indefinitely
-• Rare agricultural items (crops/animals) may have quality_tier of uncommon/rare and higher payouts
 
 Categories (enum for category)
 natural, structure, farm, mine, factory, power, logistics, research, cultural, housing, magic, wonder
@@ -175,7 +66,7 @@ Limits & placement
 
 Use 1–3 for keystones and wonders
 
-Use 5–20 for powerful unique structures
+Use 3–20 for powerful unique structures
 
 Use null for common objects
 • footprint.w / footprint.h: integers 1–20 tiles
@@ -230,6 +121,9 @@ build_time_multiplier: 0.90–1.00 (faster build is a reward)
 operation_duration_multiplier: 1.00–1.20 (longer operation is usually positive)
 • stacking: "multiplicative" (default; compounds across buildings)
 • max_stacks: 1 for strong auras (keystones, wonders); 3–10 for weaker effects
+• Keep multipliers mild: income 1.05–1.12, build_time 0.90–0.97, operation_duration 1.05–1.15.
+• cost_multiplier MUST remain 1.00 until instructed otherwise.
+• Use active_when="placed" sparingly for policy/charter style boosters that should function while building.
 
 Exciting gameplay tips
 • Mix mundane + exotic in crafting results (Stone + Fire → Glass; Tree + Metal → Clock)

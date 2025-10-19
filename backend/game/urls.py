@@ -17,6 +17,7 @@ def api_root(request):
             'logout': '/api/logout/',
             'game_state': '/api/game-state/',
             'object_catalog': '/api/object-catalog/',
+            'era_config': '/api/era-config/',
             'craft': '/api/craft/',
             'place': '/api/place/',
             'remove': '/api/remove/',
@@ -25,6 +26,7 @@ def api_root(request):
             'export': '/api/export/',
             'import': '/api/import/',
             'redeem_upgrade_key': '/api/redeem-upgrade-key/',
+            'add_coin': '/api/add-coin/',
         }
     })
 
@@ -35,6 +37,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('game-state/', views.game_state, name='game_state'),
     path('object-catalog/', views.get_object_catalog, name='object_catalog'),
+    path('era-config/', views.era_config, name='era_config'),
     path('craft/', views.craft_objects, name='craft'),
     path('place/', views.place_object, name='place'),
     path('remove/', views.remove_object, name='remove'),
@@ -43,4 +46,5 @@ urlpatterns = [
     path('export/', views.export_game, name='export'),
     path('import/', views.import_game, name='import'),
     path('redeem-upgrade-key/', views.redeem_upgrade_key, name='redeem_upgrade_key'),
+    path('add-coin/', views.add_coin, name='add_coin'),
 ]

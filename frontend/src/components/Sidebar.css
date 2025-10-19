@@ -51,6 +51,61 @@
   padding: 1rem;
   background: var(--bg-primary);
   border-bottom: 3px solid var(--border-color);
+  position: relative;
+}
+
+.era-lock-hint {
+  position: absolute;
+  bottom: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+  border: 3px solid var(--accent-secondary);
+  color: var(--text-primary);
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(52, 152, 219, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: fadeInUp 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  white-space: normal;
+  max-width: 220px;
+  backdrop-filter: blur(4px);
+}
+
+.era-lock-hint-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.era-lock-hint-text {
+  line-height: 1.3;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .era-tab {
@@ -210,11 +265,16 @@
 }
 
 .keystone-badge {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  font-size: 1.3rem;
+  font-size: 1rem;
   filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5));
+  margin-left: 0.3rem;
+}
+
+.aura-badge {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.4));
+  cursor: help;
+  margin-left: 0.3rem;
 }
 
 /* Scrollbar styling for sidebar */
