@@ -74,7 +74,7 @@ TycoonCraft/
   - `management/commands/` contains utilities:
     - `initialize_starter_objects` seeds the database with starter content (including image paths).
     - `generate_upgrade_keys` tops the database up to 1000 keys and writes them to `backend/upgrade_keys.txt`.
-    - `create_admin_account` provisions the `admin` superuser with all discoveries, unlocked eras, and Pro status, using the password from `DJANGO_SUPERUSER_PASSWORD`/`DJANGO_ADMIN_PASSWORD`.
+    - `create_admin_account` provisions the `admin` superuser with all discoveries, unlocked eras, and Pro status.
   - `prompts/` include text templates and JSON schemas that drive OpenAI structured output (capsules, schema, predefined recipes).
   - `media/objects/` stores baseline art for starter items and newly generated images keyed by crafting pairs.
 
@@ -105,9 +105,6 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_HOST=localhost
 DB_PORT=5432
-# Optional convenience admin account for local testing:
-# DJANGO_SUPERUSER_USERNAME=admin
-# DJANGO_SUPERUSER_PASSWORD=replace-with-strong-password
 # Optional in production:
 # CORS_ALLOWED_ORIGINS=https://app.tycooncraft.com,https://admin.tycooncraft.com
 ```
@@ -136,7 +133,7 @@ Additional notes:
    python manage.py migrate
    python manage.py initialize_starter_objects
    python manage.py generate_upgrade_keys    # optional but recommended before testing upgrades
-   DJANGO_SUPERUSER_PASSWORD=your-strong-password python manage.py create_admin_account     # optional admin convenience account
+   python manage.py create_admin_account     # optional admin convenience account
    python manage.py runserver
    ```
 
@@ -150,7 +147,7 @@ Additional notes:
 4. **Usage**
    - Frontend served at http://localhost:3000 (CRA dev server).
    - Backend API at http://localhost:8000/api/.
-   - Django admin at http://localhost:8000/admin/ (username defaults to `admin`; password comes from the `DJANGO_SUPERUSER_PASSWORD` you supplied when running `create_admin_account`).
+   - Django admin at http://localhost:8000/admin/ (login with credentials from `create_admin_account` if executed).
 
 ## API Endpoints
 
@@ -186,7 +183,7 @@ Run from the `backend` directory:
 
 - `python manage.py initialize_starter_objects` – Seeds starter objects across eras with stats and image references.
 - `python manage.py generate_upgrade_keys` – Ensures 1000 upgrade keys exist and writes unredeemed keys into `backend/upgrade_keys.txt`.
-- `python manage.py create_admin_account` – Creates/refreshes an `admin` superuser with all discoveries, eras, and Pro privileges (requires `DJANGO_SUPERUSER_PASSWORD` or `DJANGO_ADMIN_PASSWORD` to be set; `DJANGO_SUPERUSER_USERNAME` defaults to `admin`).
+- `python manage.py create_admin_account` – Creates/refreshes an `admin` superuser with all discoveries, eras, and Pro privileges.
 
 ## AI Prompts & Assets
 

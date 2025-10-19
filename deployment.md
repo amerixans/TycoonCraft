@@ -34,7 +34,7 @@ chmod +x deploy.sh update.sh
 | --- | --- | --- |
 | `DB_PASSWORD` | ✅ | Password for the PostgreSQL role `tycooncraft` |
 | `OPENAI_API_KEY` | ✅ | Production OpenAI key used for crafting and image generation |
-| `DJANGO_ADMIN_PASSWORD` | ✅ | Password assigned to the Django admin convenience account |
+| `DJANGO_ADMIN_PASSWORD` | ⭕ | Overrides the default admin password (falls back to `DB_PASSWORD`) |
 | `DOMAIN` | ⭕ | Public domain used for ALLOWED_HOSTS/CORS (defaults to `tycooncraft.com`) |
 | `SERVER_IP` | ⭕ | Public IP for fallback CORS/CSRF entries |
 | `ADMIN_EMAIL` | ⭕ | Email for Let's Encrypt registration |
@@ -43,10 +43,9 @@ chmod +x deploy.sh update.sh
 ```bash
 export DB_PASSWORD="change-me"
 export OPENAI_API_KEY="sk-..."
-export DJANGO_ADMIN_PASSWORD="another-strong-password"
 export DOMAIN="tycooncraft.com"
 export SERVER_IP="203.0.113.10"
-# export DJANGO_SUPERUSER_USERNAME="admin"
+# export DJANGO_ADMIN_PASSWORD="..."
 # export ADMIN_EMAIL="ops@tycooncraft.com"
 # export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
 ```

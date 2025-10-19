@@ -18,7 +18,7 @@
 "output": {
 "object_name": "Hearth",
 "era_name": "Hunter-Gatherer",
-"cost": 10000
+"cost": 3000
 }
 },
 
@@ -47,7 +47,7 @@
 "output": {
 "object_name": "Charcoal Kiln",
 "era_name": "Agriculture",
-"cost": 500000
+"cost": 90000
 }
 },
 
@@ -82,7 +82,7 @@
 "output": {
 "object_name": "Boiler",
 "era_name": "Metallurgy",
-"cost": 18000000
+"cost": 1800000
 }
 },
 
@@ -111,7 +111,7 @@
 "output": {
 "object_name": "Dynamo",
 "era_name": "Steam & Industry",
-"cost": 900000000
+"cost": 36000000
 }
 },
 
@@ -140,7 +140,7 @@
 "output": {
 "object_name": "Transistor",
 "era_name": "Electric Age",
-"cost": 7200000000
+"cost": 720000000
 }
 },
 
@@ -175,7 +175,7 @@
 "output": {
 "object_name": "Lithography",
 "era_name": "Computing",
-"cost": 1440000000000
+"cost": 14400000000
 }
 },
 
@@ -222,7 +222,7 @@
 "output": {
 "object_name": "Fusion Core",
 "era_name": "Futurism",
-"cost": 288000000000000
+"cost": 288000000000
 }
 },
 
@@ -263,7 +263,7 @@
 "output": {
 "object_name": "Aether Array",
 "era_name": "Interstellar",
-"cost": 57600000000000000
+"cost": 5760000000000
 }
 },
 
@@ -316,7 +316,7 @@
 "output": {
 "object_name": "Reality Loom",
 "era_name": "Arcana",
-"cost": 1152000000000000000
+"cost": 115200000000000
 }
 },
 
@@ -369,7 +369,7 @@
 "output": {
 "object_name": "Seed AI",
 "era_name": "Beyond",
-"cost": 230400000000000000000
+"cost": 2304000000000000
 }
 }
 ]
