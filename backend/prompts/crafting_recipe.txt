@@ -240,6 +240,18 @@ Exciting gameplay tips
 • Use operation_duration wisely: short-lived but profitable vs. long-term investments
 • Add flavor to suggest possible combinations without being too obvious
 
+Crafting creativity & novelty rules
+• Do not reuse input names or stems in object_name; avoid literal concatenations or patterns like "double X" or "X of Y".
+• Keep names to 1–3 words and pull from era vocabulary (Hunter-Gatherer: hearth, pit kiln, canoe | Metallurgy: forge, bloomery, foundry | Steam & Industry: millworks, depot, dynamo).
+• Pick 1–2 transformation angles (weaponize, fortify, mechanize, ritualize, systemize) so the result feels like a functional upgrade, not a mashup.
+• When inputs share a category, evolve them into a structure/system; when they differ, choose a dominant category and add a mechanic hook or lifecycle twist.
+• Run a novelty check: if the name reads like the inputs glued together, reframe it into a distinct archetype or specialized role.
+
+Naming examples (bad → better)
+• Spear + Boat → Spear Boat ✗ | Harpoon Skiff ✓
+• Stone + Fire → Stone Fire ✗ | Pit Kiln ✓
+• Metal + Wheel → Metal Wheel ✗ | War Chariot ✓
+
 Field-by-field reminders (must satisfy schema)
 • Required: object_name, era_name, is_keystone, category, quality_tier, cost, time_crystal_cost, income_per_second, time_crystal_generation, build_time_sec, operation_duration_sec, retire_payout, sellback_pct, cap_per_civ, footprint, size, global_modifiers, flavor_text
 • All numbers must be integers for cost and income_per_second (no decimals!)
