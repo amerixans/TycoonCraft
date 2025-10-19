@@ -82,14 +82,27 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
       
       <div className="crafting-main">
         <div className="crafting-slots">
-          <div 
+          <div
             className={`craft-slot ${slotA ? 'filled' : ''}`}
             onDrop={handleDrop('A')}
             onDragOver={handleDragOver}
           >
             {slotA ? (
               <>
-                <div className="slot-object">{slotA.object_name}</div>
+                <div className="slot-content">
+                  {slotA.image_path ? (
+                    <img
+                      src={slotA.image_path}
+                      alt={slotA.object_name}
+                      className="slot-image"
+                    />
+                  ) : (
+                    <div className="slot-image-placeholder">
+                      {slotA.object_name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="slot-object">{slotA.object_name}</div>
+                </div>
                 <button className="clear-slot" onClick={() => clearSlot('A')}>✕</button>
               </>
             ) : (
@@ -102,14 +115,27 @@ function CraftingArea({ discoveries, onCraft, playerCoins }) {
           
           <div className="craft-operator">+</div>
           
-          <div 
+          <div
             className={`craft-slot ${slotB ? 'filled' : ''}`}
             onDrop={handleDrop('B')}
             onDragOver={handleDragOver}
           >
             {slotB ? (
               <>
-                <div className="slot-object">{slotB.object_name}</div>
+                <div className="slot-content">
+                  {slotB.image_path ? (
+                    <img
+                      src={slotB.image_path}
+                      alt={slotB.object_name}
+                      className="slot-image"
+                    />
+                  ) : (
+                    <div className="slot-image-placeholder">
+                      {slotB.object_name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="slot-object">{slotB.object_name}</div>
+                </div>
                 <button className="clear-slot" onClick={() => clearSlot('B')}>✕</button>
               </>
             ) : (

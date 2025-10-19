@@ -402,15 +402,22 @@ def load_predefined_recipes():
 
 
 def get_predefined_recipe(object_a, object_b):
-    """Check if there's a predefined recipe for this combination."""
+    """Check if there's a predefined recipe for this combination.
+
+    Returns dict with 'output_name' and 'overrides', or None if not found.
+    """
     recipes = load_predefined_recipes()
 
     for recipe in recipes:
         # Check both orderings
         if ((recipe["input_a"] == object_a.object_name and recipe["input_b"] == object_b.object_name) or
             (recipe["input_a"] == object_b.object_name and recipe["input_b"] == object_a.object_name)):
-            # Return overrides if present, otherwise empty dict
-            return recipe.get("overrides", {})
+            # Return the output_name and overrides
+            return {
+                "output_name": recipe.get("output_name"),
+                "overrides": recipe.get("overrides", {}),
+                "is_keystone": recipe.get("is_keystone", False)
+            }
 
     return None
 
@@ -891,15 +898,20 @@ def craft_objects(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
     # Check for predefined recipe first
-    predefined_overrides = get_predefined_recipe(object_a, object_b)
-    
+    predefined_recipe = get_predefined_recipe(object_a, object_b)
+    predefined_output_name = predefined_recipe.get("output_name") if predefined_recipe else None
+    predefined_overrides = predefined_recipe.get("overrides", {}) if predefined_recipe else {}
+
     # Pre-existing recipe?
     existing_recipe = CraftingRecipe.objects.filter(object_a=object_a, object_b=object_b).select_related("result").first()
     if existing_recipe:
         result_obj = existing_recipe.result
-        
+
         # Validate against predefined recipe if one exists
-        if predefined_overrides and not validate_predefined_match(result_obj, predefined_overrides):
+        if predefined_recipe and (
+            (predefined_output_name and result_obj.object_name != predefined_output_name) or
+            not validate_predefined_match(result_obj, predefined_overrides)
+        ):
             # Specs don't match - delete old object and regenerate
             result_obj.delete()
             existing_recipe.delete()
@@ -934,10 +946,14 @@ def craft_objects(request):
     unlocked_eras = get_unlocked_eras(profile)
     current_era = profile.current_era
 
-    # predefined_overrides already retrieved above
+    # Build constraints dict for OpenAI (includes output_name if predefined)
+    constraints = {}
+    if predefined_output_name:
+        constraints["object_name"] = predefined_output_name
+    constraints.update(predefined_overrides)
 
     try:
-        obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefined_overrides)
+        obj_data = call_openai_crafting(object_a, object_b, unlocked_eras, current_era, constraints if constraints else None)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
