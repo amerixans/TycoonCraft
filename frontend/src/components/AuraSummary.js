@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { formatMultiplier } from '../utils/aura';
 import './AuraSummary.css';
 
-const AuraSummary = ({ summary, highlightedCategory }) => {
+const AuraSummary = ({ summary, highlightedCategory, onClose }) => {
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const toggleExpanded = (category) => {
@@ -17,6 +17,15 @@ const AuraSummary = ({ summary, highlightedCategory }) => {
     return (
       <div className="aura-summary aura-summary-empty">
         <span>No active auras yet. Place aura buildings to boost your empire!</span>
+        {onClose && (
+          <button
+            className="aura-summary-close"
+            onClick={onClose}
+            title="Close"
+          >
+            ✕
+          </button>
+        )}
       </div>
     );
   }
@@ -24,8 +33,19 @@ const AuraSummary = ({ summary, highlightedCategory }) => {
   return (
     <div className="aura-summary">
       <div className="aura-summary-header">
-        <span>🔮 Active Auras</span>
-        <small>Summarised by category</small>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span>🔮 Active Auras</span>
+          <small>Summarised by category</small>
+        </div>
+        {onClose && (
+          <button
+            className="aura-summary-close"
+            onClick={onClose}
+            title="Close"
+          >
+            ✕
+          </button>
+        )}
       </div>
       <div className="aura-summary-list">
         {summary.map((entry) => {
@@ -137,11 +157,13 @@ AuraSummary.propTypes = {
     })
   ),
   highlightedCategory: PropTypes.string,
+  onClose: PropTypes.func,
 };
 
 AuraSummary.defaultProps = {
   summary: [],
   highlightedCategory: null,
+  onClose: null,
 };
 
 export default AuraSummary;

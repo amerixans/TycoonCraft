@@ -16,7 +16,7 @@
 .aura-summary-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--accent-secondary);
@@ -26,6 +26,30 @@
   font-size: 0.7rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+.aura-summary-close {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--accent-secondary);
+  color: var(--text-primary);
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  font-family: inherit;
+  padding: 0;
+}
+
+.aura-summary-close:hover {
+  background: var(--accent-primary);
+  transform: scale(1.1);
 }
 
 .aura-summary-list {
@@ -138,4 +162,11 @@
   font-size: 0.76rem;
   font-style: italic;
   text-align: center;
+  position: relative;
+}
+
+.aura-summary-empty .aura-summary-close {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
 }

@@ -65,6 +65,7 @@ function App() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
   const [showObjectPanel, setShowObjectPanel] = useState(false);
+  const [showAuraPanel, setShowAuraPanel] = useState(true);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEraUnlockModal, setShowEraUnlockModal] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -757,19 +758,20 @@ function App() {
             {theme === 'light' ? '🌙' : theme === 'dark' ? '☀️' : '🎨'}
           </button>
           {!gameState?.profile?.is_pro && (
-            <button 
-              onClick={() => setShowUpgradeModal(true)} 
+            <button
+              onClick={() => setShowUpgradeModal(true)}
               className="btn-upgrade"
               title="Upgrade to Pro"
             >
               ⭐ Upgrade
             </button>
           )}
-          <button onClick={handleExport} className="btn-small">💾 Export</button>
+          {/* TODO: Re-enable export/import when functionality is fixed */}
+          {/* <button onClick={handleExport} className="btn-small">💾 Export</button>
           <label className="btn-small">
             📂 Import
             <input type="file" accept=".json" onChange={handleImport} style={{display: 'none'}} />
-          </label>
+          </label> */}
           <button onClick={handleLogout} className="btn-small">🚪 Logout</button>
           <button onClick={() => setShowInfoModal(true)} className="btn-icon" title="Game Info">
             ℹ️
@@ -807,10 +809,14 @@ function App() {
               </div>
             )}
 
-            <AuraSummary
-              summary={auraSummary}
-              highlightedCategory={selectedObject?.category || null}
-            />
+            {/* Only show aura summary when Agriculture era is unlocked */}
+            {showAuraPanel && gameState.era_unlocks.some(unlock => unlock.era_name === 'Agriculture') && (
+              <AuraSummary
+                summary={auraSummary}
+                highlightedCategory={selectedObject?.category || null}
+                onClose={() => setShowAuraPanel(false)}
+              />
+            )}
 
             {/* Crafting and Queue */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
