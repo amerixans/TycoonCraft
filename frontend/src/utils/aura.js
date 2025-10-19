@@ -175,3 +175,46 @@ export const describeAuraModifier = (modifier) => {
     maxStacks,
   };
 };
+
+/**
+ * Check if a newly placed object's aura would be rejected due to max stack limits.
+ * Returns true if ALL modifiers from the object are at max stack already.
+ */
+export const isAuraAtMaxStack = (newObject, placedObjects = []) => {
+  if (!hasAura(newObject)) return false;
+
+  const modifiers = newObject?.global_modifiers || [];
+  let allAtMaxStack = true;
+
+  modifiers.forEach((modifier, idx) => {
+    const maxStacks = Math.max(
+      1,
+      parseInt(modifier?.max_stacks ?? 1, 10) || 1
+    );
+    const sourceKey = `${newObject.id || 'unknown'}:${idx}`;
+
+    // Count how many of this exact object+modifier are already placed
+    let currentStacks = 0;
+    placedObjects.forEach((placed) => {
+      if (
+        placed.game_object?.id === newObject.id &&
+        Array.isArray(placed.game_object?.global_modifiers)
+      ) {
+        const placedMod = placed.game_object.global_modifiers[idx];
+        if (placedMod && JSON.stringify(placedMod) === JSON.stringify(modifier)) {
+          const activeWhen = placedMod?.active_when || 'operational';
+          const isActive =
+            (activeWhen === 'operational' && placed.is_operational) ||
+            (activeWhen === 'placed' && (placed.is_operational || placed.is_building));
+          if (isActive) currentStacks++;
+        }
+      }
+    });
+
+    if (currentStacks < maxStacks) {
+      allAtMaxStack = false;
+    }
+  });
+
+  return allAtMaxStack;
+};

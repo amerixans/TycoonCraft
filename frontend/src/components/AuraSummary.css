@@ -74,6 +74,12 @@
   font-weight: 500;
 }
 
+.aura-summary-sources-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .aura-summary-sources {
   display: flex;
   flex-wrap: wrap;
@@ -88,9 +94,41 @@
   color: var(--text-primary);
 }
 
-.aura-summary-source-extra {
-  font-size: 0.65rem;
+.aura-summary-expand-btn {
+  background: none;
+  border: none;
   color: var(--text-secondary);
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 0.2s ease;
+  font-family: inherit;
+}
+
+.aura-summary-expand-btn:hover {
+  color: var(--accent-primary);
+}
+
+.aura-summary-expanded-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding-top: 0.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.3rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
 }
 
 .aura-summary-empty {

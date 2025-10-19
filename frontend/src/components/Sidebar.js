@@ -143,7 +143,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                 ? `🔑 Keystone: Place to unlock ${getNextEra(obj.era_name) || 'next era'}!`
                 : 'Drag to craft or place';
               if (auraActive) {
-                hoverTitle += `\n🌀 Aura active`;
+                hoverTitle += `\n🔮 Aura active`;
               }
               return (
               <div 
@@ -217,7 +217,7 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                       <span className="keystone-badge">🔑</span>
                     )}
                     {auraActive && (
-                      <span className="aura-badge" title={auraTooltip}>🌀</span>
+                      <span className="aura-badge" title={auraTooltip}>🔮</span>
                     )}
                   </div>
                   <div className="object-stats">

@@ -16,6 +16,7 @@ import {
   calculateCategoryMultipliers,
   summariseActiveAuras,
   describeAuraModifier,
+  isAuraAtMaxStack,
 } from './utils/aura';
 import './App.css';
 
@@ -153,7 +154,7 @@ function App() {
             className="object-info-section-toggle"
             onClick={() => setShowAuraDetails(!showAuraDetails)}
           >
-            <span>✨ Aura Effects ({auraModifiers.length})</span>
+            <span>🔮 Aura Effects ({auraModifiers.length})</span>
             <span className="toggle-icon">{showAuraDetails ? '▼' : '▶'}</span>
           </button>
           {showAuraDetails && (
@@ -544,7 +545,7 @@ function App() {
         showNotification(`🎉 ${response.data.message}`, 'success');
       } else {
         let placementMessage = '✅ Object placed!';
-        if (placedObject && hasAura(placedObject)) {
+        if (placedObject && hasAura(placedObject) && !isAuraAtMaxStack(placedObject, gameState?.placed_objects || [])) {
           const auraDetails = placedObject.global_modifiers
             .map((modifier) => {
               const details = describeAuraModifier(modifier);
@@ -555,7 +556,7 @@ function App() {
               return `${details.categories}: ${effectText}`;
             })
             .join(' • ');
-          placementMessage = `🌀 ${placedObject.object_name} aura active! ${auraDetails}`;
+          placementMessage = `🔮 ${placedObject.object_name} aura active! ${auraDetails}`;
         }
         showNotification(placementMessage, 'success');
       }
