@@ -70,23 +70,13 @@ keystone:
       output_name: "Hot Forge"
 
     - comment: "MET-2"
-      input_a: "Ore"
-      input_b: "Clay Crucible"
-      output_name: "Loaded Crucible"
-
-    - comment: "MET-3"
-      input_a: "Loaded Crucible"
-      input_b: "Hot Forge"
+      input_a: "Hot Forge"
+      input_b: "Ore"
       output_name: "Molten Metal"
 
-    - comment: "MET-4"
+    - comment: "MET-3 (Keystone)"
       input_a: "Molten Metal"
       input_b: "Clay Crucible"
-      output_name: "Cast Kettle"
-
-    - comment: "MET-5 (Keystone)"
-      input_a: "Cast Kettle"
-      input_b: "Bellows"
       output_name: "Boiler"
       is_keystone: true
       overrides:

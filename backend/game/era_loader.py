@@ -142,18 +142,31 @@ class EraLoader:
         """
         Get predefined recipes. If era_name is provided, get only that era's recipes.
         Otherwise, get all predefined recipes from all eras.
+
+        Loads recipes from two sources:
+        1. keystone.recipe_chain - recipes that lead to the keystone
+        2. recipes - general predefined recipes for the era
         """
         recipes = []
 
         if era_name:
             era = self.get_era_by_name(era_name)
-            if era and 'keystone' in era and 'recipe_chain' in era['keystone']:
-                recipes.extend(era['keystone']['recipe_chain'])
+            if era:
+                # Load keystone recipes
+                if 'keystone' in era and 'recipe_chain' in era['keystone']:
+                    recipes.extend(era['keystone']['recipe_chain'])
+                # Load general recipes
+                if 'recipes' in era:
+                    recipes.extend(era['recipes'])
         else:
             # Get all recipes from all eras
             for era in self._eras:
+                # Load keystone recipes
                 if 'keystone' in era and 'recipe_chain' in era['keystone']:
                     recipes.extend(era['keystone']['recipe_chain'])
+                # Load general recipes
+                if 'recipes' in era:
+                    recipes.extend(era['recipes'])
 
         return recipes
 

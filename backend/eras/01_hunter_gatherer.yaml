@@ -85,6 +85,19 @@ keystone:
         cost: 10000
 
 # ==============================================================================
+# GENERAL RECIPES (Optional predefined recipes outside the keystone chain)
+# ==============================================================================
+# recipes:
+#   - comment: "Example: Water + Stick = Wet Stick"
+#     input_a: "Water"
+#     input_b: "Stick"
+#     output_name: "Wet Stick"
+#     overrides:
+#       era_name: "Hunter-Gatherer"
+#       category: "natural"
+#       cost: 50
+
+# ==============================================================================
 # STARTER OBJECTS
 # ==============================================================================
 starters:
