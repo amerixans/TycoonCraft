@@ -815,7 +815,6 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 2px solid var(--border-color);
   gap: 0.5rem;
 }
 

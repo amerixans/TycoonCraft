@@ -64,6 +64,7 @@ function App() {
   });
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
+  const [showObjectPanel, setShowObjectPanel] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showEraUnlockModal, setShowEraUnlockModal] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -106,13 +107,14 @@ function App() {
     setShowColorPicker(false);
   };
 
+  const handleSelectObject = (obj) => {
+    setSelectedObject(obj);
+    setShowObjectPanel(true);
+  };
+
   const renderSelectedObjectDetails = () => {
     if (!selectedObject) {
-      return (
-        <div className="object-info-placeholder">
-          <p>Select an object to see detailed stats.</p>
-        </div>
-      );
+      return null;
     }
 
     const cost = Number(selectedObject.cost ?? 0);
@@ -780,25 +782,27 @@ function App() {
           eraUnlocks={gameState.era_unlocks}
           currentEra={gameState.profile.current_era}
           eras={ERAS}
-          onObjectInfo={setSelectedObject}
+          onObjectInfo={handleSelectObject}
         />
         
         <div className="main-area">
           <div className="top-section-container">
             {/* Object Info Panel */}
-            <div className="object-info-panel">
-              <div className="object-info-header">
-                <h3>📋 Object Details</h3>
-                <button
-                  className="object-info-close"
-                  onClick={() => setSelectedObject(null)}
-                  title="Close"
-                >
-                  ✕
-                </button>
+            {showObjectPanel && (
+              <div className="object-info-panel">
+                <div className="object-info-header">
+                  <h3>📋 Object Details</h3>
+                  <button
+                    className="object-info-close"
+                    onClick={() => setShowObjectPanel(false)}
+                    title="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {renderSelectedObjectDetails()}
               </div>
-              {renderSelectedObjectDetails()}
-            </div>
+            )}
 
             <AuraSummary
               summary={auraSummary}
