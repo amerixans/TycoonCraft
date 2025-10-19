@@ -244,20 +244,16 @@
 }
 
 .keystone-badge {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  font-size: 1.3rem;
+  font-size: 1rem;
   filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5));
+  margin-left: 0.3rem;
 }
 
 .aura-badge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  font-size: 1.2rem;
+  font-size: 1rem;
   filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.4));
   cursor: help;
+  margin-left: 0.3rem;
 }
 
 /* Scrollbar styling for sidebar */

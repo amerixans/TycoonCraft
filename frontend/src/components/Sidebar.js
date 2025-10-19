@@ -213,25 +213,25 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                 <div className="object-content">
                   <div className="object-name">
                     {obj.object_name}
+                    {obj.is_keystone && (
+                      <span className="keystone-badge">🔑</span>
+                    )}
+                    {auraActive && (
+                      <span className="aura-badge" title={auraTooltip}>🌀</span>
+                    )}
                   </div>
                   <div className="object-stats">
                     <div>💰 {formatNumber(obj.cost)}</div>
                     <div>📊 {formatNumber(obj.income_per_second)}/s</div>
                   </div>
                 </div>
-                <div 
+                <div
                   className="object-info-icon"
                   onClick={(e) => handleInfoClick(obj, e)}
                   title="View details"
                 >
                   ℹ️
                 </div>
-                {obj.is_keystone && (
-                  <div className="keystone-badge">🔑</div>
-                )}
-                {auraActive && (
-                  <div className="aura-badge" title={auraTooltip}>🌀</div>
-                )}
               </div>
             );
             })
