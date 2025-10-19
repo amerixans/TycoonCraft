@@ -79,7 +79,7 @@ Create `.env` in project root with:
 - `backend/prompts/`: AI prompt templates and JSON schemas
   - `crafting_recipe.txt`: Main crafting prompt template
   - `object_schema.json`: Structured output schema for OpenAI
-  - `predefined_recipes.json`: Authoritative recipe overrides
+  - Keystone recipe overrides live inside each era YAML under `backend/eras/` (`keystone.recipe_chain`)
 
 ### Frontend Components
 
@@ -120,7 +120,7 @@ Applied in `update_player_coins()` at backend/game/views.py:262.
 
 ### Predefined Recipes
 
-Authoritative overrides loaded from `backend/prompts/predefined_recipes.json`:
+Authoritative overrides loaded from era YAML keystone recipe chains (`backend/eras/*.yaml`):
 - `load_predefined_recipes()`: Loads and caches recipes
 - `get_predefined_recipe(obj_a, obj_b)`: Finds match (checks both orderings)
 - `validate_predefined_match(game_object, overrides)`: Validates existing objects against specs

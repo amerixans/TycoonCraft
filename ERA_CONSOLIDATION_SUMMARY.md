@@ -119,7 +119,7 @@ Functions updated:
 
 ### 4. Deprecated Files
 
-**`backend/prompts/predefined_recipes.json`** can now be deleted (data moved to era YAML files)
+**`backend/prompts/predefined_recipes.json`** has been removed (data now lives in the era YAML files)
 
 ---
 
@@ -233,7 +233,6 @@ backend/
 │       └── validate_eras.py           # NEW - Validation command
 ├── prompts/
 │   ├── crafting_recipe.txt            # UPDATED - Uses {{ERA_DESCRIPTIONS}}
-│   └── predefined_recipes.json        # DEPRECATED - Can be deleted
 └── requirements.txt                   # UPDATED - Added PyYAML==6.0.1
 
 frontend/
@@ -274,7 +273,7 @@ Returns:
 
 ## Next Steps (Optional Enhancements)
 
-1. **Delete `backend/prompts/predefined_recipes.json`**
+1. **Removed `backend/prompts/predefined_recipes.json`**
    No longer needed - data is in era YAML files
 
 2. **Add era descriptions to API response**
