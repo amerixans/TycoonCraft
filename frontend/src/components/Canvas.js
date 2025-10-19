@@ -163,22 +163,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
     e.dataTransfer.dropEffect = 'copy';
 
     const objectId = e.dataTransfer.getData('objectId');
-    if (!objectId && !movingObject) return;
-
-    // Handle moving an existing object
-    if (movingObject) {
-      const transformState = transformRef.current?.instance?.transformState;
-      if (!transformState) return;
-
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / transformState.scale;
-      const y = (e.clientY - rect.top) / transformState.scale;
-      const gridX = Math.floor(x / GRID_SIZE);
-      const gridY = Math.floor(y / GRID_SIZE);
-
-      setDraggedObject({ obj: movingObject.game_object, x: gridX, y: gridY });
-      return;
-    }
+    if (!objectId) return;
 
     // Handle dragging from sidebar
     const obj = discoveries.find(d => d.game_object.id === parseInt(objectId))?.game_object;
@@ -206,13 +191,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // Handle moving an existing object
-    if (movingObject) {
-      handleMoveObjectDrop(e);
-      setDraggedObject(null);
-      return;
-    }
 
     const objectId = e.dataTransfer.getData('objectId');
 
@@ -275,11 +253,35 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
     } else if (canvasMode === 'move') {
       // Start moving the object
       setMovingObject(placed);
+      setDraggedObject({
+        obj: placed.game_object,
+        x: placed.x,
+        y: placed.y
+      });
     }
     // In 'view' mode, do nothing on click
   };
 
-  const handleMoveObjectDrop = (e) => {
+  const handleCanvasMouseMove = (e) => {
+    if (!movingObject) return;
+
+    const transformState = transformRef.current?.instance?.transformState;
+    if (!transformState) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / transformState.scale;
+    const y = (e.clientY - rect.top) / transformState.scale;
+    const gridX = Math.floor(x / GRID_SIZE);
+    const gridY = Math.floor(y / GRID_SIZE);
+
+    setDraggedObject({
+      obj: movingObject.game_object,
+      x: gridX,
+      y: gridY
+    });
+  };
+
+  const handleCanvasMouseUp = (e) => {
     if (!movingObject) return;
 
     e.preventDefault();
@@ -288,6 +290,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
     const transformState = transformRef.current?.instance?.transformState;
     if (!transformState) {
       setMovingObject(null);
+      setDraggedObject(null);
       return;
     }
 
@@ -303,6 +306,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
     if (gridX < 0 || gridY < 0 || gridX + obj.footprint_w > CANVAS_WIDTH || gridY + obj.footprint_h > CANVAS_HEIGHT) {
       alert('⚠️ Out of bounds! Place the object within the grid.');
       setMovingObject(null);
+      setDraggedObject(null);
       return;
     }
 
@@ -310,6 +314,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
     onRemove(movingObject.id);
     onPlace(obj.id, gridX, gridY);
     setMovingObject(null);
+    setDraggedObject(null);
   };
   
   return (
@@ -362,7 +367,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
           centerZoomedOut={true}
           wheel={{ step: 0.1 }}
           doubleClick={{ disabled: true }}
-          panning={{ velocityDisabled: true }}
+          panning={{ disabled: canvasMode === 'move' || canvasMode === 'trash', velocityDisabled: true }}
         >
           {({ zoomIn, zoomOut, resetTransform }) => (
             <>
@@ -388,6 +393,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
+                  onMouseMove={handleCanvasMouseMove}
+                  onMouseUp={handleCanvasMouseUp}
                   style={{
                     width: CANVAS_WIDTH * GRID_SIZE + 'px',
                     height: CANVAS_HEIGHT * GRID_SIZE + 'px',
@@ -405,6 +412,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, currentEra }) {
                         width: placed.game_object.footprint_w * GRID_SIZE + 'px',
                         height: placed.game_object.footprint_h * GRID_SIZE + 'px',
                         cursor: canvasMode === 'trash' ? 'not-allowed' : canvasMode === 'move' ? 'move' : 'pointer',
+                        opacity: movingObject && movingObject.id === placed.id ? 0.3 : 1,
                       }}
                       onClick={(e) => handlePlacedClick(placed, e)}
                       onMouseEnter={() => setHoveredPlaced(placed)}
