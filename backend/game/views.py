@@ -639,7 +639,27 @@ def login_view(request):
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
     login(request, user)
-    profile, _ = PlayerProfile.objects.get_or_create(user=user)
+    profile, created = PlayerProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            "coins": getattr(settings, "STARTING_COINS", Decimal("0")),
+            "is_pro": False,
+        },
+    )
+
+    # Ensure the player has the initial era unlock and starter discoveries
+    _, era_created = EraUnlock.objects.get_or_create(
+        player=profile,
+        era_name="Hunter-Gatherer"
+    )
+    if created or era_created or not Discovery.objects.filter(
+        player=profile,
+        game_object__is_starter=True,
+        game_object__era_name="Hunter-Gatherer"
+    ).exists():
+        starter_objects = GameObject.objects.filter(is_starter=True, era_name="Hunter-Gatherer")
+        for obj in starter_objects:
+            Discovery.objects.get_or_create(player=profile, game_object=obj)
 
     # Explicitly ensure CSRF cookie is set for subsequent requests
     # get_token() forces Django to set the csrftoken cookie

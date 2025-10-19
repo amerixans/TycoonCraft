@@ -49,7 +49,7 @@ Run migrations and seed initial content:
 python manage.py migrate
 python manage.py initialize_starter_objects
 python manage.py generate_upgrade_keys    # optional: seeds 1000 upgrade keys into backend/upgrade_keys.txt
-python manage.py create_admin_account     # optional: creates admin / tycooncraft$123 superuser
+DJANGO_SUPERUSER_PASSWORD=your-strong-password python manage.py create_admin_account     # optional: creates admin superuser
 ```
 
 Finally, start the Django API:
@@ -77,7 +77,7 @@ REACT_APP_API_URL=http://your-backend-host/api
 - Frontend: http://localhost:3000
 - Backend API root: http://localhost:8000/api/
 - Django admin (if created): http://localhost:8000/admin/
-  - Default credentials from `create_admin_account`: username `admin`, password `tycooncraft$123`
+  - Credentials come from `DJANGO_SUPERUSER_USERNAME`/`DJANGO_SUPERUSER_PASSWORD` (defaults to `admin` / value you export)
 
 Log in or register from the landing screen, craft your starter objects (Rock, Stick, Water, Dry Grass), and begin combining discoveries. Keystone placements will unlock new eras automatically; you can also unlock eras via the sidebar using time crystals.
 

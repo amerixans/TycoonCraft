@@ -69,7 +69,7 @@ BACKUP_RETENTION_DAYS=7
 echo "Validating environment..."
 
 # Required environment variables
-required_vars=("DB_PASSWORD" "OPENAI_API_KEY")
+required_vars=("DB_PASSWORD" "OPENAI_API_KEY" "DJANGO_ADMIN_PASSWORD")
 for var in "${required_vars[@]}"; do
     if [ -z "${!var:-}" ]; then
         echo "ERROR: $var environment variable is required"
@@ -77,9 +77,10 @@ for var in "${required_vars[@]}"; do
         echo "Required variables:"
         echo "  - DB_PASSWORD: Database password"
         echo "  - OPENAI_API_KEY: OpenAI API key"
+        echo "  - DJANGO_ADMIN_PASSWORD: Password assigned to the admin account"
         echo ""
         echo "Optional variables:"
-        echo "  - DJANGO_ADMIN_PASSWORD: Admin password (defaults to DB_PASSWORD)"
+        echo "  - DJANGO_SUPERUSER_USERNAME: Admin username (defaults to 'admin')"
         echo "  - SERVER_IP: Server IP address"
         echo "  - DOMAIN: Domain name"
         echo "  - ADMIN_EMAIL: Admin email"
@@ -92,7 +93,8 @@ done
 SERVER_IP="${SERVER_IP:-159.65.255.82}"
 DOMAIN="${DOMAIN:-tycooncraft.com}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@tycooncraft.com}"
-DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-$DB_PASSWORD}"  # Separate admin password
+DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
+DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-}"
 
 # Validate domain format
@@ -259,6 +261,9 @@ CSRF_TRUSTED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},htt
 SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE_VALUE}
 CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE_VALUE}
 SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT_VALUE}
+DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD}
+DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
+DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
 EOF
 
 # Run Django migrations
@@ -279,6 +284,7 @@ python manage.py generate_upgrade_keys
 # Create admin account with pro status
 echo "Creating admin account with pro status..."
 export DJANGO_SUPERUSER_PASSWORD="${DJANGO_ADMIN_PASSWORD}"
+export DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME}"
 python manage.py create_admin_account
 
 # Collect static files
@@ -708,8 +714,8 @@ else
 fi
 echo ""
 echo "👤 Admin credentials:"
-echo "  Username: admin"
-echo "  Password: [DJANGO_ADMIN_PASSWORD]"
+echo "  Username: ${DJANGO_SUPERUSER_USERNAME}"
+echo "  Password: (value from DJANGO_ADMIN_PASSWORD environment variable)"
 echo ""
 echo "📊 Monitoring:"
 echo "  sudo journalctl -u tycooncraft -f"

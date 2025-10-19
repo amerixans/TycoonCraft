@@ -93,6 +93,19 @@ if [ ! -f "/var/www/tycooncraft/backend/.env" ]; then
     exit 1
 fi
 
+# Load environment variables (including admin credentials)
+set -a
+source /var/www/tycooncraft/backend/.env
+set +a
+
+if [ -z "${DJANGO_SUPERUSER_PASSWORD:-}" ] && [ -z "${DJANGO_ADMIN_PASSWORD:-}" ]; then
+    echo "ERROR: Admin password not found in backend/.env (DJANGO_SUPERUSER_PASSWORD or DJANGO_ADMIN_PASSWORD)"
+    exit 1
+fi
+
+DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-admin}"
+DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-${DJANGO_ADMIN_PASSWORD}}"
+
 # Check if service exists (check both systemctl and file system)
 if ! systemctl list-unit-files tycooncraft.service &>/dev/null && ! [ -f /etc/systemd/system/tycooncraft.service ]; then
     echo "ERROR: tycooncraft.service not found"
@@ -249,6 +262,8 @@ echo "✓ Migrations complete"
 
 # Create admin account (idempotent - safe to run multiple times)
 echo "Setting up admin testing account..."
+export DJANGO_SUPERUSER_USERNAME
+export DJANGO_SUPERUSER_PASSWORD
 python manage.py create_admin_account
 echo "✓ Admin account configured"
 
