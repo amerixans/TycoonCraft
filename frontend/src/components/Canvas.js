@@ -349,7 +349,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
             }}
             title="Delete Mode"
           >
-            🗑️ Trash
+            ❌ Remove
           </button>
           <span className="control-hint">🖱️ Drag to pan • 🔍 Scroll to zoom</span>
         </div>
@@ -530,7 +530,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
           <div className="tooltip-stats">
             <div className="stat-row">
               <span>💰 Income:</span>
-              <span className="stat-value">{formatNumber(hoveredPlaced.game_object.income_per_second)}/s</span>
+              <span className="stat-value">{!hoveredPlaced.is_operational ? '0' : formatNumber(hoveredPlaced.game_object.income_per_second)}/s</span>
             </div>
             {hoveredPlaced.game_object.time_crystal_generation > 0 && (
               <div className="stat-row">
@@ -541,7 +541,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
             <div className="stat-row">
               <span>📊 Status:</span>
               <span className={`stat-value ${hoveredPlaced.is_operational ? 'operational' : 'inactive'}`}>
-                {hoveredPlaced.is_building ? '🔨 Building' : hoveredPlaced.is_operational ? '✅ Active' : '⏸️ Retiring'}
+                {hoveredPlaced.is_building ? '🔨 Building' : hoveredPlaced.is_operational ? '✅ Active' : '⏸️ Retired'}
               </span>
             </div>
             {hoveredPlaced.is_building && (() => {
@@ -577,6 +577,18 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
               <span>📏 Size:</span>
               <span className="stat-value">{hoveredPlaced.game_object.footprint_w}×{hoveredPlaced.game_object.footprint_h}</span>
             </div>
+            {/* Show removal refund for operational or retired objects */}
+            {(!hoveredPlaced.is_building) && (
+              <div className="stat-row">
+                <span>💵 Remove for:</span>
+                <span className="stat-value">
+                  {hoveredPlaced.is_operational
+                    ? formatNumber(hoveredPlaced.game_object.cost * hoveredPlaced.game_object.sellback_pct)
+                    : formatNumber(hoveredPlaced.game_object.cost * hoveredPlaced.game_object.retire_payout_coins_pct)
+                  } coins
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}
