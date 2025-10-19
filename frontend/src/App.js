@@ -374,7 +374,7 @@ function App() {
     );
   }
 
-  if (!gameState) {
+  if (!gameState || !objectCatalog) {
     return <div className="loading-screen"><div className="loader"></div></div>;
   }
 
@@ -443,9 +443,9 @@ function App() {
       </div>
 
       <div className="game-container">
-        <Sidebar 
+        <Sidebar
           discoveries={gameState.discoveries}
-          allObjects={gameState.all_objects}
+          allObjects={objectCatalog?.all_objects || []}
           eraUnlocks={gameState.era_unlocks}
           currentEra={gameState.profile.current_era}
           eras={ERAS}

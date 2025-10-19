@@ -87,16 +87,68 @@ if [ ! -d "/var/www/tycooncraft" ]; then
     exit 1
 fi
 
-if [ ! -f "/var/www/tycooncraft/backend/.env" ]; then
+ENV_FILE="/var/www/tycooncraft/backend/.env"
+
+if [ ! -f "$ENV_FILE" ]; then
     echo "ERROR: Backend .env file not found"
     echo "Have you run the initial deployment script?"
     exit 1
 fi
 
-# Load environment variables (including admin credentials)
-set -a
-source /var/www/tycooncraft/backend/.env
-set +a
+# Load environment variables (including admin credentials) without sourcing the file
+# The production .env may contain characters that are not valid in bash assignments (e.g. parentheses)
+ENV_EXPORTS=$(ENV_FILE="$ENV_FILE" python3 - <<'PY'
+import os
+import shlex
+from pathlib import Path
+
+env_path = Path(os.environ["ENV_FILE"])
+if not env_path.exists():
+    raise SystemExit("missing env file")
+
+output_lines = []
+for raw_line in env_path.read_text().splitlines():
+    stripped = raw_line.strip()
+    if not stripped or stripped.startswith("#"):
+        continue
+    if "=" not in stripped:
+        continue
+
+    key, value = stripped.split("=", 1)
+    key = key.strip()
+    if not key:
+        continue
+
+    if key.lower().startswith("export "):
+        key = key.split(None, 1)[1]
+
+    value = value.strip()
+
+    if (
+        value
+        and value[0] in ("'", '"')
+        and len(value) >= 2
+        and value[-1] == value[0]
+    ):
+        quote_char = value[0]
+        value = value[1:-1]
+        if quote_char == '"':
+            value = bytes(value, "utf-8").decode("unicode_escape")
+    elif "#" in value:
+        hash_index = value.find("#")
+        if hash_index == 0 or value[hash_index - 1].isspace():
+            value = value[:hash_index].rstrip()
+
+    output_lines.append(f"export {key}={shlex.quote(value)}")
+
+print("\n".join(output_lines))
+PY
+) || {
+    echo "ERROR: Failed to parse $ENV_FILE"
+    exit 1
+}
+
+eval "$ENV_EXPORTS"
 
 if [ -z "${DJANGO_SUPERUSER_PASSWORD:-}" ] && [ -z "${DJANGO_ADMIN_PASSWORD:-}" ]; then
     echo "ERROR: Admin password not found in backend/.env (DJANGO_SUPERUSER_PASSWORD or DJANGO_ADMIN_PASSWORD)"
