@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { formatNumber } from '../utils/formatNumber';
+import { hasAura, describeAuraModifier } from '../utils/aura';
 import './Sidebar.css';
 
-function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
+function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, eraConfig, onObjectInfo }) {
   const [selectedEra, setSelectedEra] = useState(currentEra);
   const [searchTerm, setSearchTerm] = useState('');
+  const [hoveredLockedEra, setHoveredLockedEra] = useState(null);
 
   // Update selectedEra when currentEra changes
   useEffect(() => {
@@ -22,9 +24,9 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
 
   const objectsByEra = {};
   eras.forEach(era => {
-    // Include objects that match this era OR are keystone objects (visible in all eras)
+    // Include only objects that match this era (keystones belong to their own era)
     objectsByEra[era] = discoveredObjects.filter(obj =>
-      obj.era_name === era || obj.is_keystone
+      obj.era_name === era
     );
   });
 
@@ -34,9 +36,30 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
     return 'locked';
   };
 
-  // Filter objects based on search term
+  // Get the keystone object needed to unlock a specific era
+  const getKeystoneForEra = (targetEra) => {
+    const eraIndex = eras.indexOf(targetEra);
+    if (eraIndex <= 0) return null; // First era has no keystone
+
+    // Keystone belongs to the previous era
+    const previousEra = eras[eraIndex - 1];
+
+    // Find the keystone object in the previous era that unlocks the target era
+    return allObjects.find(obj =>
+      obj.era_name === previousEra && obj.is_keystone
+    );
+  };
+
+  // Get unlock message for an era from eraConfig
+  const getUnlockMessage = (era) => {
+    if (!eraConfig || !eraConfig.eras) return null;
+    const eraData = eraConfig.eras.find(e => e.name === era);
+    return eraData ? eraData.unlock_message : null;
+  };
+
+  // Filter objects based on search term - now only within selected era
   const filteredObjects = searchTerm
-    ? discoveredObjects.filter(obj =>
+    ? (objectsByEra[selectedEra] || []).filter(obj =>
         obj.object_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : objectsByEra[selectedEra] || [];
@@ -64,17 +87,36 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
         <div className="era-tabs">
           {eras.map(era => {
             const status = getEraStatus(era);
+            const keystone = status === 'locked' ? getKeystoneForEra(era) : null;
+            const hintText = keystone
+              ? `Craft ${keystone.object_name} to unlock this era`
+              : status === 'locked'
+              ? 'Unlock previous eras first'
+              : '';
+
             return (
               <button
                 key={era}
                 className={`era-tab ${status} ${selectedEra === era ? 'active' : ''}`}
                 onClick={() => setSelectedEra(era)}
                 disabled={status === 'locked'}
+                onMouseEnter={() => status === 'locked' && setHoveredLockedEra(era)}
+                onMouseLeave={() => setHoveredLockedEra(null)}
+                title={hintText}
               >
                 {era.split(' ')[0]}
               </button>
             );
           })}
+          {hoveredLockedEra && (() => {
+            const unlockMsg = getUnlockMessage(hoveredLockedEra);
+            return unlockMsg ? (
+              <div className="era-lock-hint">
+                <div className="era-lock-hint-icon">🔒</div>
+                <div className="era-lock-hint-text">{unlockMsg}</div>
+              </div>
+            ) : null;
+          })()}
         </div>
       )}
       
@@ -91,11 +133,31 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
               {searchTerm ? '❌ No objects found' : '🔒 No objects discovered yet'}
             </div>
           ) : (
-            filteredObjects.map(obj => (
+            filteredObjects.map(obj => {
+              const auraActive = hasAura(obj);
+              const auraTooltip = auraActive
+                ? obj.global_modifiers
+                    .map((modifier) => {
+                      const details = describeAuraModifier(modifier);
+                      const effectText =
+                        details.effects.length > 0
+                          ? details.effects.join(', ')
+                          : 'No stat changes';
+                      return `${details.categories}: ${effectText} (${details.activation}, ${details.maxStacks > 1 ? `stacks x${details.maxStacks}` : 'single-stack'})`;
+                    })
+                    .join('\n')
+                : '';
+              let hoverTitle = obj.is_keystone
+                ? `🔑 Keystone: Place to unlock ${getNextEra(obj.era_name) || 'next era'}!`
+                : 'Drag to craft or place';
+              if (auraActive) {
+                hoverTitle += `\n🔮 Aura active`;
+              }
+              return (
               <div 
                 key={obj.id}
                 className={`object-item ${obj.is_keystone ? 'keystone' : ''}`}
-                title={obj.is_keystone ? `🔑 Keystone: Place to unlock ${getNextEra(obj.era_name) || 'next era'}!` : 'Drag to craft or place'}
+                title={hoverTitle}
                 draggable={true}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'copy';
@@ -159,24 +221,28 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                 <div className="object-content">
                   <div className="object-name">
                     {obj.object_name}
+                    {obj.is_keystone && (
+                      <span className="keystone-badge">🔑</span>
+                    )}
+                    {auraActive && (
+                      <span className="aura-badge" title={auraTooltip}>🔮</span>
+                    )}
                   </div>
                   <div className="object-stats">
                     <div>💰 {formatNumber(obj.cost)}</div>
                     <div>📊 {formatNumber(obj.income_per_second)}/s</div>
                   </div>
                 </div>
-                <div 
+                <div
                   className="object-info-icon"
                   onClick={(e) => handleInfoClick(obj, e)}
                   title="View details"
                 >
                   ℹ️
                 </div>
-                {obj.is_keystone && (
-                  <div className="keystone-badge">🔑</div>
-                )}
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>

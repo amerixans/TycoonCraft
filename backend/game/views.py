@@ -1,6 +1,7 @@
 # views.py
 
-from decimal import Decimal
+from collections import defaultdict
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import timedelta
 import base64
 import hashlib
@@ -43,6 +44,8 @@ from .config import (
     ERAS, ERA_CRYSTAL_COSTS, ERA_CRAFTING_COSTS,
     get_next_era, get_higher_era, get_crafting_cost, get_unlock_cost
 )
+from .era_loader import get_era_loader
+from .schema_builder import build_era_aware_schema
 
 
 # Era progression helper
@@ -75,6 +78,100 @@ def ensure_hunter_gatherer_starters(profile):
     for obj in starter_objects:
         if obj.id not in known_ids:
             Discovery.objects.get_or_create(player=profile, game_object=obj)
+
+
+def get_active_placed_objects(player):
+    """Return placed objects that are either operational or currently building."""
+    return list(
+        PlacedObject.objects
+        .filter(player=player)
+        .filter(Q(is_operational=True) | Q(is_building=True))
+        .select_related("game_object")
+    )
+
+
+def build_modifier_map(placed_objects):
+    """Build a category -> [modifier] map honoring active_when and max_stacks."""
+    modifier_map = defaultdict(list)
+    source_counts = defaultdict(int)
+
+    for placed in placed_objects:
+        game_object = placed.game_object
+        modifiers = game_object.global_modifiers or []
+        if not modifiers:
+            continue
+
+        for idx, modifier in enumerate(modifiers):
+            active_when = modifier.get("active_when", "operational")
+            if active_when not in {"operational", "placed"}:
+                continue
+
+            if active_when == "operational" and not placed.is_operational:
+                continue
+            if active_when == "placed" and not (placed.is_operational or placed.is_building):
+                continue
+
+            affected_categories = modifier.get("affected_categories", [])
+            if not affected_categories:
+                continue
+
+            try:
+                max_stacks = int(modifier.get("max_stacks", 1))
+            except (TypeError, ValueError):
+                max_stacks = 1
+
+            if max_stacks <= 0:
+                continue
+
+            source_key = (game_object.id, idx)
+            if source_counts[source_key] >= max_stacks:
+                continue
+            source_counts[source_key] += 1
+
+            stacking = modifier.get("stacking", "multiplicative")
+            if stacking not in {"multiplicative", "additive"}:
+                stacking = "multiplicative"
+
+            entry = {
+                "stacking": stacking,
+                "income_multiplier": Decimal(str(modifier.get("income_multiplier", 1))),
+                "cost_multiplier": Decimal(str(modifier.get("cost_multiplier", 1))),
+                "build_time_multiplier": Decimal(str(modifier.get("build_time_multiplier", 1))),
+                "operation_duration_multiplier": Decimal(str(modifier.get("operation_duration_multiplier", 1))),
+            }
+
+            for category in affected_categories:
+                modifier_map[category].append(entry)
+
+    return modifier_map
+
+
+def calculate_category_multiplier(modifier_map, category, field_name):
+    """Aggregate modifiers for a category/field into a single multiplier."""
+    modifiers = modifier_map.get(category)
+    if not modifiers:
+        return Decimal("1")
+
+    total = Decimal("1")
+    for modifier in modifiers:
+        value = modifier.get(field_name, Decimal("1"))
+        stacking = modifier["stacking"]
+        if stacking == "multiplicative":
+            total *= value
+        else:
+            total += (value - Decimal("1"))
+
+    # Prevent negative multipliers from cascading into runtime errors
+    if total < Decimal("0"):
+        total = Decimal("0")
+    return total
+
+
+def apply_time_multiplier(base_value, multiplier):
+    """Apply a multiplier to an integer time field and clamp to non-negative."""
+    result = (Decimal(base_value) * multiplier).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    adjusted = int(result)
+    return max(adjusted, 0)
 
 
 # -----------------------------
@@ -147,48 +244,26 @@ def update_player_coins(player):
 
     time_elapsed = (now - player.last_coin_update).total_seconds()
 
-    # Fetch all operational objects once and cache them
-    # Filter for objects that either haven't been assigned a retire_at time yet (NULL)
-    # or haven't reached their retirement time yet
-    operational_objects = list(
-        PlacedObject.objects
-        .filter(player=player, is_operational=True)
-        .filter(Q(retire_at__isnull=True) | Q(retire_at__gt=now))
-        .select_related("game_object")
-    )
+    active_objects = get_active_placed_objects(player)
+    modifier_map = build_modifier_map(active_objects)
 
     total_income = Decimal("0")
     total_crystals = Decimal("0")
-
-    # Build modifier map: for each category, collect all active modifiers
-    # This avoids looping through all objects for each object
-    modifier_map = {}  # category -> list of (income_multiplier, stacking_type)
-
-    for mod_obj in operational_objects:
-        modifiers = mod_obj.game_object.global_modifiers or []
-        for mod in modifiers:
-            if mod.get("active_when") == "operational":
-                affected_categories = mod.get("affected_categories", [])
-                income_mult = Decimal(str(mod.get("income_multiplier", 1)))
-                stacking = mod.get("stacking", "multiplicative")
-
-                for category in affected_categories:
-                    if category not in modifier_map:
-                        modifier_map[category] = []
-                    modifier_map[category].append((income_mult, stacking))
+    income_multiplier_cache = {}
 
     # Calculate income for each operational object, using the modifier map
-    for placed in operational_objects:
-        income_multiplier = Decimal("1")
+    for placed in active_objects:
+        if not placed.is_operational:
+            continue
+        if placed.retire_at is not None and placed.retire_at <= now:
+            continue
 
-        # Apply modifiers from the map for this object's category
-        if placed.game_object.category in modifier_map:
-            for income_mult, stacking in modifier_map[placed.game_object.category]:
-                if stacking == "multiplicative":
-                    income_multiplier *= income_mult
-                else:
-                    income_multiplier += (income_mult - Decimal("1"))
-
+        category = placed.game_object.category
+        if category not in income_multiplier_cache:
+            income_multiplier_cache[category] = calculate_category_multiplier(
+                modifier_map, category, "income_multiplier"
+            )
+        income_multiplier = income_multiplier_cache[category]
         total_income += placed.game_object.income_per_second * income_multiplier
         total_crystals += placed.game_object.time_crystal_generation
 
@@ -313,31 +388,30 @@ def _values_equal(actual, expected):
 _PREDEFINED_RECIPES_CACHE = None
 
 def load_predefined_recipes():
-    """Load predefined recipes from JSON file."""
+    """Load predefined recipes from era YAML files."""
     global _PREDEFINED_RECIPES_CACHE
     if _PREDEFINED_RECIPES_CACHE is not None:
         return _PREDEFINED_RECIPES_CACHE
-    
-    recipes_path = os.path.join(settings.BASE_DIR, "prompts", "predefined_recipes.json")
-    if not os.path.exists(recipes_path):
-        _PREDEFINED_RECIPES_CACHE = []
-        return []
-    
-    with open(recipes_path, "r", encoding="utf-8") as f:
-        _PREDEFINED_RECIPES_CACHE = json.load(f)
+
+    # Load all predefined recipes from all eras via era_loader
+    era_loader = get_era_loader()
+    recipes = era_loader.get_predefined_recipes()
+
+    _PREDEFINED_RECIPES_CACHE = recipes
     return _PREDEFINED_RECIPES_CACHE
 
 
 def get_predefined_recipe(object_a, object_b):
     """Check if there's a predefined recipe for this combination."""
     recipes = load_predefined_recipes()
-    
+
     for recipe in recipes:
         # Check both orderings
         if ((recipe["input_a"] == object_a.object_name and recipe["input_b"] == object_b.object_name) or
             (recipe["input_a"] == object_b.object_name and recipe["input_b"] == object_a.object_name)):
-            return recipe.get("output", {})
-    
+            # Return overrides if present, otherwise empty dict
+            return recipe.get("overrides", {})
+
     return None
 
 
@@ -408,14 +482,17 @@ def call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefi
     """
     Call OpenAI (Responses API) to generate a new object definition via structured output.
     Uses server-to-server endpoint: POST /v1/responses
-    
+
     predefined_overrides: dict of field values that MUST be respected in the output
     """
 
+    era_loader = get_era_loader()
     prompts_dir = os.path.join(settings.BASE_DIR, "prompts")
     prompt_template = _read_file_text(prompts_dir, "crafting_recipe.txt")
     capsule_schema = _read_file_json(prompts_dir, "object_capsule.json")  # present for ref; not directly posted
-    object_schema = _read_file_json(prompts_dir, "object_schema.json")
+
+    # Build era-aware schema with stat ranges from the higher era
+    object_schema = build_era_aware_schema(object_a.era_name, object_b.era_name)
 
     # Build capsules
     capsule_a = {
@@ -473,9 +550,10 @@ CRITICAL ERA ASSIGNMENT RULES:
         constraints_text += "\nAll other fields should be generated normally following the game rules.\n"
         era_context += constraints_text
 
-    # Fill prompt
+    # Fill prompt with era descriptions and object capsules
     prompt = (
         prompt_template
+        .replace("{{ERA_DESCRIPTIONS}}", era_loader.get_all_prompt_descriptions())
         .replace("{{object_a_capsule}}", json.dumps(capsule_a, indent=2))
         .replace("{{object_b_capsule}}", json.dumps(capsule_b, indent=2))
     ) + "\n" + era_context
@@ -828,19 +906,21 @@ def craft_objects(request):
             # Continue to generation below (fall through to create new recipe)
         else:
             # Recipe exists and matches predefined specs (or no predefined specs)
-            # Deduct crafting cost
-            profile.coins -= crafting_cost
-            profile.save()
-            
             # Check if player already discovered this
             discovery, created = Discovery.objects.get_or_create(player=profile, game_object=result_obj)
-            
+
+            # Only deduct cost if this is a new discovery for the player
+            actual_cost = crafting_cost if created else Decimal('0')
+            if actual_cost > 0:
+                profile.coins -= actual_cost
+                profile.save()
+
             # Return the existing recipe result without calling OpenAI
             return Response({
                 "object": GameObjectSerializer(result_obj).data,
                 "newly_discovered": created,
                 "newly_created": False,
-                "crafting_cost": float(crafting_cost),
+                "crafting_cost": float(actual_cost),
                 "used_existing_recipe": True,
             })
 
@@ -870,10 +950,7 @@ def craft_objects(request):
         already_discovered = Discovery.objects.filter(player=profile, game_object=existing_obj).exists()
         
         if already_discovered:
-            # Player already knows this object - just inform them and save the recipe
-            profile.coins -= crafting_cost
-            profile.save()
-            
+            # Player already knows this object - no cost to craft again
             # Create recipe linking these inputs to the existing result (if not already exists)
             CraftingRecipe.objects.get_or_create(
                 object_a=object_a,
@@ -883,13 +960,13 @@ def craft_objects(request):
                     "discovered_by": request.user,
                 }
             )
-            
+
             return Response({
                 "object": GameObjectSerializer(existing_obj).data,
                 "newly_discovered": False,
                 "newly_created": False,
                 "message": f"That combination creates {existing_obj.object_name}, which you have already discovered!",
-                "crafting_cost": float(crafting_cost),
+                "crafting_cost": 0,
             })
         else:
             # Player hasn't discovered it yet - link recipe and mark as discovered
@@ -1041,14 +1118,30 @@ def place_object(request):
     if x < 0 or y < 0 or x + game_object.footprint_w > 1000 or y + game_object.footprint_h > 1000:
         return Response({"error": "Out of bounds"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Evaluate active modifiers impacting this placement
+    modifier_map = build_modifier_map(get_active_placed_objects(profile))
+    build_time_multiplier = calculate_category_multiplier(
+        modifier_map, game_object.category, "build_time_multiplier"
+    )
+    operation_duration_multiplier = calculate_category_multiplier(
+        modifier_map, game_object.category, "operation_duration_multiplier"
+    )
+
+    effective_build_time = apply_time_multiplier(game_object.build_time_sec, build_time_multiplier)
+    effective_operation_duration = apply_time_multiplier(
+        game_object.operation_duration_sec, operation_duration_multiplier
+    )
+    if effective_operation_duration <= 0:
+        effective_operation_duration = 1
+
     # Deduct cost
     profile.coins -= game_object.cost
     profile.time_crystals -= game_object.time_crystal_cost
     profile.save()
 
     now = timezone.now()
-    build_complete = now + timedelta(seconds=game_object.build_time_sec)
-    retire_at = build_complete + timedelta(seconds=game_object.operation_duration_sec)
+    build_complete = now + timedelta(seconds=effective_build_time)
+    retire_at = build_complete + timedelta(seconds=effective_operation_duration)
 
     placed = PlacedObject.objects.create(
         player=profile,
@@ -1058,8 +1151,8 @@ def place_object(request):
         placed_at=now,
         build_complete_at=build_complete,
         retire_at=retire_at,
-        is_building=game_object.build_time_sec > 0,
-        is_operational=game_object.build_time_sec == 0,
+        is_building=effective_build_time > 0,
+        is_operational=effective_build_time == 0,
     )
 
     response_data = PlacedObjectSerializer(placed).data
@@ -1204,6 +1297,7 @@ def import_game(request):
     profile = request.user.profile
 
     with transaction.atomic():
+        was_pro = profile.is_pro
         PlacedObject.objects.filter(player=profile).delete()
         Discovery.objects.filter(player=profile).delete()
         EraUnlock.objects.filter(player=profile).delete()
@@ -1212,8 +1306,8 @@ def import_game(request):
         profile.coins = data["profile"]["coins"]
         profile.time_crystals = data["profile"]["time_crystals"]
         profile.current_era = data["profile"]["current_era"]
-        if "is_pro" in data["profile"]:
-            profile.is_pro = data["profile"]["is_pro"]
+        # Preserve pro status - only upgrade keys can grant this privilege
+        profile.is_pro = was_pro
         profile.save()
 
         # Restore discoveries from validated data
@@ -1286,6 +1380,46 @@ def redeem_upgrade_key(request):
     
     return Response({
         "success": True,
-        "message": "Successfully upgraded to Pro! You now have 500 daily API calls.",
+        "message": "Successfully upgraded to Pro! You now have 200 daily discoveries.",
         "profile": PlayerProfileSerializer(profile).data
     }, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_coin(request):
+    """Add one coin to the player's account."""
+    profile = request.user.profile
+    profile.coins += 1
+    profile.save()
+
+    return Response({
+        "success": True,
+        "coins": float(profile.coins)
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def era_config(request):
+    """
+    Get complete era configuration from YAML files.
+    This endpoint is public and cacheable by the frontend.
+    """
+    era_loader = get_era_loader()
+
+    # Build response with all era data
+    eras_data = []
+    for era in era_loader.get_all_eras():
+        eras_data.append({
+            "order": era['order'],
+            "name": era['name'],
+            "display_name": era.get('display_name', era['name']),
+            "crystal_unlock_cost": era['crystal_unlock_cost'],
+            "crafting_cost": era['crafting_cost'],
+            "unlock_message": era.get('unlock_message', ''),
+        })
+
+    return Response({
+        "eras": eras_data
+    })

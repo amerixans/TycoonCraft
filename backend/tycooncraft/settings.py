@@ -21,7 +21,17 @@ def env_bool(name, default=False):
 
 DEBUG = env_bool('DEBUG', False)
 
-ALLOWED_HOSTS = ['*']
+def env_list(name, default=None):
+    """Parse a comma-separated env var into a list."""
+    value = os.environ.get(name)
+    if value:
+        return [item.strip() for item in value.split(',') if item.strip()]
+    return default if default is not None else []
+
+
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1'])
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -183,7 +193,7 @@ RATE_LIMIT_WINDOW = 60  # seconds
 
 # Daily rate limits by tier
 RATE_LIMIT_DAILY_STANDARD = 20  # Standard users
-RATE_LIMIT_DAILY_PRO = 500      # Pro users (with upgrade key)
+RATE_LIMIT_DAILY_PRO = 200      # Pro users (with upgrade key)
 RATE_LIMIT_DAILY_ADMIN = 1000   # Admin users
 RATE_LIMIT_DAILY_GLOBAL = 4000  # Total API calls per day across all users
 

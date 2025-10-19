@@ -1,0 +1,232 @@
+# Era Definition: Metallurgy
+# This file completely defines everything about the Metallurgy era
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+order: 3
+name: "Metallurgy"
+display_name: "Metallurgy"
+unlock_message: "Craft Blast Furnace to unlock Steam & Industry"
+
+# ==============================================================================
+# COSTS
+# ==============================================================================
+crystal_unlock_cost: 50
+crafting_cost: 5000  # 1250 * 4
+
+# ==============================================================================
+# STAT RANGES (for schema generation & validation)
+# ==============================================================================
+stat_ranges:
+  cost:
+    min: 5000
+    max: 50000
+  income_per_second:
+    min: 30
+    max: 500
+  build_time_sec:
+    min: 0
+    max: 300
+  operation_duration_sec:
+    min: 1000
+    max: 15000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 6
+  size_min: 0.5
+  size_max: 4.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0
+
+# ==============================================================================
+# PROMPT DESCRIPTION (injected into crafting_recipe.txt)
+# ==============================================================================
+prompt_description: |
+  Metallurgy
+  • Unique Mechanic (applies to items in/after this era): Forge Banners — focus on mild auras (mine/factory income 1.05–1.12, build_time 0.95–1.00); cost_multiplier must stay 1.00.
+  • Keystone to Unlock: Boiler (Metal + Water)
+  • Cost Range: 5,000–50,000 coins
+  • Income Range: 30–500 coins/second
+  • Core Examples: Mine, Furnace, Anvil, Forge, Sword
+
+# ==============================================================================
+# KEYSTONE DEFINITION
+# ==============================================================================
+keystone:
+  recipe_chain:
+    - comment: "MET-1"
+      input_a: "Charcoal"
+      input_b: "Bellows"
+      output_name: "Hot Forge"
+
+    - comment: "MET-2"
+      input_a: "Hot Forge"
+      input_b: "Ore"
+      output_name: "Molten Metal"
+
+    - comment: "MET-3 (Keystone)"
+      input_a: "Molten Metal"
+      input_b: "Clay Crucible"
+      output_name: "Boiler"
+      is_keystone: true
+      overrides:
+        era_name: "Metallurgy"
+        cost: 18000000
+        category: "factory"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["factory"]
+            affected_tags: []
+            income_multiplier: 1.12
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+# ==============================================================================
+# STARTER OBJECTS
+# ==============================================================================
+starters:
+  - object_name: "Ore"
+    era_name: "Metallurgy"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 1000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Stone veined with promise."
+    image_path: "/media/objects/starter-ore.png"
+
+  - object_name: "Charcoal"
+    era_name: "Metallurgy"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 1000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Hot, clean fuel for the first furnaces."
+    image_path: "/media/objects/starter-charcoal.png"
+
+  - object_name: "Clay Crucible"
+    era_name: "Metallurgy"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 1000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "A small pot that endures great heat."
+    image_path: "/media/objects/starter-crucible.png"
+
+  - object_name: "Bellows"
+    era_name: "Metallurgy"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "common"
+    cost: 1000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Leather lungs that breathe fire hotter."
+    image_path: "/media/objects/starter-bellows.png"
+
+  - object_name: "Anvil"
+    era_name: "Metallurgy"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 1000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Heavy edge that shapes every ingot."
+    image_path: "/media/objects/starter-anvil.png"
+
+  - object_name: "Flux Stone"
+    era_name: "Metallurgy"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 1000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Mineral mix that coaxes impurities to melt away."
+    image_path: "/media/objects/starter-fluxstone.png"

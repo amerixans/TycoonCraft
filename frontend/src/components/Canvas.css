@@ -130,13 +130,6 @@
   box-shadow: 0 4px 12px var(--shadow-heavy);
 }
 
-.placed-object:hover {
-  border-color: var(--accent-primary);
-  transform: scale(1.03);
-  box-shadow: 0 6px 20px rgba(230, 126, 34, 0.5);
-  z-index: 10;
-}
-
 .placed-object.building {
   border-color: var(--accent-warning);
   /* Removed flashing animation - build progress circle is sufficient visual indicator */
@@ -210,6 +203,28 @@
   }
 }
 
+.placement-preview {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #f1f5f9;
+  pointer-events: none;
+}
+
+.placement-preview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
 .object-image {
   width: 100%;
   height: 100%;
@@ -227,34 +242,6 @@
   text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
   padding: 0.5rem;
 }
-
-.building-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(243, 156, 18, 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  pointer-events: none;
-}
-
-.building-progress-circle {
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
-}
-
-.building-time {
-  color: white;
-  font-weight: 700;
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  line-height: 1;
-}
-
 
 /* Enhanced Tooltip */
 .hover-tooltip {
@@ -340,4 +327,53 @@
   background: var(--bg-primary);
   border-radius: 8px;
   border: 2px dashed var(--border-color);
+}
+
+.tooltip-auras {
+  margin-top: 0.6rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.tooltip-auras-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  color: var(--accent-secondary);
+}
+
+.tooltip-auras ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.building-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(243, 156, 18, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  pointer-events: none;
+}
+
+.building-progress-circle {
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+}
+
+.building-time {
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
 }

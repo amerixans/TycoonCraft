@@ -1,0 +1,268 @@
+# Era Definition: Agriculture
+# This file completely defines everything about the Agriculture era
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+order: 2
+name: "Agriculture"
+display_name: "Agriculture"
+unlock_message: "Craft Charcoal Kiln to unlock Metallurgy"
+
+# ==============================================================================
+# COSTS
+# ==============================================================================
+crystal_unlock_cost: 10
+crafting_cost: 750  # 250 * 3
+
+# ==============================================================================
+# STAT RANGES (for schema generation & validation)
+# ==============================================================================
+stat_ranges:
+  cost:
+    min: 800
+    max: 8000
+  income_per_second:
+    min: 5
+    max: 80
+  build_time_sec:
+    min: 0
+    max: 300
+  operation_duration_sec:
+    min: 600
+    max: 8000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.50
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 5
+  size_min: 0.3
+  size_max: 3.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0
+
+# ==============================================================================
+# PROMPT DESCRIPTION (injected into crafting_recipe.txt)
+# ==============================================================================
+prompt_description: |
+  Agriculture
+  • Unique Mechanic (applies to items in/after this era): Growth — farmables can be replanted to extend operation (choice: cash out vs. regrow).
+  • Keystone to Unlock: Charcoal Kiln (Clay + Wood)
+  • Cost Range: 800–8,000 coins
+  • Income Range: 5–80 coins/second
+  • Core Examples: Farm, Granary, Well, Plow, Barn
+
+  ⚠️ AGRICULTURAL ITEMS SPECIAL MECHANICS ⚠️
+
+  For items in Agriculture era and beyond that represent animals, crops, or plants:
+
+  ANIMALS (e.g., Pig, Cow, Sheep, Chicken, Horse, Beehive):
+  • CRITICAL: animals do NOT generate passive income while operational
+  • income_per_second: MUST be 1 (minimum; represents growth/feeding cost, not revenue)
+  • operation_duration_sec: SHORT (300-1200 seconds / 5-20 minutes typical)
+  • retire_payout.coins_pct: HIGH (0.40-0.70; animal is sold/butchered for meat/goods)
+  • Example: Pig costs 800 coins, generates 1 coin/sec for 10 minutes, then pays out 600 coins (75% refund)
+  • Flavor: suggest "grown" or "fattened" or "ready for market"
+
+  CROPS / HARVESTABLE PLANTS (e.g., Wheat, Corn, Pumpkin, Barley, Cabbage, Grapes):
+  • CRITICAL: crops do NOT generate passive income; income only at harvest (retirement)
+  • income_per_second: MUST be 1 (minimum; represents maintenance/watering cost)
+  • operation_duration_sec: SHORT-MEDIUM (600-3600 seconds / 10-60 minutes typical for seasonal crops)
+  • retire_payout.coins_pct: VERY HIGH (0.50-1.00; entire harvest/yield is the payout)
+  • Example: Wheat costs 500 coins, generates 1 coin/sec for 30 minutes, then pays out 500-900 coins as harvest
+  • Flavor: emphasize "ready to harvest" or "mature crop" or "full yield"
+
+  FRUIT/NUT TREES (e.g., Apple Tree, Orange Tree, Walnut Tree, Olive Tree):
+  • These are PERENNIAL and should behave differently from seasonal crops
+  • income_per_second: MODERATE (5-50 coins/sec; continuous fruit/nut production)
+  • operation_duration_sec: LONG (5000-20000 seconds / 1.4-5.5 hours; trees stay productive longer)
+  • retire_payout.coins_pct: LOW-MODERATE (0.10-0.30; tree ages/becomes less productive, small salvage value)
+  • Example: Apple Tree costs 2000 coins, generates 20 coins/sec for 3 hours, then pays out 300 coins
+  • Flavor: suggest "aged" or "declining" or "salvage wood"
+
+  GENERAL RULE FOR ALL AGRICULTURAL ITEMS:
+  • If the item represents a living organism that would realistically "expire" or "be harvested",
+    use a FINITE operation_duration_sec and calculate payout as if it's being sold/harvested
+  • Do NOT use null for operation_duration_sec; all agricultural items must retire naturally
+  • Do NOT create agricultural items that generate high passive income indefinitely
+  • Rare agricultural items (crops/animals) may have quality_tier of uncommon/rare and higher payouts
+
+
+# ==============================================================================
+# KEYSTONE DEFINITION
+# ==============================================================================
+keystone:
+  recipe_chain:
+    - comment: "AG-1"
+      input_a: "Seed"
+      input_b: "Fiber"
+      output_name: "Straw"
+
+    - comment: "AG-2"
+      input_a: "Straw"
+      input_b: "Clay"
+      output_name: "Lined Pit"
+
+    - comment: "AG-3 (Keystone)"
+      input_a: "Lined Pit"
+      input_b: "Wood"
+      output_name: "Charcoal Kiln"
+      is_keystone: true
+      overrides:
+        era_name: "Agriculture"
+        cost: 500000
+        category: "structure"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["farm"]
+            affected_tags: []
+            income_multiplier: 1.08
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.05
+            stacking: "multiplicative"
+            max_stacks: 1
+
+# ==============================================================================
+# STARTER OBJECTS
+# ==============================================================================
+starters:
+  - object_name: "Seed"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "A tiny start to a larger plan."
+    image_path: "/media/objects/starter-seed.png"
+
+  - object_name: "Clay"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Moldable earth, patient and steadfast."
+    image_path: "/media/objects/starter-clay.png"
+
+  - object_name: "Wood"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Straight grain, ready for work and fire."
+    image_path: "/media/objects/starter-wood.png"
+
+  - object_name: "Fiber"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Plant strands for rope, cloth, and binding."
+    image_path: "/media/objects/starter-fiber.png"
+
+  - object_name: "Cat"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "farm"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Quiet paws that keep grain stores clear."
+    image_path: "/media/objects/starter-cat.png"
+
+  - object_name: "Compost Heap"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "farm"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Layered scraps that feed the fields."
+    image_path: "/media/objects/starter-compostheap.png"

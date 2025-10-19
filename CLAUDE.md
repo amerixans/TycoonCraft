@@ -79,7 +79,7 @@ Create `.env` in project root with:
 - `backend/prompts/`: AI prompt templates and JSON schemas
   - `crafting_recipe.txt`: Main crafting prompt template
   - `object_schema.json`: Structured output schema for OpenAI
-  - `predefined_recipes.json`: Authoritative recipe overrides
+  - Keystone recipe overrides live inside each era YAML under `backend/eras/` (`keystone.recipe_chain`)
 
 ### Frontend Components
 
@@ -120,11 +120,30 @@ Applied in `update_player_coins()` at backend/game/views.py:262.
 
 ### Predefined Recipes
 
-Authoritative overrides loaded from `backend/prompts/predefined_recipes.json`:
-- `load_predefined_recipes()`: Loads and caches recipes
+Authoritative overrides loaded from era YAML files (`backend/eras/*.yaml`). Recipes can be defined in two places:
+
+1. **Keystone Recipe Chains** (`keystone.recipe_chain`): Required recipes that lead to the era's keystone object
+2. **General Recipes** (`recipes`): Optional predefined recipes outside the keystone chain
+
+Key functions:
+- `load_predefined_recipes()`: Loads and caches recipes from both sources
 - `get_predefined_recipe(obj_a, obj_b)`: Finds match (checks both orderings)
 - `validate_predefined_match(game_object, overrides)`: Validates existing objects against specs
 - If existing recipe doesn't match predefined specs, it's deleted and regenerated
+
+Recipe format in YAML:
+```yaml
+recipes:
+  - comment: "Description of the recipe"
+    input_a: "Object Name A"
+    input_b: "Object Name B"
+    output_name: "Result Object Name"
+    overrides:
+      era_name: "Era Name"
+      category: "category_name"
+      cost: 1000
+      # ... any other GameObject field
+```
 
 ### Era Progression
 
