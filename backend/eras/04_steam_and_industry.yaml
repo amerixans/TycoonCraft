@@ -1,0 +1,233 @@
+# Era Definition: Steam & Industry
+# This file completely defines everything about the Steam & Industry era
+
+order: 4
+name: "Steam & Industry"
+display_name: "Steam & Industry"
+
+crystal_unlock_cost: 250
+crafting_cost: 31250  # 6250 * 5
+
+stat_ranges:
+  cost:
+    min: 40000
+    max: 400000
+  income_per_second:
+    min: 200
+    max: 3000
+  build_time_sec:
+    min: 0
+    max: 300
+  operation_duration_sec:
+    min: 2000
+    max: 20000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 8
+  size_min: 0.5
+  size_max: 6.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.001
+
+prompt_description: |
+  Steam & Industry
+  • Unique Mechanic (applies to items in/after this era): Assembly Signals — use build_time auras (factory/logistics 0.90–0.97) plus light income boosts; cost_multiplier stays 1.00.
+  • Keystone to Unlock: Dynamo (Steam Engine + Magnet)
+  • Cost Range: 40,000–400,000 coins
+  • Income Range: 200–3,000 coins/second
+  • Core Examples: Steam Engine, Factory, Rail, Locomotive, Warehouse
+
+keystone:
+  recipe_chain:
+    - comment: "IND-1"
+      input_a: "Iron"
+      input_b: "Gear"
+      output_name: "Gearbox"
+    - comment: "IND-2"
+      input_a: "Gearbox"
+      input_b: "Iron"
+      output_name: "Flywheel"
+    - comment: "IND-3"
+      input_a: "Flywheel"
+      input_b: "Steam"
+      output_name: "Turbine"
+    - comment: "IND-4 (Keystone)"
+      input_a: "Turbine"
+      input_b: "Magnet"
+      output_name: "Dynamo"
+      is_keystone: true
+      overrides:
+        era_name: "Steam & Industry"
+        cost: 900000000
+        category: "power"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["power"]
+            affected_tags: []
+            income_multiplier: 1.12
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Iron"
+    era_name: "Steam & Industry"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 10000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Refined metal ready for machines."
+    image_path: "/media/objects/starter-iron.png"
+
+  - object_name: "Steam"
+    era_name: "Steam & Industry"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "common"
+    cost: 10000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.8
+    global_modifiers: []
+    flavor_text: "Boiling breath that turns wheels."
+    image_path: "/media/objects/starter-steam.png"
+
+  - object_name: "Gear"
+    era_name: "Steam & Industry"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 10000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Teeth that share motion."
+    image_path: "/media/objects/starter-gear.png"
+
+  - object_name: "Magnet"
+    era_name: "Steam & Industry"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "uncommon"
+    cost: 10000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "A lodestone with a pull on progress."
+    image_path: "/media/objects/starter-magnet.png"
+
+  - object_name: "Shift Whistle"
+    era_name: "Steam & Industry"
+    is_keystone: false
+    is_starter: true
+    category: "cultural"
+    quality_tier: "uncommon"
+    cost: 80000
+    time_crystal_cost: 0
+    income_per_second: 700
+    time_crystal_generation: 0
+    build_time_sec: 180
+    operation_duration_sec: 7200
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.5
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["factory", "logistics"]
+        affected_tags: []
+        income_multiplier: 1.0
+        cost_multiplier: 1.0
+        build_time_multiplier: 0.92
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "A piercing call snaps every line into motion on schedule."
+    image_path: "/media/objects/starter-shiftwhistle.png"
+
+  - object_name: "Rail Milepost"
+    era_name: "Steam & Industry"
+    is_keystone: false
+    is_starter: true
+    category: "logistics"
+    quality_tier: "uncommon"
+    cost: 90000
+    time_crystal_cost: 0
+    income_per_second: 750
+    time_crystal_generation: 0
+    build_time_sec: 200
+    operation_duration_sec: 7500
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.5
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["logistics"]
+        affected_tags: []
+        income_multiplier: 1.08
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 3
+    flavor_text: "Perfectly spaced markers keep freight and passengers flowing."
+    image_path: "/media/objects/starter-railpost.png"

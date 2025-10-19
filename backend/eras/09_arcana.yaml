@@ -1,0 +1,248 @@
+# Era Definition: Arcana
+
+order: 9
+name: "Arcana"
+display_name: "Arcana"
+
+crystal_unlock_cost: 800000
+crafting_cost: 195312500  # 19531250 * 10
+
+stat_ranges:
+  cost:
+    min: 800000000
+    max: 8000000000
+  income_per_second:
+    min: 4000000
+    max: 60000000
+  build_time_sec:
+    min: 0
+    max: 700
+  operation_duration_sec:
+    min: 15000
+    max: 100000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 20
+  size_min: 0.3
+  size_max: 18.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.05
+
+prompt_description: |
+  Arcana
+  • Unique Mechanic (applies to items in/after this era): Rune Foci — magic auras with tight caps (max_stacks=1 on keystones) delivering strong but limited income boosts.
+  • Keystone to Unlock: Reality Loom (Arcane Tower + Rune Forge)
+  • Cost Range: 800,000,000–8,000,000,000 coins
+  • Income Range: 4,000,000–60,000,000 coins/second
+  • Core Examples: Mana Well, Transmutation Lab, Arcane Tower, Rune Forge
+
+keystone:
+  recipe_chain:
+    - comment: "ARC-1"
+      input_a: "Chalk Circle"
+      input_b: "Rune"
+      output_name: "Marked Circle"
+    - comment: "ARC-2"
+      input_a: "Marked Circle"
+      input_b: "Mana"
+      output_name: "Charged Circle"
+    - comment: "ARC-3"
+      input_a: "Crystal"
+      input_b: "Rune"
+      output_name: "Focus Stone"
+    - comment: "ARC-4"
+      input_a: "Focus Stone"
+      input_b: "Mana"
+      output_name: "Bright Focus"
+    - comment: "ARC-5"
+      input_a: "Bright Focus"
+      input_b: "Charged Circle"
+      output_name: "Spell Frame"
+    - comment: "ARC-6"
+      input_a: "Spell Frame"
+      input_b: "Rune"
+      output_name: "Patterned Frame"
+    - comment: "ARC-7"
+      input_a: "Patterned Frame"
+      input_b: "Crystal"
+      output_name: "Loom Frame"
+    - comment: "ARC-8 (Keystone)"
+      input_a: "Loom Frame"
+      input_b: "Mana"
+      output_name: "Reality Loom"
+      is_keystone: true
+      overrides:
+        era_name: "Arcana"
+        cost: 1152000000000000000
+        category: "magic"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["magic"]
+            affected_tags: []
+            income_multiplier: 1.18
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Crystal"
+    era_name: "Arcana"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "rare"
+    cost: 500000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Facets hum with hidden hymns."
+    image_path: "/media/objects/starter-crystal.png"
+
+  - object_name: "Mana"
+    era_name: "Arcana"
+    is_keystone: false
+    is_starter: true
+    category: "magic"
+    quality_tier: "rare"
+    cost: 500000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Raw current from the unseen."
+    image_path: "/media/objects/starter-mana.png"
+
+  - object_name: "Rune"
+    era_name: "Arcana"
+    is_keystone: false
+    is_starter: true
+    category: "magic"
+    quality_tier: "rare"
+    cost: 500000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "A small mark with a large voice."
+    image_path: "/media/objects/starter-rune.png"
+
+  - object_name: "Chalk Circle"
+    era_name: "Arcana"
+    is_keystone: false
+    is_starter: true
+    category: "magic"
+    quality_tier: "rare"
+    cost: 500000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "A boundary where rules may bend."
+    image_path: "/media/objects/starter-chalkcircle.png"
+
+  - object_name: "Rune Circle"
+    era_name: "Arcana"
+    is_keystone: false
+    is_starter: true
+    category: "magic"
+    quality_tier: "uncommon"
+    cost: 950000000
+    time_crystal_cost: 0
+    income_per_second: 6000000
+    time_crystal_generation: 0
+    build_time_sec: 460
+    operation_duration_sec: 21000
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.2
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["magic"]
+        affected_tags: []
+        income_multiplier: 1.10
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Sigils flare bright, amplifying every working in its radius."
+    image_path: "/media/objects/starter-runecircle.png"
+
+  - object_name: "Ley Tuning Fork"
+    era_name: "Arcana"
+    is_keystone: false
+    is_starter: true
+    category: "magic"
+    quality_tier: "uncommon"
+    cost: 980000000
+    time_crystal_cost: 0
+    income_per_second: 6200000
+    time_crystal_generation: 0
+    build_time_sec: 480
+    operation_duration_sec: 21500
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.3
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["magic"]
+        affected_tags: []
+        income_multiplier: 1.0
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.10
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Struck once, it keeps ley pulses resonant far longer than they should be."
+    image_path: "/media/objects/starter-leyfork.png"

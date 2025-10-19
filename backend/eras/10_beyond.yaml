@@ -1,0 +1,249 @@
+# Era Definition: Beyond
+
+order: 10
+name: "Beyond"
+display_name: "Beyond"
+
+crystal_unlock_cost: 4000000
+crafting_cost: 1073218750  # 97656250 * 11
+
+stat_ranges:
+  cost:
+    min: 6000000000
+    max: 60000000000
+  income_per_second:
+    min: 30000000
+    max: 500000000
+  build_time_sec:
+    min: 0
+    max: 1000
+  operation_duration_sec:
+    min: 20000
+    max: 150000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 20
+  size_min: 0.8
+  size_max: 20.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.1
+
+prompt_description: |
+  Beyond
+  • Unique Mechanic (applies to items in/after this era): Singularity Hub — final wonder aura boosting all income (1.10–1.18, max_stacks=1) with optional tiny time crystal trickle.
+  • Keystone to Unlock: Seed AI (Quantum Core + Archive)
+  • Cost Range: 6,000,000,000–60,000,000,000 coins
+  • Income Range: 30,000,000–500,000,000 coins/second
+  • Core Examples: World Forge, Reality Printer, Singularity Core, Time Weaver
+
+keystone:
+  recipe_chain:
+    - comment: "BEY-1"
+      input_a: "Dataset"
+      input_b: "Archive"
+      output_name: "Knowledge Base"
+    - comment: "BEY-2"
+      input_a: "Knowledge Base"
+      input_b: "Quantum Core"
+      output_name: "Model Seed"
+    - comment: "BEY-3"
+      input_a: "Model Seed"
+      input_b: "Simulator"
+      output_name: "Test Run"
+    - comment: "BEY-4"
+      input_a: "Test Run"
+      input_b: "Dataset"
+      output_name: "Feedback"
+    - comment: "BEY-5"
+      input_a: "Feedback"
+      input_b: "Archive"
+      output_name: "Revised Model"
+    - comment: "BEY-6"
+      input_a: "Revised Model"
+      input_b: "Simulator"
+      output_name: "Agent"
+    - comment: "BEY-7"
+      input_a: "Agent"
+      input_b: "Knowledge Base"
+      output_name: "Guided Agent"
+    - comment: "BEY-8 (Keystone)"
+      input_a: "Guided Agent"
+      input_b: "Quantum Core"
+      output_name: "Seed AI"
+      is_keystone: true
+      overrides:
+        era_name: "Beyond"
+        cost: 230400000000000000000
+        category: "wonder"
+        cap_per_civ: 1
+        time_crystal_generation: 0.002
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["natural", "structure", "farm", "mine", "factory", "power", "logistics", "research", "cultural", "housing", "magic", "wonder"]
+            affected_tags: []
+            income_multiplier: 1.15
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Archive Mirror"
+    era_name: "Beyond"
+    is_keystone: false
+    is_starter: true
+    category: "wonder"
+    quality_tier: "uncommon"
+    cost: 7000000000
+    time_crystal_cost: 0
+    income_per_second: 40000000
+    time_crystal_generation: 0
+    build_time_sec: 520
+    operation_duration_sec: 24000
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.5
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["research"]
+        affected_tags: []
+        income_multiplier: 1.07
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Parallel archives whisper answers forward, accelerating every breakthrough."
+    image_path: "/media/objects/starter-archivemirror.png"
+
+  - object_name: "Convergence Anchor"
+    era_name: "Beyond"
+    is_keystone: false
+    is_starter: true
+    category: "wonder"
+    quality_tier: "rare"
+    cost: 7200000000
+    time_crystal_cost: 0
+    income_per_second: 41000000
+    time_crystal_generation: 0
+    build_time_sec: 540
+    operation_duration_sec: 24500
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.6
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["natural", "structure", "farm", "mine", "factory", "power", "logistics", "research", "cultural", "housing", "magic"]
+        affected_tags: []
+        income_multiplier: 1.0
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.10
+        stacking: "multiplicative"
+        max_stacks: 1
+    flavor_text: "Locks in reality so layouts run longer before the fabric frays."
+    image_path: "/media/objects/starter-convergenceanchor.png"
+
+  - object_name: "Quantum Core"
+    era_name: "Beyond"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "epic"
+    cost: 5000000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.5
+    global_modifiers: []
+    flavor_text: "Computation condensed to a heartbeat."
+    image_path: "/media/objects/starter-quantum.png"
+
+  - object_name: "Archive"
+    era_name: "Beyond"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "epic"
+    cost: 5000000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.2
+    global_modifiers: []
+    flavor_text: "Memory made monument."
+    image_path: "/media/objects/starter-archive.png"
+
+  - object_name: "Dataset"
+    era_name: "Beyond"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "epic"
+    cost: 5000000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.8
+    global_modifiers: []
+    flavor_text: "Curated truths awaiting a mind."
+    image_path: "/media/objects/starter-dataset.png"
+
+  - object_name: "Simulator"
+    era_name: "Beyond"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "epic"
+    cost: 5000000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.0
+    global_modifiers: []
+    flavor_text: "A sandbox for possible worlds."
+    image_path: "/media/objects/starter-simulator.png"

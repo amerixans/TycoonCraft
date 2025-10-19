@@ -444,7 +444,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                 >
                   {/* Placed objects */}
                   {placedObjects.map(placed => {
-                    const auraActive = hasAura(placed.game_object);
                     const auraTooltip = auraActive
                       ? placed.game_object.global_modifiers
                           .map((modifier) => {
@@ -486,92 +485,6 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                         </div>
                       )}
 
-                      {auraActive && (
-                        <div className="placed-aura-badge" title={auraTooltip}>🌀</div>
-                      )}
-
-                      {placed.is_building && (() => {
-                        const progress = getBuildProgress(placed);
-                        if (!progress) return null;
-
-                        // Calculate circle size based on object footprint
-                        const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
-                        const circleSize = Math.min(minDimension * GRID_SIZE * 0.6, 60);
-                        const strokeWidth = Math.max(circleSize * 0.15, 4);
-                        const radius = (circleSize - strokeWidth) / 2;
-                        const circumference = 2 * Math.PI * radius;
-                        const offset = circumference - (progress.percentage / 100) * circumference;
-
-                        return (
-                          <div className="building-overlay">
-                            <svg
-                              className="building-progress-circle"
-                              width={circleSize}
-                              height={circleSize}
-                              style={{ width: circleSize, height: circleSize }}
-                            >
-                              {/* Background circle */}
-                              <circle
-                                cx={circleSize / 2}
-                                cy={circleSize / 2}
-                                r={radius}
-                                stroke="rgba(255,255,255,0.15)"
-                                strokeWidth={strokeWidth}
-                                fill="none"
-                              />
-
-                              {/* Progress circle */}
-                              <circle
-                                cx={circleSize / 2}
-                                cy={circleSize / 2}
-                                r={radius}
-                                stroke="var(--accent-secondary)"
-                                strokeWidth={strokeWidth}
-                                fill="none"
-                                strokeDasharray={`${circumference} ${circumference}`}
-                                strokeDashoffset={offset}
-                                strokeLinecap="round"
-                              />
-
-                              {/* Progress text */}
-                              <text
-                                x="50%"
-                                y="50%"
-                                dominantBaseline="middle"
-                                textAnchor="middle"
-                                fill="var(--text-primary)"
-                                fontSize={Math.max(circleSize * 0.25, 12)}
-                                fontWeight="bold"
-                              >
-                                {Math.round(progress.percentage)}%
-                              </text>
-                            </svg>
-                            <div className="building-remaining">
-                              {progress.remainingSeconds > 60
-                                ? `${Math.ceil(progress.remainingSeconds / 60)}m`
-                                : `${progress.remainingSeconds}s`}
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {(!placed.is_building && placed.is_operational && placed.retire_at !== null) && (() => {
-                        const progress = getRetirementProgress(placed);
-                        if (!progress) return null;
-
-                        const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
-
-                        return (
-                          <div className={`retirement-badge ${progress.isRetiring ? 'retirement-critical' : ''}`}>
-                            <div className="retirement-label">⏳</div>
-                            <div className="retirement-remaining">
-                              {progress.remainingSeconds > 60
-                                ? `${Math.ceil(progress.remainingSeconds / 60)}m`
-                                : `${progress.remainingSeconds}s`}
-                            </div>
-                          </div>
-                        );
-                      })()}
                     </div>
                   );
                   })}

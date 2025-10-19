@@ -1,0 +1,176 @@
+# Era Definition: Hunter-Gatherer
+# This file completely defines everything about the Hunter-Gatherer era
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+order: 1
+name: "Hunter-Gatherer"
+display_name: "Hunter-Gatherer"
+
+# ==============================================================================
+# COSTS
+# ==============================================================================
+crystal_unlock_cost: 0
+crafting_cost: 100  # 50 * 2
+
+# ==============================================================================
+# STAT RANGES (for schema generation & validation)
+# ==============================================================================
+stat_ranges:
+  cost:
+    min: 50
+    max: 1000
+  income_per_second:
+    min: 1
+    max: 10
+  build_time_sec:
+    min: 0
+    max: 300
+  operation_duration_sec:
+    min: 300
+    max: 5000
+  retire_payout_coins_pct:
+    min: 0.10
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 4
+  size_min: 0.5
+  size_max: 2.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0
+
+# ==============================================================================
+# PROMPT DESCRIPTION (injected into crafting_recipe.txt)
+# ==============================================================================
+prompt_description: |
+  Hunter-Gatherer
+  • Unique Mechanic (applies to items in/after this era): Decay — basic items "burn out" after a short operation window, yielding salvage.
+  • Keystone to Unlock: Hearth (Stone + Fire)
+  • Cost Range: 50–1,000 coins
+  • Income Range: 1–10 coins/second
+  • Core Examples: Berry Patch, Stone Tool, Flint Knife, Bark Shelter
+
+# ==============================================================================
+# KEYSTONE DEFINITION
+# ==============================================================================
+keystone:
+  # Recipe chain to produce this keystone
+  recipe_chain:
+    - comment: "HG-1"
+      input_a: "Dry Grass"
+      input_b: "Stick"
+      output_name: "Tinder Bundle"
+
+    - comment: "HG-2"
+      input_a: "Tinder Bundle"
+      input_b: "Stick"
+      output_name: "Fire"
+
+    - comment: "HG-3 (Keystone)"
+      input_a: "Fire"
+      input_b: "Rock"
+      output_name: "Hearth"
+      is_keystone: true
+      overrides:
+        era_name: "Hunter-Gatherer"
+        cost: 10000
+
+# ==============================================================================
+# STARTER OBJECTS
+# ==============================================================================
+starters:
+  - object_name: "Rock"
+    era_name: "Hunter-Gatherer"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 10
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "A simple rock. Hard and useful."
+    image_path: "/media/objects/starter-rock.png"
+
+  - object_name: "Stick"
+    era_name: "Hunter-Gatherer"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 10
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "A sturdy stick. Nature's first tool."
+    image_path: "/media/objects/starter-stick.png"
+
+  - object_name: "Water"
+    era_name: "Hunter-Gatherer"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 10
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Pure water. Essential for life."
+    image_path: "/media/objects/starter-water.png"
+
+  - object_name: "Dry Grass"
+    era_name: "Hunter-Gatherer"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 10
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Tinder that whispers of fire."
+    image_path: "/media/objects/starter-drygrass.png"

@@ -1,0 +1,244 @@
+# Era Definition: Futurism
+
+order: 7
+name: "Futurism"
+display_name: "Futurism"
+
+crystal_unlock_cost: 30000
+crafting_cost: 6250000  # 781250 * 8
+
+stat_ranges:
+  cost:
+    min: 15000000
+    max: 150000000
+  income_per_second:
+    min: 75000
+    max: 1200000
+  build_time_sec:
+    min: 0
+    max: 500
+  operation_duration_sec:
+    min: 7000
+    max: 50000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 15
+  size_min: 0.4
+  size_max: 12.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.01
+
+prompt_description: |
+  Futurism
+  • Unique Mechanic (applies to items in/after this era): Synthetics — efficiency auras (factory/power income 1.05–1.10) with cost_multiplier locked at 1.00.
+  • Keystone to Unlock: Fusion Core (Fusion Prototype + Superconductor)
+  • Cost Range: 15,000,000–150,000,000 coins
+  • Income Range: 75,000–1,200,000 coins/second
+  • Core Examples: Drone Bay, Fusion Prototype, Quantum Lab, Nanites
+
+keystone:
+  recipe_chain:
+    - comment: "FUT-1"
+      input_a: "Magnetic Coil"
+      input_b: "Superconductor"
+      output_name: "Magnetic Loop"
+    - comment: "FUT-2"
+      input_a: "Magnetic Loop"
+      input_b: "Energy Cell"
+      output_name: "Powered Loop"
+    - comment: "FUT-3"
+      input_a: "Assembler"
+      input_b: "Energy Cell"
+      output_name: "Control Unit"
+    - comment: "FUT-4"
+      input_a: "Control Unit"
+      input_b: "Powered Loop"
+      output_name: "Field Controller"
+    - comment: "FUT-5"
+      input_a: "Field Controller"
+      input_b: "Magnetic Coil"
+      output_name: "Magnetic Bottle"
+    - comment: "FUT-6"
+      input_a: "Magnetic Bottle"
+      input_b: "Energy Cell"
+      output_name: "Stable Bottle"
+    - comment: "FUT-7 (Keystone)"
+      input_a: "Stable Bottle"
+      input_b: "Control Unit"
+      output_name: "Fusion Core"
+      is_keystone: true
+      overrides:
+        era_name: "Futurism"
+        cost: 288000000000000
+        category: "power"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["power"]
+            affected_tags: []
+            income_multiplier: 1.15
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Superconductor"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "uncommon"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Resistance falls to zero; dreams don't."
+    image_path: "/media/objects/starter-superconductor.png"
+
+  - object_name: "Assembler"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "factory"
+    quality_tier: "common"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.0
+    global_modifiers: []
+    flavor_text: "A small cell that builds bigger things."
+    image_path: "/media/objects/starter-assembler.png"
+
+  - object_name: "Magnetic Coil"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "uncommon"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.6
+    global_modifiers: []
+    flavor_text: "Field lines wound tight as springs."
+    image_path: "/media/objects/starter-magneticcoil.png"
+
+  - object_name: "Energy Cell"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "common"
+    cost: 5000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "A pocket of captured lightning."
+    image_path: "/media/objects/starter-energycell.png"
+
+  - object_name: "Polymer Ledger"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "structure"
+    quality_tier: "uncommon"
+    cost: 20000000
+    time_crystal_cost: 0
+    income_per_second: 130000
+    time_crystal_generation: 0
+    build_time_sec: 320
+    operation_duration_sec: 14000
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.9
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["factory", "power"]
+        affected_tags: []
+        income_multiplier: 1.06
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 3
+    flavor_text: "Every batch run is logged, squeezing waste from high-tech fabs."
+    image_path: "/media/objects/starter-polymerledger.png"
+
+  - object_name: "Composite Shielding"
+    era_name: "Futurism"
+    is_keystone: false
+    is_starter: true
+    category: "structure"
+    quality_tier: "uncommon"
+    cost: 22000000
+    time_crystal_cost: 0
+    income_per_second: 140000
+    time_crystal_generation: 0
+    build_time_sec: 340
+    operation_duration_sec: 14500
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.0
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["factory"]
+        affected_tags: []
+        income_multiplier: 1.0
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.08
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Layered skins keep delicate fabrication lines running longer."
+    image_path: "/media/objects/starter-compositeshield.png"

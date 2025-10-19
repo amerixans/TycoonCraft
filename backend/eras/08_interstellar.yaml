@@ -1,0 +1,240 @@
+# Era Definition: Interstellar
+
+order: 8
+name: "Interstellar"
+display_name: "Interstellar"
+
+crystal_unlock_cost: 150000
+crafting_cost: 35156250  # 3906250 * 9
+
+stat_ranges:
+  cost:
+    min: 100000000
+    max: 1000000000
+  income_per_second:
+    min: 500000
+    max: 8000000
+  build_time_sec:
+    min: 0
+    max: 600
+  operation_duration_sec:
+    min: 10000
+    max: 70000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 18
+  size_min: 0.8
+  size_max: 15.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.02
+
+prompt_description: |
+  Interstellar
+  • Unique Mechanic (applies to items in/after this era): Beacon Uplinks — logistics/research income auras (1.06–1.12) keep everything synced; minimal other multipliers.
+  • Keystone to Unlock: Aether Array (Orbital Telescope + Quantum Lab)
+  • Cost Range: 100,000,000–1,000,000,000 coins
+  • Income Range: 500,000–8,000,000 coins/second
+  • Core Examples: Orbital Farm, Asteroid Mine, Starport, Warp Gate
+
+keystone:
+  recipe_chain:
+    - comment: "INT-1"
+      input_a: "Satellite Bus"
+      input_b: "Thruster"
+      output_name: "Spacecraft"
+    - comment: "INT-2"
+      input_a: "Spacecraft"
+      input_b: "Orbital Telescope"
+      output_name: "Survey Ship"
+    - comment: "INT-3"
+      input_a: "Survey Ship"
+      input_b: "Quantum Lab"
+      output_name: "Sensor Suite"
+    - comment: "INT-4"
+      input_a: "Sensor Suite"
+      input_b: "Orbital Telescope"
+      output_name: "Deep Scanner"
+    - comment: "INT-5"
+      input_a: "Deep Scanner"
+      input_b: "Spacecraft"
+      output_name: "Probe Network"
+    - comment: "INT-6 (Keystone)"
+      input_a: "Probe Network"
+      input_b: "Quantum Lab"
+      output_name: "Aether Array"
+      is_keystone: true
+      overrides:
+        era_name: "Interstellar"
+        cost: 57600000000000000
+        category: "research"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["research"]
+            affected_tags: []
+            income_multiplier: 1.15
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Orbital Telescope"
+    era_name: "Interstellar"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "uncommon"
+    cost: 50000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 2
+    footprint_h: 2
+    size: 1.2
+    global_modifiers: []
+    flavor_text: "Eyes above the sky."
+    image_path: "/media/objects/starter-orbitaltelescope.png"
+
+  - object_name: "Quantum Lab"
+    era_name: "Interstellar"
+    is_keystone: false
+    is_starter: true
+    category: "research"
+    quality_tier: "uncommon"
+    cost: 50000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 2
+    footprint_h: 2
+    size: 1.2
+    global_modifiers: []
+    flavor_text: "Where uncertainty becomes instrument."
+    image_path: "/media/objects/starter-quantumlab.png"
+
+  - object_name: "Satellite Bus"
+    era_name: "Interstellar"
+    is_keystone: false
+    is_starter: true
+    category: "logistics"
+    quality_tier: "common"
+    cost: 50000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.8
+    global_modifiers: []
+    flavor_text: "The frame that carries spacefaring dreams."
+    image_path: "/media/objects/starter-satellitebus.png"
+
+  - object_name: "Thruster"
+    era_name: "Interstellar"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "common"
+    cost: 50000000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.9
+    global_modifiers: []
+    flavor_text: "Push enough, and the stars get closer."
+    image_path: "/media/objects/starter-thruster.png"
+
+  - object_name: "Tracking Beacon"
+    era_name: "Interstellar"
+    is_keystone: false
+    is_starter: true
+    category: "logistics"
+    quality_tier: "uncommon"
+    cost: 150000000
+    time_crystal_cost: 0
+    income_per_second: 900000
+    time_crystal_generation: 0
+    build_time_sec: 420
+    operation_duration_sec: 18000
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.1
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["logistics", "research"]
+        affected_tags: []
+        income_multiplier: 1.08
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 3
+    flavor_text: "Relay chains whisper across the void, boosting every link in the network."
+    image_path: "/media/objects/starter-trackingbeacon.png"
+
+  - object_name: "Waypoint Relay"
+    era_name: "Interstellar"
+    is_keystone: false
+    is_starter: true
+    category: "logistics"
+    quality_tier: "uncommon"
+    cost: 160000000
+    time_crystal_cost: 0
+    income_per_second: 920000
+    time_crystal_generation: 0
+    build_time_sec: 440
+    operation_duration_sec: 18500
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 2.1
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["logistics"]
+        affected_tags: []
+        income_multiplier: 1.0
+        cost_multiplier: 1.0
+        build_time_multiplier: 0.93
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Autonomous couriers pre-stage deliveries, trimming downtime between jumps."
+    image_path: "/media/objects/starter-waypointrelay.png"

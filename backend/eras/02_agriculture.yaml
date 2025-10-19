@@ -1,0 +1,254 @@
+# Era Definition: Agriculture
+# This file completely defines everything about the Agriculture era
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+order: 2
+name: "Agriculture"
+display_name: "Agriculture"
+
+# ==============================================================================
+# COSTS
+# ==============================================================================
+crystal_unlock_cost: 10
+crafting_cost: 750  # 250 * 3
+
+# ==============================================================================
+# STAT RANGES (for schema generation & validation)
+# ==============================================================================
+stat_ranges:
+  cost:
+    min: 800
+    max: 8000
+  income_per_second:
+    min: 5
+    max: 80
+  build_time_sec:
+    min: 0
+    max: 300
+  operation_duration_sec:
+    min: 600
+    max: 8000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.50
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 5
+  size_min: 0.3
+  size_max: 3.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0
+
+# ==============================================================================
+# PROMPT DESCRIPTION (injected into crafting_recipe.txt)
+# ==============================================================================
+prompt_description: |
+  Agriculture
+  • Unique Mechanic (applies to items in/after this era): Growth — farmables can be replanted to extend operation (choice: cash out vs. regrow).
+  • Keystone to Unlock: Charcoal Kiln (Clay + Wood)
+  • Cost Range: 800–8,000 coins
+  • Income Range: 5–80 coins/second
+  • Core Examples: Farm, Granary, Well, Plow, Barn
+
+# ==============================================================================
+# KEYSTONE DEFINITION
+# ==============================================================================
+keystone:
+  recipe_chain:
+    - comment: "AG-1"
+      input_a: "Seed"
+      input_b: "Fiber"
+      output_name: "Straw"
+
+    - comment: "AG-2"
+      input_a: "Straw"
+      input_b: "Wood"
+      output_name: "Wood Stack"
+
+    - comment: "AG-3"
+      input_a: "Clay"
+      input_b: "Wood Stack"
+      output_name: "Lined Pit"
+
+    - comment: "AG-4 (Keystone)"
+      input_a: "Lined Pit"
+      input_b: "Wood"
+      output_name: "Charcoal Kiln"
+      is_keystone: true
+      overrides:
+        era_name: "Agriculture"
+        cost: 500000
+        category: "structure"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["farm"]
+            affected_tags: []
+            income_multiplier: 1.08
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.05
+            stacking: "multiplicative"
+            max_stacks: 1
+
+# ==============================================================================
+# STARTER OBJECTS
+# ==============================================================================
+starters:
+  - object_name: "Seed"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "A tiny start to a larger plan."
+    image_path: "/media/objects/starter-seed.png"
+
+  - object_name: "Clay"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "Moldable earth, patient and steadfast."
+    image_path: "/media/objects/starter-clay.png"
+
+  - object_name: "Wood"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.7
+    global_modifiers: []
+    flavor_text: "Straight grain, ready for work and fire."
+    image_path: "/media/objects/starter-wood.png"
+
+  - object_name: "Fiber"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Plant strands for rope, cloth, and binding."
+    image_path: "/media/objects/starter-fiber.png"
+
+  - object_name: "Village Notice Board"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "cultural"
+    quality_tier: "uncommon"
+    cost: 1600
+    time_crystal_cost: 0
+    income_per_second: 18
+    time_crystal_generation: 0
+    build_time_sec: 60
+    operation_duration_sec: 3600
+    retire_payout_coins_pct: 0.25
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.0
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["farm", "natural"]
+        affected_tags: []
+        income_multiplier: 1.06
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.06
+        stacking: "multiplicative"
+        max_stacks: 3
+    flavor_text: "Announcements keep the village humming and fields coordinated."
+    image_path: "/media/objects/starter-noticeboard.png"
+
+  - object_name: "Storehouse Ledger"
+    era_name: "Agriculture"
+    is_keystone: false
+    is_starter: true
+    category: "structure"
+    quality_tier: "uncommon"
+    cost: 1800
+    time_crystal_cost: 0
+    income_per_second: 22
+    time_crystal_generation: 0
+    build_time_sec: 75
+    operation_duration_sec: 4000
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.0
+    global_modifiers:
+      - active_when: "placed"
+        affected_categories: ["farm"]
+        affected_tags: []
+        income_multiplier: 1.05
+        cost_multiplier: 1.0
+        build_time_multiplier: 0.97
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Tidy grain counts shave hours off planting and harvest prep."
+    image_path: "/media/objects/starter-ledger.png"

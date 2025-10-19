@@ -44,6 +44,8 @@ from .config import (
     ERAS, ERA_CRYSTAL_COSTS, ERA_CRAFTING_COSTS,
     get_next_era, get_higher_era, get_crafting_cost, get_unlock_cost
 )
+from .era_loader import get_era_loader
+from .schema_builder import build_era_aware_schema
 
 
 # Era progression helper
@@ -386,31 +388,30 @@ def _values_equal(actual, expected):
 _PREDEFINED_RECIPES_CACHE = None
 
 def load_predefined_recipes():
-    """Load predefined recipes from JSON file."""
+    """Load predefined recipes from era YAML files."""
     global _PREDEFINED_RECIPES_CACHE
     if _PREDEFINED_RECIPES_CACHE is not None:
         return _PREDEFINED_RECIPES_CACHE
-    
-    recipes_path = os.path.join(settings.BASE_DIR, "prompts", "predefined_recipes.json")
-    if not os.path.exists(recipes_path):
-        _PREDEFINED_RECIPES_CACHE = []
-        return []
-    
-    with open(recipes_path, "r", encoding="utf-8") as f:
-        _PREDEFINED_RECIPES_CACHE = json.load(f)
+
+    # Load all predefined recipes from all eras via era_loader
+    era_loader = get_era_loader()
+    recipes = era_loader.get_predefined_recipes()
+
+    _PREDEFINED_RECIPES_CACHE = recipes
     return _PREDEFINED_RECIPES_CACHE
 
 
 def get_predefined_recipe(object_a, object_b):
     """Check if there's a predefined recipe for this combination."""
     recipes = load_predefined_recipes()
-    
+
     for recipe in recipes:
         # Check both orderings
         if ((recipe["input_a"] == object_a.object_name and recipe["input_b"] == object_b.object_name) or
             (recipe["input_a"] == object_b.object_name and recipe["input_b"] == object_a.object_name)):
-            return recipe.get("output", {})
-    
+            # Return overrides if present, otherwise empty dict
+            return recipe.get("overrides", {})
+
     return None
 
 
@@ -481,14 +482,17 @@ def call_openai_crafting(object_a, object_b, unlocked_eras, current_era, predefi
     """
     Call OpenAI (Responses API) to generate a new object definition via structured output.
     Uses server-to-server endpoint: POST /v1/responses
-    
+
     predefined_overrides: dict of field values that MUST be respected in the output
     """
 
+    era_loader = get_era_loader()
     prompts_dir = os.path.join(settings.BASE_DIR, "prompts")
     prompt_template = _read_file_text(prompts_dir, "crafting_recipe.txt")
     capsule_schema = _read_file_json(prompts_dir, "object_capsule.json")  # present for ref; not directly posted
-    object_schema = _read_file_json(prompts_dir, "object_schema.json")
+
+    # Build era-aware schema with stat ranges from the higher era
+    object_schema = build_era_aware_schema(object_a.era_name, object_b.era_name)
 
     # Build capsules
     capsule_a = {
@@ -546,9 +550,10 @@ CRITICAL ERA ASSIGNMENT RULES:
         constraints_text += "\nAll other fields should be generated normally following the game rules.\n"
         era_context += constraints_text
 
-    # Fill prompt
+    # Fill prompt with era descriptions and object capsules
     prompt = (
         prompt_template
+        .replace("{{ERA_DESCRIPTIONS}}", era_loader.get_all_prompt_descriptions())
         .replace("{{object_a_capsule}}", json.dumps(capsule_a, indent=2))
         .replace("{{object_b_capsule}}", json.dumps(capsule_b, indent=2))
     ) + "\n" + era_context
@@ -1378,3 +1383,28 @@ def redeem_upgrade_key(request):
         "message": "Successfully upgraded to Pro! You now have 500 daily API calls.",
         "profile": PlayerProfileSerializer(profile).data
     }, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def era_config(request):
+    """
+    Get complete era configuration from YAML files.
+    This endpoint is public and cacheable by the frontend.
+    """
+    era_loader = get_era_loader()
+
+    # Build response with all era data
+    eras_data = []
+    for era in era_loader.get_all_eras():
+        eras_data.append({
+            "order": era['order'],
+            "name": era['name'],
+            "display_name": era.get('display_name', era['name']),
+            "crystal_unlock_cost": era['crystal_unlock_cost'],
+            "crafting_cost": era['crafting_cost'],
+        })
+
+    return Response({
+        "eras": eras_data
+    })

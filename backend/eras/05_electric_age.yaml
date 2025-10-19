@@ -1,0 +1,232 @@
+# Era Definition: Electric Age
+
+order: 5
+name: "Electric Age"
+display_name: "Electric Age"
+
+crystal_unlock_cost: 1200
+crafting_cost: 187500  # 31250 * 6
+
+stat_ranges:
+  cost:
+    min: 300000
+    max: 3000000
+  income_per_second:
+    min: 1500
+    max: 25000
+  build_time_sec:
+    min: 0
+    max: 360
+  operation_duration_sec:
+    min: 3000
+    max: 25000
+  retire_payout_coins_pct:
+    min: 0.15
+    max: 0.40
+  sellback_pct:
+    min: 0.10
+    max: 0.30
+  footprint_min: 1
+  footprint_max: 10
+  size_min: 0.3
+  size_max: 8.0
+  time_crystal_cost:
+    min: 0
+    max: 0
+  time_crystal_generation:
+    min: 0
+    max: 0.002
+
+prompt_description: |
+  Electric Age
+  • Unique Mechanic (applies to items in/after this era): Grid Support — power auras (income 1.05–1.12, operation_duration 1.05–1.10) keep networks stable; no cost multipliers.
+  • Keystone to Unlock: Transistor (Silicon + Battery)
+  • Cost Range: 300,000–3,000,000 coins
+  • Income Range: 1,500–25,000 coins/second
+  • Core Examples: Dynamo, Power Lines, Lightbulb, Telegraph, Battery
+
+keystone:
+  recipe_chain:
+    - comment: "ELEC-1"
+      input_a: "Copper"
+      input_b: "Wire"
+      output_name: "Coil"
+    - comment: "ELEC-2"
+      input_a: "Coil"
+      input_b: "Battery"
+      output_name: "Electromagnet"
+    - comment: "ELEC-3"
+      input_a: "Silicon"
+      input_b: "Wire"
+      output_name: "Junction"
+    - comment: "ELEC-4 (Keystone)"
+      input_a: "Electromagnet"
+      input_b: "Junction"
+      output_name: "Transistor"
+      is_keystone: true
+      overrides:
+        era_name: "Electric Age"
+        cost: 7200000000
+        category: "power"
+        cap_per_civ: 1
+        global_modifiers:
+          - active_when: "operational"
+            affected_categories: ["research"]
+            affected_tags: []
+            income_multiplier: 1.10
+            cost_multiplier: 1.0
+            build_time_multiplier: 1.0
+            operation_duration_multiplier: 1.0
+            stacking: "multiplicative"
+            max_stacks: 1
+
+starters:
+  - object_name: "Copper"
+    era_name: "Electric Age"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "common"
+    cost: 100000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.5
+    global_modifiers: []
+    flavor_text: "A bright path for electrons."
+    image_path: "/media/objects/starter-copper.png"
+
+  - object_name: "Wire"
+    era_name: "Electric Age"
+    is_keystone: false
+    is_starter: true
+    category: "logistics"
+    quality_tier: "common"
+    cost: 100000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "A humble line that ties power together."
+    image_path: "/media/objects/starter-wire.png"
+
+  - object_name: "Silicon"
+    era_name: "Electric Age"
+    is_keystone: false
+    is_starter: true
+    category: "natural"
+    quality_tier: "uncommon"
+    cost: 100000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.3
+    global_modifiers: []
+    flavor_text: "Sand made thoughtful."
+    image_path: "/media/objects/starter-silicon.png"
+
+  - object_name: "Battery"
+    era_name: "Electric Age"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "common"
+    cost: 100000
+    time_crystal_cost: 0
+    income_per_second: 0
+    time_crystal_generation: 0
+    build_time_sec: 0
+    operation_duration_sec: 300
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.2
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 0.4
+    global_modifiers: []
+    flavor_text: "Stored spark, ready on demand."
+    image_path: "/media/objects/starter-battery.png"
+
+  - object_name: "Substation Signage"
+    era_name: "Electric Age"
+    is_keystone: false
+    is_starter: true
+    category: "power"
+    quality_tier: "uncommon"
+    cost: 600000
+    time_crystal_cost: 0
+    income_per_second: 4000
+    time_crystal_generation: 0
+    build_time_sec: 220
+    operation_duration_sec: 9000
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.6
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["power"]
+        affected_tags: []
+        income_multiplier: 1.08
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.0
+        stacking: "multiplicative"
+        max_stacks: 3
+    flavor_text: "Clear routing placards keep every circuit humming efficiently."
+    image_path: "/media/objects/starter-substation.png"
+
+  - object_name: "Insulator Yard"
+    era_name: "Electric Age"
+    is_keystone: false
+    is_starter: true
+    category: "structure"
+    quality_tier: "uncommon"
+    cost: 650000
+    time_crystal_cost: 0
+    income_per_second: 4200
+    time_crystal_generation: 0
+    build_time_sec: 240
+    operation_duration_sec: 9500
+    retire_payout_coins_pct: 0.2
+    sellback_pct: 0.15
+    cap_per_civ: null
+    footprint_w: 1
+    footprint_h: 1
+    size: 1.7
+    global_modifiers:
+      - active_when: "operational"
+        affected_categories: ["power"]
+        affected_tags: []
+        income_multiplier: 1.0
+        cost_multiplier: 1.0
+        build_time_multiplier: 1.0
+        operation_duration_multiplier: 1.08
+        stacking: "multiplicative"
+        max_stacks: 2
+    flavor_text: "Spools and ceramic racks stretch grid uptime between shutdowns."
+    image_path: "/media/objects/starter-insulatoryard.png"

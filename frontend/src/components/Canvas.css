@@ -130,22 +130,6 @@
   box-shadow: 0 4px 12px var(--shadow-heavy);
 }
 
-.placed-aura-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 1.2rem;
-  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
-  cursor: help;
-}
-
-.placed-object:hover {
-  border-color: var(--accent-primary);
-  transform: scale(1.03);
-  box-shadow: 0 6px 20px rgba(230, 126, 34, 0.5);
-  z-index: 10;
-}
-
 .placed-object.building {
   border-color: var(--accent-warning);
   /* Removed flashing animation - build progress circle is sufficient visual indicator */
@@ -258,34 +242,6 @@
   text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
   padding: 0.5rem;
 }
-
-.building-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(243, 156, 18, 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  pointer-events: none;
-}
-
-.building-progress-circle {
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
-}
-
-.building-time {
-  color: white;
-  font-weight: 700;
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.9);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  line-height: 1;
-}
-
 
 /* Enhanced Tooltip */
 .hover-tooltip {

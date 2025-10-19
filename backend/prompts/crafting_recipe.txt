@@ -11,75 +11,7 @@ Game context (authoritative)
 
 Eras (AUTHORITATIVE: enum + details; use these exact names for era_name)
 
-Hunter-Gatherer
-• Unique Mechanic (applies to items in/after this era): Decay — basic items "burn out" after a short operation window, yielding salvage.
-• Keystone to Unlock: Hearth (Stone + Fire)
-• Cost Range: 50–1,000 coins
-• Income Range: 1–10 coins/second
-• Core Examples: Berry Patch, Stone Tool, Flint Knife, Bark Shelter
-
-Agriculture
-• Unique Mechanic (applies to items in/after this era): Growth — farmables can be replanted to extend operation (choice: cash out vs. regrow).
-• Keystone to Unlock: Charcoal Kiln (Clay + Wood)
-• Cost Range: 800–8,000 coins
-• Income Range: 5–80 coins/second
-• Core Examples: Farm, Granary, Well, Plow, Barn
-
-Metallurgy
-• Unique Mechanic (applies to items in/after this era): Forge Banners — focus on mild auras (mine/factory income 1.05–1.12, build_time 0.95–1.00); cost_multiplier must stay 1.00.
-• Keystone to Unlock: Boiler (Metal + Water)
-• Cost Range: 5,000–50,000 coins
-• Income Range: 30–500 coins/second
-• Core Examples: Mine, Furnace, Anvil, Forge, Sword
-
-Steam & Industry
-• Unique Mechanic (applies to items in/after this era): Assembly Signals — use build_time auras (factory/logistics 0.90–0.97) plus light income boosts; cost_multiplier stays 1.00.
-• Keystone to Unlock: Dynamo (Steam Engine + Magnet)
-• Cost Range: 40,000–400,000 coins
-• Income Range: 200–3,000 coins/second
-• Core Examples: Steam Engine, Factory, Rail, Locomotive, Warehouse
-
-Electric Age
-• Unique Mechanic (applies to items in/after this era): Grid Support — power auras (income 1.05–1.12, operation_duration 1.05–1.10) keep networks stable; no cost multipliers.
-• Keystone to Unlock: Transistor (Silicon + Battery)
-• Cost Range: 300,000–3,000,000 coins
-• Income Range: 1,500–25,000 coins/second
-• Core Examples: Dynamo, Power Lines, Lightbulb, Telegraph, Battery
-
-Computing
-• Unique Mechanic (applies to items in/after this era): Scheduler Nodes — uptime auras (operation_duration 1.05–1.15) for factory/research with light income (1.05–1.08); cost multipliers stay 1.00.
-• Keystone to Unlock: Lithography (Laser + Computer)
-• Cost Range: 2,000,000–20,000,000 coins
-• Income Range: 10,000–180,000 coins/second
-• Core Examples: Computer, Router, Data Center, Server, Processor
-
-Futurism
-• Unique Mechanic (applies to items in/after this era): Synthetics — efficiency auras (factory/power income 1.05–1.10) with cost_multiplier locked at 1.00.
-• Keystone to Unlock: Fusion Core (Fusion Prototype + Superconductor)
-• Cost Range: 15,000,000–150,000,000 coins
-• Income Range: 75,000–1,200,000 coins/second
-• Core Examples: Drone Bay, Fusion Prototype, Quantum Lab, Nanites
-
-Interstellar
-• Unique Mechanic (applies to items in/after this era): Beacon Uplinks — logistics/research income auras (1.06–1.12) keep everything synced; minimal other multipliers.
-• Keystone to Unlock: Aether Array (Orbital Telescope + Quantum Lab)
-• Cost Range: 100,000,000–1,000,000,000 coins
-• Income Range: 500,000–8,000,000 coins/second
-• Core Examples: Orbital Farm, Asteroid Mine, Starport, Warp Gate
-
-Arcana
-• Unique Mechanic (applies to items in/after this era): Rune Foci — magic auras with tight caps (max_stacks=1 on keystones) delivering strong but limited income boosts.
-• Keystone to Unlock: Reality Loom (Arcane Tower + Rune Forge)
-• Cost Range: 800,000,000–8,000,000,000 coins
-• Income Range: 4,000,000–60,000,000 coins/second
-• Core Examples: Mana Well, Transmutation Lab, Arcane Tower, Rune Forge
-
-Beyond
-• Unique Mechanic (applies to items in/after this era): Singularity Hub — final wonder aura boosting all income (1.10–1.18, max_stacks=1) with optional tiny time crystal trickle.
-• Keystone to Unlock: Seed AI (Quantum Core + Archive)
-• Cost Range: 6,000,000,000–60,000,000,000 coins
-• Income Range: 30,000,000–500,000,000 coins/second
-• Core Examples: World Forge, Reality Printer, Singularity Core, Time Weaver
+{{ERA_DESCRIPTIONS}}
 
 ⚠️ CRITICAL ERA ASSIGNMENT RULES ⚠️
 

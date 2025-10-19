@@ -48,6 +48,8 @@ export const game = {
     api.get('/game-state/'),
   getObjectCatalog: () =>
     api.get('/object-catalog/'),
+  getEraConfig: () =>
+    api.get('/era-config/'),
   craft: (objectAId, objectBId) =>
     api.post('/craft/', { object_a_id: objectAId, object_b_id: objectBId }),
   place: (objectId, x, y) =>
