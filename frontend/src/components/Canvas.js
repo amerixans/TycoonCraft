@@ -131,6 +131,8 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
   const contentHeight = CANVAS_HEIGHT * GRID_SIZE;
 
   let desiredScale = 1;
+  let minScale = 0.2; // Default fallback
+
   if (wrapperSize.width && wrapperSize.height) {
     const widthRatio = wrapperSize.width / contentWidth;
     const heightRatio = wrapperSize.height / contentHeight;
@@ -143,9 +145,11 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
         needsHeightScale ? heightRatio : 1
       );
     }
-  }
 
-  const minScale = Math.max(Math.min(desiredScale * 0.5, 1), 0.2);
+    // Set minScale to ensure canvas always fills the viewport
+    // Users can't zoom out beyond the point where canvas edges are visible
+    minScale = Math.min(widthRatio, heightRatio);
+  }
 
   useEffect(() => {
     const scaleChanged = Math.abs(desiredScale - previousScaleRef.current) > 0.01;
@@ -364,6 +368,7 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
           maxScale={10}
           centerOnInit={true}
           centerZoomedOut={true}
+          limitToBounds={true}
           wheel={{ step: 0.1 }}
           doubleClick={{ disabled: true }}
           panning={{ disabled: canvasMode === 'move' || canvasMode === 'trash', velocityDisabled: true }}
