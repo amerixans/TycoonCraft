@@ -800,22 +800,30 @@ body {
   background: var(--bg-secondary);
   border: 3px solid var(--border-color);
   border-radius: 16px;
-  padding: 1rem;
+  padding: 0;
   box-shadow: 0 4px 16px var(--shadow);
   min-width: 360px;
   max-width: 420px;
   max-height: 500px;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
   overflow: hidden;
+}
+
+.object-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 2px solid var(--border-color);
+  gap: 0.5rem;
 }
 
 .object-info-panel h3 {
   color: var(--accent-primary);
   margin: 0;
   font-size: 1.1rem;
-  text-align: center;
+  flex: 1;
 }
 
 .object-info-empty {
@@ -831,19 +839,18 @@ body {
   gap: 1rem;
   align-items: flex-start;
   overflow-y: auto;
-  max-height: calc(500px - 3rem);
-  position: relative;
+  max-height: calc(500px - 70px);
+  padding: 1rem;
+  flex: 1;
 }
 
 .object-info-close {
-  position: absolute;
-  top: 0;
-  right: 0;
   background: var(--bg-tertiary);
   border: 2px solid var(--accent-secondary);
   color: var(--text-primary);
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 8px;
   font-size: 1.2rem;
   cursor: pointer;
@@ -851,7 +858,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  z-index: 10;
+  flex-shrink: 0;
 }
 
 .object-info-close:hover {

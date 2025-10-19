@@ -114,10 +114,6 @@ function App() {
       );
     }
 
-    const handleClose = () => {
-      setSelectedObject(null);
-    };
-
     const cost = Number(selectedObject.cost ?? 0);
     const incomePerSecond = Number(selectedObject.income_per_second ?? 0);
     const crystalGeneration = Number(selectedObject.time_crystal_generation ?? 0);
@@ -214,13 +210,6 @@ function App() {
 
     return (
       <div className="object-info-content">
-        <button
-          className="object-info-close"
-          onClick={handleClose}
-          title="Close"
-        >
-          ✕
-        </button>
         {selectedObject.image_path && (
           <div className="object-info-image-container">
             <img
@@ -797,7 +786,16 @@ function App() {
           <div className="top-section-container">
             {/* Object Info Panel */}
             <div className="object-info-panel">
-              <h3>📋 Object Details</h3>
+              <div className="object-info-header">
+                <h3>📋 Object Details</h3>
+                <button
+                  className="object-info-close"
+                  onClick={() => setSelectedObject(null)}
+                  title="Close"
+                >
+                  ✕
+                </button>
+              </div>
               {renderSelectedObjectDetails()}
             </div>
 
