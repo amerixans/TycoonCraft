@@ -139,16 +139,7 @@
 
 .placed-object.building {
   border-color: var(--accent-warning);
-  animation: building 1.5s ease-in-out infinite;
-}
-
-@keyframes building {
-  0%, 100% {
-    border-color: var(--accent-warning);
-  }
-  50% {
-    border-color: var(--accent-secondary);
-  }
+  /* Removed flashing animation - build progress circle is sufficient visual indicator */
 }
 
 .placed-object.inactive {
