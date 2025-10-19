@@ -1,4 +1,6 @@
-from django.core.management.base import BaseCommand
+import os
+
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from decimal import Decimal
 from game.models import (
@@ -9,8 +11,17 @@ class Command(BaseCommand):
     help = 'Creates an admin testing account with special privileges'
 
     def handle(self, *args, **options):
-        username = "admin"
-        password = "tycooncraft$123"
+        username = os.getenv("DJANGO_SUPERUSER_USERNAME", "admin")
+        password = (
+            os.getenv("DJANGO_SUPERUSER_PASSWORD")
+            or os.getenv("DJANGO_ADMIN_PASSWORD")
+        )
+
+        if not password:
+            raise CommandError(
+                "Admin password not provided. Set DJANGO_SUPERUSER_PASSWORD or "
+                "DJANGO_ADMIN_PASSWORD before running this command."
+            )
         
         # Check if admin user already exists
         if User.objects.filter(username=username).exists():
@@ -94,7 +105,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('='*50))
         self.stdout.write(self.style.SUCCESS('Admin account created successfully!'))
         self.stdout.write(self.style.SUCCESS(f'Username: {username}'))
-        self.stdout.write(self.style.SUCCESS(f'Password: {password}'))
         self.stdout.write(self.style.SUCCESS(f'Coins: {profile.coins}'))
         self.stdout.write(self.style.SUCCESS(f'Time Crystals: {profile.time_crystals}'))
         self.stdout.write(self.style.SUCCESS(f'Total Discoveries: {Discovery.objects.filter(player=profile).count()}'))

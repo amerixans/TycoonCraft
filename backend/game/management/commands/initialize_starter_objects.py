@@ -903,7 +903,7 @@ class Command(BaseCommand):
         for obj_data in starter_objects:
             # Add is_starter=True to the data
             obj_data['is_starter'] = True
-            
+
             obj, created = GameObject.objects.get_or_create(
                 object_name=obj_data['object_name'],
                 defaults=obj_data
@@ -911,6 +911,12 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f'Created {obj.object_name}'))
             else:
-                self.stdout.write(self.style.WARNING(f'{obj.object_name} already exists'))
+                # Always update is_starter=True for existing objects
+                if not obj.is_starter:
+                    obj.is_starter = True
+                    obj.save(update_fields=['is_starter'])
+                    self.stdout.write(self.style.SUCCESS(f'Updated {obj.object_name} (marked as starter)'))
+                else:
+                    self.stdout.write(self.style.WARNING(f'{obj.object_name} already exists'))
 
         self.stdout.write(self.style.SUCCESS('Starter objects initialized!'))
