@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { formatNumber } from '../utils/formatNumber';
+import { hasAura, describeAuraModifier, calculateCategoryMultipliers } from '../utils/aura';
 import './Canvas.css';
 
 const GRID_SIZE = 50; // Pixels per grid tile
@@ -20,7 +21,7 @@ const ERA_SIZES = {
   'Beyond': { height: 2560, width: 7680 },
 };
 
-function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra }) {
+function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra, auraModifierMap }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
@@ -32,6 +33,42 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
   const previousEraRef = useRef(currentEra);
   const [canvasMode, setCanvasMode] = useState('view'); // 'view', 'move', 'trash'
   const [movingObject, setMovingObject] = useState(null);
+
+  const formatDuration = (seconds) => {
+    const totalSeconds = Number(seconds);
+    if (Number.isNaN(totalSeconds) || totalSeconds <= 0) return '0s';
+    if (totalSeconds < 60) return `${Math.round(totalSeconds)}s`;
+    if (totalSeconds < 3600) return `${Math.round(totalSeconds / 60)}m`;
+    if (totalSeconds < 86400) return `${Math.round(totalSeconds / 3600)}h`;
+    return `${Math.round(totalSeconds / 86400)}d`;
+  };
+
+  const getPlacementPreview = (gameObject) => {
+    if (!gameObject) return null;
+
+    const category = gameObject.category;
+    const baseBuildTime = Number(gameObject.build_time_sec ?? gameObject.build_time ?? 0);
+    const baseDuration = Number(
+      gameObject.operation_duration_sec ?? gameObject.operation_duration ?? 0
+    );
+
+    const multipliers = calculateCategoryMultipliers(
+      auraModifierMap instanceof Map ? auraModifierMap : new Map(),
+      category
+    );
+
+    const buildMultiplier = Number(multipliers.build_time_multiplier ?? 1);
+    const durationMultiplier = Number(multipliers.operation_duration_multiplier ?? 1);
+
+    return {
+      baseBuildTime,
+      baseDuration,
+      effectiveBuildTime: Math.max(0, Math.round(baseBuildTime * buildMultiplier)),
+      effectiveDuration: Math.max(0, Math.round(baseDuration * durationMultiplier)),
+      buildMultiplier,
+      durationMultiplier,
+    };
+  };
   
   // Update time every second for build progress
   useEffect(() => {
@@ -406,7 +443,22 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                   }}
                 >
                   {/* Placed objects */}
-                  {placedObjects.map(placed => (
+                  {placedObjects.map(placed => {
+                    const auraActive = hasAura(placed.game_object);
+                    const auraTooltip = auraActive
+                      ? placed.game_object.global_modifiers
+                          .map((modifier) => {
+                            const details = describeAuraModifier(modifier);
+                            const effectText =
+                              details.effects.length > 0
+                                ? details.effects.join(', ')
+                                : 'No stat changes';
+                            return `${details.categories}: ${effectText} (${details.activation})`;
+                          })
+                          .join('\\n')
+                      : '';
+
+                    return (
                     <div
                       key={placed.id}
                       className={`placed-object ${placed.is_building ? 'building' : (!placed.is_operational ? 'retiring' : getOperationalStatus(placed))}`}
@@ -434,6 +486,10 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                         </div>
                       )}
 
+                      {auraActive && (
+                        <div className="placed-aura-badge" title={auraTooltip}>🌀</div>
+                      )}
+
                       {placed.is_building && (() => {
                         const progress = getBuildProgress(placed);
                         if (!progress) return null;
@@ -459,59 +515,127 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                                 cx={circleSize / 2}
                                 cy={circleSize / 2}
                                 r={radius}
-                                fill="none"
-                                stroke="rgba(255, 255, 255, 0.2)"
+                                stroke="rgba(255,255,255,0.15)"
                                 strokeWidth={strokeWidth}
+                                fill="none"
                               />
+
                               {/* Progress circle */}
                               <circle
                                 cx={circleSize / 2}
                                 cy={circleSize / 2}
                                 r={radius}
-                                fill="none"
-                                stroke="#27ae60"
+                                stroke="var(--accent-secondary)"
                                 strokeWidth={strokeWidth}
-                                strokeDasharray={circumference}
+                                fill="none"
+                                strokeDasharray={`${circumference} ${circumference}`}
                                 strokeDashoffset={offset}
                                 strokeLinecap="round"
-                                transform={`rotate(-90 ${circleSize / 2} ${circleSize / 2})`}
-                                style={{ transition: 'stroke-dashoffset 0.3s ease' }}
                               />
+
+                              {/* Progress text */}
+                              <text
+                                x="50%"
+                                y="50%"
+                                dominantBaseline="middle"
+                                textAnchor="middle"
+                                fill="var(--text-primary)"
+                                fontSize={Math.max(circleSize * 0.25, 12)}
+                                fontWeight="bold"
+                              >
+                                {Math.round(progress.percentage)}%
+                              </text>
                             </svg>
-                            <div className="building-time" style={{ fontSize: `${Math.max(circleSize * 0.25, 10)}px` }}>
-                              {progress.remainingSeconds}s
+                            <div className="building-remaining">
+                              {progress.remainingSeconds > 60
+                                ? `${Math.ceil(progress.remainingSeconds / 60)}m`
+                                : `${progress.remainingSeconds}s`}
                             </div>
                           </div>
                         );
                       })()}
 
+                      {(!placed.is_building && placed.is_operational && placed.retire_at !== null) && (() => {
+                        const progress = getRetirementProgress(placed);
+                        if (!progress) return null;
+
+                        const minDimension = Math.min(placed.game_object.footprint_w, placed.game_object.footprint_h);
+
+                        return (
+                          <div className={`retirement-badge ${progress.isRetiring ? 'retirement-critical' : ''}`}>
+                            <div className="retirement-label">⏳</div>
+                            <div className="retirement-remaining">
+                              {progress.remainingSeconds > 60
+                                ? `${Math.ceil(progress.remainingSeconds / 60)}m`
+                                : `${progress.remainingSeconds}s`}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
-                  ))}
+                  );
+                  })}
                   
                   {/* Ghost preview during drag */}
-                  {draggedObject && (
-                    <div
-                      className="placed-object ghost"
-                      style={{
-                        left: draggedObject.x * GRID_SIZE + 'px',
-                        top: draggedObject.y * GRID_SIZE + 'px',
-                        width: draggedObject.obj.footprint_w * GRID_SIZE + 'px',
-                        height: draggedObject.obj.footprint_h * GRID_SIZE + 'px',
-                      }}
-                    >
-                      {draggedObject.obj.image_path ? (
-                        <img
-                          src={draggedObject.obj.image_path}
-                          alt={draggedObject.obj.object_name}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      ) : (
-                        <div className="object-placeholder">
-                          {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {draggedObject && (() => {
+                    const preview = getPlacementPreview(draggedObject.obj);
+                    return (
+                      <div
+                        className="placed-object ghost"
+                        style={{
+                          left: draggedObject.x * GRID_SIZE + 'px',
+                          top: draggedObject.y * GRID_SIZE + 'px',
+                          width: draggedObject.obj.footprint_w * GRID_SIZE + 'px',
+                          height: draggedObject.obj.footprint_h * GRID_SIZE + 'px',
+                        }}
+                      >
+                        {draggedObject.obj.image_path ? (
+                          <img
+                            src={draggedObject.obj.image_path}
+                            alt={draggedObject.obj.object_name}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        ) : (
+                          <div className="object-placeholder">
+                            {draggedObject.obj.object_name.substring(0, 3).toUpperCase()}
+                          </div>
+                        )}
+
+                        {preview && (
+                          <div className="placement-preview">
+                            {preview.baseBuildTime > 0 && (
+                              <div className="placement-preview-row">
+                                <span>🔨 Build</span>
+                                <span>
+                                  {formatDuration(preview.baseBuildTime)}
+                                  {preview.buildMultiplier !== 1 && (
+                                    <>
+                                      {' '}
+                                      → {formatDuration(preview.effectiveBuildTime)}
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {preview.baseDuration > 0 && (
+                              <div className="placement-preview-row">
+                                <span>⏱️ Lifespan</span>
+                                <span>
+                                  {formatDuration(preview.baseDuration)}
+                                  {preview.durationMultiplier !== 1 && (
+                                    <>
+                                      {' '}
+                                      → {formatDuration(preview.effectiveDuration)}
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </TransformComponent>
             </>
@@ -592,6 +716,22 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
                     : formatNumber(hoveredPlaced.game_object.cost * hoveredPlaced.game_object.retire_payout_coins_pct)
                   } coins
                 </span>
+              </div>
+            )}
+            {hasAura(hoveredPlaced.game_object) && (
+              <div className="tooltip-auras">
+                <div className="tooltip-auras-title">Aura Effects</div>
+                <ul>
+                  {hoveredPlaced.game_object.global_modifiers.map((modifier, idx) => {
+                    const details = describeAuraModifier(modifier);
+                    const effects = details.effects.length > 0
+                      ? details.effects.join(', ')
+                      : 'No stat changes';
+                    return (
+                      <li key={idx}>{details.categories}: {effects}</li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
           </div>

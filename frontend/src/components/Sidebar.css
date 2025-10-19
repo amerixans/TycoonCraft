@@ -217,6 +217,15 @@
   filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5));
 }
 
+.aura-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.4));
+  cursor: help;
+}
+
 /* Scrollbar styling for sidebar */
 .objects-list::-webkit-scrollbar {
   width: 10px;

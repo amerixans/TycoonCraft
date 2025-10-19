@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatNumber } from '../utils/formatNumber';
+import { hasAura, describeAuraModifier } from '../utils/aura';
 import './Sidebar.css';
 
 function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObjectInfo }) {
@@ -91,11 +92,31 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
               {searchTerm ? '❌ No objects found' : '🔒 No objects discovered yet'}
             </div>
           ) : (
-            filteredObjects.map(obj => (
+            filteredObjects.map(obj => {
+              const auraActive = hasAura(obj);
+              const auraTooltip = auraActive
+                ? obj.global_modifiers
+                    .map((modifier) => {
+                      const details = describeAuraModifier(modifier);
+                      const effectText =
+                        details.effects.length > 0
+                          ? details.effects.join(', ')
+                          : 'No stat changes';
+                      return `${details.categories}: ${effectText} (${details.activation}, ${details.maxStacks > 1 ? `stacks x${details.maxStacks}` : 'single-stack'})`;
+                    })
+                    .join('\n')
+                : '';
+              let hoverTitle = obj.is_keystone
+                ? `🔑 Keystone: Place to unlock ${getNextEra(obj.era_name) || 'next era'}!`
+                : 'Drag to craft or place';
+              if (auraActive) {
+                hoverTitle += `\n🌀 Aura active`;
+              }
+              return (
               <div 
                 key={obj.id}
                 className={`object-item ${obj.is_keystone ? 'keystone' : ''}`}
-                title={obj.is_keystone ? `🔑 Keystone: Place to unlock ${getNextEra(obj.era_name) || 'next era'}!` : 'Drag to craft or place'}
+                title={hoverTitle}
                 draggable={true}
                 onDragStart={(e) => {
                   e.dataTransfer.effectAllowed = 'copy';
@@ -175,8 +196,12 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, onObje
                 {obj.is_keystone && (
                   <div className="keystone-badge">🔑</div>
                 )}
+                {auraActive && (
+                  <div className="aura-badge" title={auraTooltip}>🌀</div>
+                )}
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>

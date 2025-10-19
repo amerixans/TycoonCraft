@@ -913,6 +913,117 @@ body {
   margin-top: 0.3rem;
 }
 
+.object-info-applied {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-top: 0.4rem;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+}
+
+.object-info-applied-title {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  color: var(--accent-secondary);
+}
+
+.object-info-applied ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.object-info-applied li {
+  list-style: disc;
+}
+
+.object-info-auras {
+  margin-top: 0.6rem;
+  padding: 0.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.object-info-auras-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.object-info-auras-title::before {
+  content: '🌀';
+}
+
+.object-info-auras-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.object-info-auras-empty {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.object-info-aura {
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.object-info-aura-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+}
+
+.object-info-aura-categories {
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.object-info-aura-activation {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.object-info-aura-effects {
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+}
+
+.object-info-aura-effects li {
+  margin-bottom: 0.15rem;
+}
+
+.object-info-aura-none {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.object-info-aura-stacking {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+
 .top-section-container {
   display: flex;
   gap: 1rem;

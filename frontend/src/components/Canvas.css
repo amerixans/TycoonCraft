@@ -130,6 +130,15 @@
   box-shadow: 0 4px 12px var(--shadow-heavy);
 }
 
+.placed-aura-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+  cursor: help;
+}
+
 .placed-object:hover {
   border-color: var(--accent-primary);
   transform: scale(1.03);
@@ -208,6 +217,28 @@
   50% {
     opacity: 0.3;
   }
+}
+
+.placement-preview {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #f1f5f9;
+  pointer-events: none;
+}
+
+.placement-preview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
 }
 
 .object-image {
@@ -340,4 +371,26 @@
   background: var(--bg-primary);
   border-radius: 8px;
   border: 2px dashed var(--border-color);
+}
+
+.tooltip-auras {
+  margin-top: 0.6rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.tooltip-auras-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  color: var(--accent-secondary);
+}
+
+.tooltip-auras ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }

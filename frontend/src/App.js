@@ -1,13 +1,22 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { auth, game } from './api';
 import Sidebar from './components/Sidebar';
 import CraftingArea from './components/CraftingArea';
 import CraftingQueue from './components/CraftingQueue';
 import CraftingResults from './components/CraftingResults';
 import Canvas from './components/Canvas';
+import AuraSummary from './components/AuraSummary';
 import { gameInfoContent } from './GameInfo';
 import { formatNumber } from './utils/formatNumber';
 import { ERAS } from './config';
+import {
+  hasAura,
+  formatMultiplier,
+  buildModifierMap,
+  calculateCategoryMultipliers,
+  summariseActiveAuras,
+  describeAuraModifier,
+} from './utils/aura';
 import './App.css';
 
 const COLOR_THEMES = {
@@ -19,6 +28,22 @@ const COLOR_THEMES = {
   purple: { name: 'Twilight', primary: '#8e44ad', secondary: '#ab47bc' },
   red: { name: 'Fire', primary: '#c0392b', secondary: '#e74c3c' },
   gray: { name: 'Steel', primary: '#7f8c8d', secondary: '#95a5a6' },
+};
+
+const formatPercent = (value, decimals = 0) => {
+  if (value === undefined || value === null) return '0%';
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) return '0%';
+  return `${(numeric * 100).toFixed(decimals)}%`;
+};
+
+const formatDuration = (seconds) => {
+  const totalSeconds = Number(seconds);
+  if (Number.isNaN(totalSeconds) || totalSeconds <= 0) return '0s';
+  if (totalSeconds < 60) return `${Math.round(totalSeconds)}s`;
+  if (totalSeconds < 3600) return `${Math.round(totalSeconds / 60)}m`;
+  if (totalSeconds < 86400) return `${Math.round(totalSeconds / 3600)}h`;
+  return `${Math.round(totalSeconds / 86400)}d`;
 };
 
 function App() {
@@ -78,6 +103,248 @@ function App() {
     setShowColorPicker(false);
   };
 
+  const renderSelectedObjectDetails = () => {
+    if (!selectedObject) {
+      return (
+        <div className="object-info-placeholder">
+          <p>Select an object to see detailed stats.</p>
+        </div>
+      );
+    }
+
+    const cost = Number(selectedObject.cost ?? 0);
+    const incomePerSecond = Number(selectedObject.income_per_second ?? 0);
+    const crystalGeneration = Number(selectedObject.time_crystal_generation ?? 0);
+    const buildTimeSec = Number(
+      selectedObject.build_time_sec ?? selectedObject.build_time ?? 0
+    );
+    const operationDurationSec = Number(
+      selectedObject.operation_duration_sec ??
+        selectedObject.operation_duration ??
+        0
+    );
+    const retirePct = Number(selectedObject.retire_payout_coins_pct ?? 0);
+    const sellbackPct = Number(
+      selectedObject.sellback_pct ?? selectedObject.sellback_percent ?? 0
+    );
+    const capPerCiv = Number(selectedObject.cap_per_civ ?? 0);
+    const auraModifiers = Array.isArray(selectedObject.global_modifiers)
+      ? selectedObject.global_modifiers
+      : [];
+    const appliedCategoryMultipliers = calculateCategoryMultipliers(
+      modifierMap instanceof Map ? modifierMap : new Map(),
+      selectedObject.category
+    );
+    const hasAppliedBoosts =
+      Math.abs((appliedCategoryMultipliers.build_time_multiplier ?? 1) - 1) >= 0.001 ||
+      Math.abs((appliedCategoryMultipliers.operation_duration_multiplier ?? 1) - 1) >= 0.001 ||
+      Math.abs((appliedCategoryMultipliers.income_multiplier ?? 1) - 1) >= 0.001;
+
+    const renderAuraEffects = () => {
+      if (!hasAura(selectedObject)) {
+        return (
+          <div className="object-info-auras object-info-auras-empty">
+            <span>No aura effects.</span>
+          </div>
+        );
+      }
+
+      return (
+        <div className="object-info-auras">
+          <div className="object-info-auras-title">✨ Aura Effects</div>
+          <div className="object-info-auras-list">
+            {auraModifiers.map((modifier, index) => {
+              const categories = (modifier?.affected_categories || []).join(', ');
+              const effects = [];
+
+              const pushEffect = (label, value) => {
+                const numeric = Number(value ?? 1);
+                if (Number.isNaN(numeric) || Math.abs(numeric - 1) < 0.001) {
+                  return;
+                }
+                effects.push(`${label} ${formatMultiplier(numeric, Math.abs(numeric - 1) < 0.1 ? 1 : 0)}`);
+              };
+
+              pushEffect('Income', modifier?.income_multiplier);
+              pushEffect('Build time', modifier?.build_time_multiplier);
+              pushEffect('Lifespan', modifier?.operation_duration_multiplier);
+              pushEffect('Cost', modifier?.cost_multiplier);
+
+              const stacking = modifier?.stacking === 'additive' ? 'additive' : 'multiplicative';
+              const maxStacks = Number(modifier?.max_stacks ?? 1);
+              const activation = modifier?.active_when === 'placed' ? 'while placed' : 'while operational';
+
+              return (
+                <div key={index} className="object-info-aura">
+                  <div className="object-info-aura-heading">
+                    <span className="object-info-aura-categories">{categories || 'All categories'}</span>
+                    <span className="object-info-aura-activation">Active {activation}</span>
+                  </div>
+                  {effects.length > 0 ? (
+                    <ul className="object-info-aura-effects">
+                      {effects.map((effect, i) => (
+                        <li key={i}>{effect}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="object-info-aura-none">No stat modifiers</div>
+                  )}
+                  <div className="object-info-aura-stacking">
+                    {maxStacks > 1
+                      ? `Stacks up to ${maxStacks} (${stacking})`
+                      : 'Single-stack aura'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="object-info-content">
+        {selectedObject.image_path && (
+          <div className="object-info-image-container">
+            <img
+              src={selectedObject.image_path}
+              alt={selectedObject.object_name}
+              className="object-info-image"
+            />
+          </div>
+        )}
+
+        <div className="object-info-details">
+          <div className="object-info-name">{selectedObject.object_name}</div>
+          <div className="object-info-flavor">{selectedObject.flavor_text}</div>
+
+          <div className="object-info-stats">
+            <div className="object-info-stat">
+              <span className="object-info-stat-label">💰 Cost</span>
+              <span className="object-info-stat-value">
+                {Math.floor(cost)}
+              </span>
+            </div>
+            <div className="object-info-stat">
+              <span className="object-info-stat-label">📊 Income/sec</span>
+              <span className="object-info-stat-value">
+                {Math.floor(incomePerSecond)}
+              </span>
+            </div>
+            {crystalGeneration > 0 && (
+              <div className="object-info-stat">
+                <span className="object-info-stat-label">💎 Crystals/sec</span>
+                <span className="object-info-stat-value">
+                  {formatNumber(crystalGeneration)}
+                </span>
+              </div>
+            )}
+            <div className="object-info-stat">
+              <span className="object-info-stat-label">📐 Size</span>
+              <span className="object-info-stat-value">
+                {selectedObject.footprint_w}×{selectedObject.footprint_h}
+              </span>
+            </div>
+            <div className="object-info-stat">
+              <span className="object-info-stat-label">⭐ Quality</span>
+              <span className="object-info-stat-value">
+                {selectedObject.quality_tier || 'N/A'}
+              </span>
+            </div>
+            <div className="object-info-stat">
+              <span className="object-info-stat-label">🏛️ Era</span>
+              <span className="object-info-stat-value">
+                {selectedObject.era_name}
+              </span>
+            </div>
+            <div className="object-info-stat">
+              <span className="object-info-stat-label">📁 Category</span>
+              <span className="object-info-stat-value">
+                {selectedObject.category}
+              </span>
+            </div>
+            {buildTimeSec > 0 && (
+              <div className="object-info-stat">
+                <span className="object-info-stat-label">🔨 Build Time</span>
+                <span className="object-info-stat-value">
+                  {formatDuration(buildTimeSec)}
+                </span>
+              </div>
+            )}
+            {operationDurationSec > 0 && (
+              <div className="object-info-stat">
+                <span className="object-info-stat-label">⏱️ Lifespan</span>
+                <span className="object-info-stat-value">
+                  {formatDuration(operationDurationSec)}
+                </span>
+              </div>
+            )}
+            {retirePct > 0 && (
+              <div className="object-info-stat">
+                <span className="object-info-stat-label">💰 Retirement</span>
+                <span className="object-info-stat-value">
+                  {formatPercent(retirePct)} of cost
+                </span>
+              </div>
+            )}
+            {sellbackPct > 0 && (
+              <div className="object-info-stat">
+                <span className="object-info-stat-label">♻️ Sellback</span>
+                <span className="object-info-stat-value">
+                  {formatPercent(sellbackPct)}
+                </span>
+              </div>
+            )}
+            {capPerCiv > 0 && (
+              <div className="object-info-stat">
+                <span className="object-info-stat-label">🔢 Cap/Civ</span>
+                <span className="object-info-stat-value">{capPerCiv}</span>
+              </div>
+            )}
+          </div>
+
+          {selectedObject.is_keystone && (() => {
+            const nextEra =
+              ERAS[ERAS.indexOf(selectedObject.era_name) + 1];
+            return (
+              <div className="object-info-keystone">
+                🔑 Keystone Object - Place to unlock{' '}
+                <strong>{nextEra || 'next era'}</strong>!
+              </div>
+            );
+          })()}
+
+          {hasAppliedBoosts && (
+            <div className="object-info-applied">
+              <div className="object-info-applied-title">Current aura impact</div>
+              <ul>
+                {Math.abs((appliedCategoryMultipliers.income_multiplier ?? 1) - 1) >= 0.001 && (
+                  <li>Income {formatMultiplier(appliedCategoryMultipliers.income_multiplier, 1)}</li>
+                )}
+                {Math.abs((appliedCategoryMultipliers.build_time_multiplier ?? 1) - 1) >= 0.001 && (
+                  <li>Build time {formatMultiplier(appliedCategoryMultipliers.build_time_multiplier, 1)}</li>
+                )}
+                {Math.abs((appliedCategoryMultipliers.operation_duration_multiplier ?? 1) - 1) >= 0.001 && (
+                  <li>Lifespan {formatMultiplier(appliedCategoryMultipliers.operation_duration_multiplier, 1)}</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {renderAuraEffects()}
+        </div>
+      </div>
+    );
+  };
+
+  const modifierMap = useMemo(() => {
+    if (!gameState?.placed_objects) return new Map();
+    return buildModifierMap(gameState.placed_objects);
+  }, [gameState?.placed_objects]);
+
+  const auraSummary = useMemo(() => {
+    return summariseActiveAuras(modifierMap);
+  }, [modifierMap]);
   const showNotification = useCallback((message, type = 'info') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
@@ -253,6 +520,7 @@ function App() {
     try {
       const response = await game.place(objectId, x, y);
       await loadGameState();
+      const placedObject = response.data?.game_object;
       
       // Check if a new era was unlocked!
       if (response.data.era_unlocked) {
@@ -262,7 +530,21 @@ function App() {
         });
         showNotification(`🎉 ${response.data.message}`, 'success');
       } else {
-        showNotification('✅ Object placed!', 'success');
+        let placementMessage = '✅ Object placed!';
+        if (placedObject && hasAura(placedObject)) {
+          const auraDetails = placedObject.global_modifiers
+            .map((modifier) => {
+              const details = describeAuraModifier(modifier);
+              const effectText =
+                details.effects.length > 0
+                  ? details.effects.join(', ')
+                  : 'No stat changes';
+              return `${details.categories}: ${effectText}`;
+            })
+            .join(' • ');
+          placementMessage = `🌀 ${placedObject.object_name} aura active! ${auraDetails}`;
+        }
+        showNotification(placementMessage, 'success');
       }
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Placement failed';
@@ -482,111 +764,14 @@ function App() {
             {/* Object Info Panel */}
             <div className="object-info-panel">
               <h3>📋 Object Details</h3>
-              {selectedObject ? (
-                <div className="object-info-content">
-                  {selectedObject.image_path && (
-                    <div className="object-info-image-container">
-                      <img 
-                        src={selectedObject.image_path} 
-                        alt={selectedObject.object_name}
-                        className="object-info-image"
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="object-info-details">
-                    <div className="object-info-name">{selectedObject.object_name}</div>
-                    <div className="object-info-flavor">{selectedObject.flavor_text}</div>
-                    
-                    <div className="object-info-stats">
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">💰 Cost</span>
-                        <span className="object-info-stat-value">{Math.floor(parseFloat(selectedObject.cost))}</span>
-                      </div>
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">📊 Income/sec</span>
-                        <span className="object-info-stat-value">{Math.floor(parseFloat(selectedObject.income_per_second))}</span>
-                      </div>
-                      {parseFloat(selectedObject.time_crystal_generation) > 0 && (
-                        <div className="object-info-stat">
-                          <span className="object-info-stat-label">💎 Crystals/sec</span>
-                          <span className="object-info-stat-value">{formatNumber(selectedObject.time_crystal_generation)}</span>
-                        </div>
-                      )}
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">📐 Size</span>
-                        <span className="object-info-stat-value">{selectedObject.footprint_w}×{selectedObject.footprint_h}</span>
-                      </div>
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">⭐ Quality</span>
-                        <span className="object-info-stat-value">{selectedObject.quality_tier || 'N/A'}</span>
-                      </div>
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">🏛️ Era</span>
-                        <span className="object-info-stat-value">{selectedObject.era_name}</span>
-                      </div>
-                      <div className="object-info-stat">
-                        <span className="object-info-stat-label">📁 Category</span>
-                        <span className="object-info-stat-value">{selectedObject.category}</span>
-                      </div>
-                      {selectedObject.build_time && parseFloat(selectedObject.build_time) > 0 && (
-                        <div className="object-info-stat">
-                          <span className="object-info-stat-label">🔨 Build Time</span>
-                          <span className="object-info-stat-value">{selectedObject.build_time}s</span>
-                        </div>
-                      )}
-{selectedObject.operation_duration && parseFloat(selectedObject.operation_duration) > 0 && (() => {
-                        const duration = parseFloat(selectedObject.operation_duration);
-                        const formatDuration = (seconds) => {
-                          if (seconds < 60) return `${seconds}s`;
-                          if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-                          const hours = Math.floor(seconds / 3600);
-                          return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
-                        };
-                        return (
-                          <div className="object-info-stat">
-                            <span className="object-info-stat-label">⏱️ Lifespan</span>
-                            <span className="object-info-stat-value">{formatDuration(duration)}</span>
-                          </div>
-                        );
-                      })()}
-                      {selectedObject.retire_payout_coins_pct && parseFloat(selectedObject.retire_payout_coins_pct) > 0 && (
-                        <div className="object-info-stat">
-                          <span className="object-info-stat-label">💰 Retirement</span>
-                          <span className="object-info-stat-value">{parseFloat(selectedObject.retire_payout_coins_pct)}% of earned coins</span>
-                        </div>
-                      )}
-                      {selectedObject.sellback_percent && parseFloat(selectedObject.sellback_percent) > 0 && (
-                        <div className="object-info-stat">
-                          <span className="object-info-stat-label">♻️ Sellback</span>
-                          <span className="object-info-stat-value">{selectedObject.sellback_percent}%</span>
-                        </div>
-                      )}
-                      {selectedObject.cap_per_civ && parseFloat(selectedObject.cap_per_civ) > 0 && (
-                        <div className="object-info-stat">
-                          <span className="object-info-stat-label">🔢 Cap/Civ</span>
-                          <span className="object-info-stat-value">{selectedObject.cap_per_civ}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {selectedObject.is_keystone && (() => {
-                      const nextEra = ERAS[ERAS.indexOf(selectedObject.era_name) + 1];
-                      return (
-                        <div className="object-info-keystone">
-                          🔑 Keystone Object - Place to unlock <strong>{nextEra || 'next era'}</strong>!
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              ) : (
-                <div className="object-info-empty">
-                  Click the ℹ️ icon on any object in the sidebar to view its details here
-                </div>
-              )}
+              {renderSelectedObjectDetails()}
             </div>
-            
+
+            <AuraSummary
+              summary={auraSummary}
+              highlightedCategory={selectedObject?.category || null}
+            />
+
             {/* Crafting and Queue */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -618,6 +803,7 @@ function App() {
             onRemove={handleRemove}
             onMove={handleMove}
             currentEra={gameState.profile.current_era}
+            auraModifierMap={modifierMap}
           />
         </div>
       </div>
