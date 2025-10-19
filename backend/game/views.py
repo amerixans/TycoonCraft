@@ -1297,6 +1297,7 @@ def import_game(request):
     profile = request.user.profile
 
     with transaction.atomic():
+        was_pro = profile.is_pro
         PlacedObject.objects.filter(player=profile).delete()
         Discovery.objects.filter(player=profile).delete()
         EraUnlock.objects.filter(player=profile).delete()
@@ -1305,8 +1306,8 @@ def import_game(request):
         profile.coins = data["profile"]["coins"]
         profile.time_crystals = data["profile"]["time_crystals"]
         profile.current_era = data["profile"]["current_era"]
-        if "is_pro" in data["profile"]:
-            profile.is_pro = data["profile"]["is_pro"]
+        # Preserve pro status - only upgrade keys can grant this privilege
+        profile.is_pro = was_pro
         profile.save()
 
         # Restore discoveries from validated data

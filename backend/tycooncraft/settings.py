@@ -21,7 +21,17 @@ def env_bool(name, default=False):
 
 DEBUG = env_bool('DEBUG', False)
 
-ALLOWED_HOSTS = ['*']
+def env_list(name, default=None):
+    """Parse a comma-separated env var into a list."""
+    value = os.environ.get(name)
+    if value:
+        return [item.strip() for item in value.split(',') if item.strip()]
+    return default if default is not None else []
+
+
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1'])
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
