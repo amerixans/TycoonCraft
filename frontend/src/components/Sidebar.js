@@ -31,8 +31,21 @@ function Sidebar({ discoveries, allObjects, eraUnlocks, currentEra, eras, eraCon
   });
 
   const getEraStatus = (era) => {
+    // If this era is unlocked, return 'unlocked'
     if (unlockedEras.has(era)) return 'unlocked';
-    if (eras.indexOf(era) <= eras.indexOf(currentEra)) return 'available';
+
+    // For the first era (Hunter-Gatherer), it should always be unlocked
+    // But if for some reason it's not, treat it as available
+    if (eras.indexOf(era) === 0) return 'available';
+
+    // Check if the previous era is unlocked
+    const eraIndex = eras.indexOf(era);
+    const previousEra = eras[eraIndex - 1];
+
+    // If the previous era is unlocked, this era is available to unlock
+    if (unlockedEras.has(previousEra)) return 'available';
+
+    // Otherwise, it's locked (need to unlock previous eras first)
     return 'locked';
   };
 
