@@ -272,7 +272,10 @@ cd /var/www/tycooncraft/backend
 # Check if requirements.txt changed
 REQUIREMENTS_CHANGED=false
 if [ "$CHANGES_DETECTED" = true ]; then
-    if sudo -u www-data git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "backend/requirements.txt"; then
+    # Use merge-base to handle non-linear history (merge commits)
+    MERGE_BASE=$(sudo -u www-data git merge-base $CURRENT_COMMIT $NEW_COMMIT 2>/dev/null || echo "$CURRENT_COMMIT")
+
+    if sudo -u www-data git diff --name-only $MERGE_BASE $NEW_COMMIT | grep -q "backend/requirements.txt"; then
         REQUIREMENTS_CHANGED=true
         echo "📦 Requirements.txt changed - updating dependencies..."
     fi
@@ -386,12 +389,16 @@ FRONTEND_CHANGED=false
 PACKAGE_JSON_CHANGED=false
 
 if [ "$CHANGES_DETECTED" = true ]; then
-    if sudo -u www-data git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "frontend/"; then
+    # Use merge-base to handle non-linear history (merge commits)
+    # This finds the common ancestor and diffs from there
+    MERGE_BASE=$(sudo -u www-data git merge-base $CURRENT_COMMIT $NEW_COMMIT 2>/dev/null || echo "$CURRENT_COMMIT")
+
+    if sudo -u www-data git diff --name-only $MERGE_BASE $NEW_COMMIT | grep -q "frontend/"; then
         FRONTEND_CHANGED=true
         echo "🎨 Frontend files changed"
     fi
-    
-    if sudo -u www-data git diff --name-only $CURRENT_COMMIT $NEW_COMMIT | grep -q "frontend/package.json"; then
+
+    if sudo -u www-data git diff --name-only $MERGE_BASE $NEW_COMMIT | grep -q "frontend/package.json"; then
         PACKAGE_JSON_CHANGED=true
         echo "📦 package.json changed"
     fi
