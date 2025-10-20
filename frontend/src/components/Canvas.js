@@ -6,22 +6,7 @@ import './Canvas.css';
 
 const GRID_SIZE = 50; // Pixels per grid tile
 
-// Era-based canvas sizes (height x width in tiles)
-// Starting at 3x9 for Hunter-Gatherer, doubling each era unlock
-const ERA_SIZES = {
-  'Hunter-Gatherer': { height: 5, width: 15 },
-  'Agriculture': { height: 10, width: 30 },
-  'Metallurgy': { height: 20, width: 60 },
-  'Steam & Industry': { height: 40, width: 120 },
-  'Electric Age': { height: 80, width: 240 },
-  'Computing': { height: 160, width: 480 },
-  'Futurism': { height: 320, width: 960 },
-  'Interstellar': { height: 640, width: 1920 },
-  'Arcana': { height: 1280, width: 3840 },
-  'Beyond': { height: 2560, width: 7680 },
-};
-
-function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra }) {
+function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, currentEra, eraConfig }) {
   const [draggedObject, setDraggedObject] = useState(null);
   const [hoveredPlaced, setHoveredPlaced] = useState(null);
   const transformRef = useRef(null);
@@ -125,8 +110,9 @@ function Canvas({ placedObjects, discoveries, onPlace, onRemove, onMove, current
     return 'operational-healthy';
   };
   
-  // Get canvas size for current era
-  const canvasSize = ERA_SIZES[currentEra] || ERA_SIZES['Hunter-Gatherer'];
+  // Get canvas size for current era from eraConfig
+  const currentEraData = eraConfig?.eras?.find(e => e.name === currentEra);
+  const canvasSize = currentEraData?.canvas_size || { height: 5, width: 15 };
   const CANVAS_WIDTH = canvasSize.width;
   const CANVAS_HEIGHT = canvasSize.height;
   const contentWidth = CANVAS_WIDTH * GRID_SIZE;

@@ -15,6 +15,10 @@ unlock_message: "Craft Charcoal Kiln to unlock Metallurgy"
 crystal_unlock_cost: 10
 crafting_cost: 750  # 250 * 3
 
+canvas_size:
+  height: 10
+  width: 30
+
 # ==============================================================================
 # STAT RANGES (for schema generation & validation)
 # ==============================================================================

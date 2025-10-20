@@ -8,6 +8,10 @@ unlock_message: "Craft Analytical Engine to unlock Computing"
 crystal_unlock_cost: 1200
 crafting_cost: 187500  # 31250 * 6
 
+canvas_size:
+  height: 80
+  width: 240
+
 stat_ranges:
   cost:
     min: 300000

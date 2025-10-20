@@ -8,6 +8,10 @@ unlock_message: "Maximum era reached"
 crystal_unlock_cost: 4000000
 crafting_cost: 1073218750  # 97656250 * 11
 
+canvas_size:
+  height: 2560
+  width: 7680
+
 stat_ranges:
   cost:
     min: 6000000000

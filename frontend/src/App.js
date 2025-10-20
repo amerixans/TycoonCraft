@@ -387,9 +387,10 @@ function App() {
           if (newlyUnlocked && eraConfig) {
             const eraData = eraConfig.eras.find(e => e.name === newlyUnlocked.era_name);
             const message = eraData?.unlock_message || `Welcome to ${newlyUnlocked.era_name}!`;
+            const eraName = eraData?.display_name || newlyUnlocked.era_name;
 
             setShowEraUnlockModal({
-              era: newlyUnlocked.era_name,
+              era: eraName,
               message: message
             });
           }
@@ -872,6 +873,7 @@ function App() {
             onPlace={handlePlace}
             onRemove={handleRemove}
             onMove={handleMove}
+            eraConfig={eraConfig}
             currentEra={(() => {
               // Find the highest unlocked era by ERAS order
               const unlockedEraNames = gameState.era_unlocks.map(u => u.era_name);

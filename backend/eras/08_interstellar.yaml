@@ -8,6 +8,10 @@ unlock_message: "Craft Spell Codex to unlock Arcana"
 crystal_unlock_cost: 150000
 crafting_cost: 35156250  # 3906250 * 9
 
+canvas_size:
+  height: 640
+  width: 1920
+
 stat_ranges:
   cost:
     min: 100000000

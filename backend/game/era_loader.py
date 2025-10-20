@@ -50,7 +50,7 @@ class EraLoader:
 
                 # Validate required fields
                 required_fields = ['order', 'name', 'crystal_unlock_cost', 'crafting_cost',
-                                 'stat_ranges', 'prompt_description', 'keystone', 'starters']
+                                 'canvas_size', 'stat_ranges', 'prompt_description', 'keystone', 'starters']
                 for field in required_fields:
                     if field not in era_data:
                         raise ValueError(f"Era file {era_file} missing required field: {field}")

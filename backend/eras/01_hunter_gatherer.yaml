@@ -15,6 +15,10 @@ unlock_message: "Craft Hearth to unlock Agriculture"
 crystal_unlock_cost: 0
 crafting_cost: 100  # 50 * 2
 
+canvas_size:
+  height: 5
+  width: 15
+
 # ==============================================================================
 # STAT RANGES (for schema generation & validation)
 # ==============================================================================

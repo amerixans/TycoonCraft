@@ -959,9 +959,16 @@ def craft_objects(request):
 
     # Check if an object with this name already exists (handle duplicates gracefully)
     existing_obj = GameObject.objects.filter(object_name=obj_data.get("object_name")).first()
-    
+
     if existing_obj:
-        # Object with this name already exists
+        # Validate against predefined recipe if one exists
+        if predefined_recipe and not validate_predefined_match(existing_obj, predefined_overrides):
+            # Existing object doesn't match predefined specs - delete and recreate
+            existing_obj.delete()
+            existing_obj = None
+
+    if existing_obj:
+        # Object with this name already exists and matches specs (or no predefined specs)
         # Check if this player already discovered it
         already_discovered = Discovery.objects.filter(player=profile, game_object=existing_obj).exists()
         
@@ -1170,6 +1177,20 @@ def place_object(request):
         is_building=effective_build_time > 0,
         is_operational=effective_build_time == 0,
     )
+
+    # If this is a keystone with 0 build time, it becomes immediately operational
+    # and should unlock the next era right away
+    if game_object.is_keystone and effective_build_time == 0:
+        era_to_unlock = get_next_era(game_object.era_name)
+        if era_to_unlock and not EraUnlock.objects.filter(player=profile, era_name=era_to_unlock).exists():
+            EraUnlock.objects.create(player=profile, era_name=era_to_unlock)
+            profile.current_era = era_to_unlock
+            profile.save()
+
+            # Give starter objects for the newly unlocked era
+            starter_objects = GameObject.objects.filter(is_starter=True, era_name=era_to_unlock)
+            for obj in starter_objects:
+                Discovery.objects.get_or_create(player=profile, game_object=obj)
 
     response_data = PlacedObjectSerializer(placed).data
     return Response(response_data, status=status.HTTP_201_CREATED)
@@ -1434,6 +1455,7 @@ def era_config(request):
             "crystal_unlock_cost": era['crystal_unlock_cost'],
             "crafting_cost": era['crafting_cost'],
             "unlock_message": era.get('unlock_message', ''),
+            "canvas_size": era.get('canvas_size', {"height": 5, "width": 15}),
         })
 
     return Response({

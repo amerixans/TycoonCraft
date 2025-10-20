@@ -8,6 +8,10 @@ unlock_message: "Craft Reality Stone to unlock Beyond"
 crystal_unlock_cost: 800000
 crafting_cost: 195312500  # 19531250 * 10
 
+canvas_size:
+  height: 1280
+  width: 3840
+
 stat_ranges:
   cost:
     min: 800000000

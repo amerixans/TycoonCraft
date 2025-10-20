@@ -8,6 +8,10 @@ unlock_message: "Craft Warp Drive to unlock Interstellar"
 crystal_unlock_cost: 30000
 crafting_cost: 6250000  # 781250 * 8
 
+canvas_size:
+  height: 320
+  width: 960
+
 stat_ranges:
   cost:
     min: 15000000

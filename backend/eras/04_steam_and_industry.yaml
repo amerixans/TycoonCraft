@@ -9,6 +9,10 @@ unlock_message: "Craft Telegraph to unlock Electric Age"
 crystal_unlock_cost: 250
 crafting_cost: 31250  # 6250 * 5
 
+canvas_size:
+  height: 40
+  width: 120
+
 stat_ranges:
   cost:
     min: 40000
