@@ -19,7 +19,8 @@ from __future__ import annotations
 
 import os
 import re
-import urllib.parse
+import urllib.error          # explicit: importing urllib.request only happens to
+import urllib.parse          # pull this in as a side effect in CPython
 import urllib.request
 
 import pytest
