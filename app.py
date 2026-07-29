@@ -81,6 +81,11 @@ def need_player() -> Tuple[Optional[str], Optional[object]]:
     return pid, None
 
 
+def _is_automatable(item_key: str) -> bool:
+    parsed = store.parse_item_key(item_key)
+    return bool(parsed) and parsed[1] != parsed[2]
+
+
 def item_payload(item_key: str) -> Optional[dict]:
     row = store.get_item(item_key)
     if row is None:
@@ -103,9 +108,12 @@ def item_payload(item_key: str) -> Optional[dict]:
         # Placeable as a producer (a Kiln, a Well) -- and what it would cost.
         "produces": PRODUCERS[bucket.id].label if bucket.id in PRODUCERS else None,
         "produce_cost": PRODUCERS[bucket.id].place_cost if bucket.id in PRODUCERS else None,
-        # Automatable as a factory: true for anything that was crafted, since
-        # its key records which two buckets make it. Starters have no recipe.
-        "automatable": store.parse_item_key(item_key) is not None,
+        # Automatable as a factory: anything crafted from two *different*
+        # buckets, since its key records which ones. Starters have no recipe, and
+        # a self-pair key (minted by `_ensure_producer_output` for a producer
+        # whose output nobody has crafted) is not a real recipe either -- X + X
+        # is always a dud, so offering to automate it would fail confusingly.
+        "automatable": _is_automatable(item_key),
         "factory_cost": buckets.factory_place_cost(bucket.id),
     }
 
@@ -432,7 +440,7 @@ def api_place():
 
         out_row = store.get_item(out_key)
         parsed = store.parse_item_key(out_key)
-        if not out_row or not parsed:
+        if not out_row or not parsed or not _is_automatable(out_key):
             return jsonify({"error": "that cannot be automated"}), 400
         result_bucket, a_bucket, b_bucket = parsed
 

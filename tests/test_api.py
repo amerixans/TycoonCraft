@@ -364,3 +364,26 @@ def test_feed_credits_the_finder(client):
 
     feed = client.get("/api/feed").get_json()["feed"]
     assert feed and feed[0]["by"] == "Tester"
+
+
+def test_a_self_pair_key_is_not_offered_as_automatable(client):
+    """`_ensure_producer_output` mints keys like `charcoal<charcoal+charcoal` for a
+    producer whose output nobody has crafted. X + X is always a dud, so offering
+    to automate it would fail with a confusing "above your tier" message."""
+    from game import store
+
+    pid = new_player(client)
+    store.set_coins(pid, 100000)
+    store.put_item("charcoal<charcoal+charcoal", "charcoal", "Test Coal", "\U0001f525",
+                   "", None, True)
+    store.record_discovery(pid, "charcoal<charcoal+charcoal")
+
+    item = next(i for i in state(client, pid)["items"]
+                if i["key"] == "charcoal<charcoal+charcoal")
+    assert item["automatable"] is False
+
+    res = client.post("/api/place",
+                      json={"kind": "factory", "output": "charcoal<charcoal+charcoal"},
+                      headers={"X-Player": pid})
+    assert res.status_code == 400
+    assert res.get_json()["error"] == "that cannot be automated"
