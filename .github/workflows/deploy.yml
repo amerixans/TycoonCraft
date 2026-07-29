@@ -1,0 +1,113 @@
+name: ci-and-deploy
+
+on:
+  push: { branches: [main] }
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Manifest and tile are present and valid
+        run: |
+          set -euo pipefail
+          jq empty app.json
+          test "$(jq -r .name app.json)" = tycooncraft
+          test -f public/tile.gif
+          # The homepage loads three tiles at once; keep this one cheap.
+          test "$(stat -c%s public/tile.gif)" -lt 307200
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+
+      - name: Unit tests -- traits, buckets, economy, balance
+        run: |
+          pip install -r requirements.txt pytest
+          pytest tests -q -m "not live"
+
+      - run: docker build -t tycooncraft:ci .
+
+      # The subpath run is the one that matters: it is where path bugs surface,
+      # and it is the configuration the droplet actually runs. Note neither
+      # container gets an API key -- a missing key must degrade to fallback
+      # names, not to an outage.
+      - name: Smoke-test at / and at /tycooncraft/
+        run: |
+          set -euo pipefail
+          docker run -d --name t1 -p 8080:8080 tycooncraft:ci
+          docker run -d --name t2 -e BASE_PATH=/tycooncraft -p 8081:8080 tycooncraft:ci
+
+          # Wait for BOTH. Polling only the first and then immediately curling
+          # the second is a race the second loses.
+          wait_for() {
+            for i in $(seq 1 40); do
+              curl -fsS "$1" >/dev/null 2>&1 && return 0
+              sleep 1
+            done
+            echo "timed out waiting for $1"
+            return 1
+          }
+
+          wait_for http://127.0.0.1:8080/health          || { docker logs t1; exit 1; }
+          wait_for http://127.0.0.1:8081/tycooncraft/health || { docker logs t2; exit 1; }
+
+          curl -fsS http://127.0.0.1:8080/health | jq -e '.ok == true'
+          curl -fsS http://127.0.0.1:8081/tycooncraft/health | jq -e '.base == "/tycooncraft"'
+
+          # No API key was supplied, so this must say so rather than 500.
+          curl -fsS http://127.0.0.1:8081/tycooncraft/health \
+            | jq -e '.llm == "unconfigured"'
+
+      # A hardcoded list of URLs to curl will happily pass while the app is
+      # broken, because it checks paths you wrote rather than the ones the
+      # browser derives. This walks the real module graph from the entry point.
+      - name: Every module the browser would load resolves inside the mount
+        env:
+          BASE_URL: http://127.0.0.1:8081/tycooncraft
+        run: pytest tests/test_module_graph.py -q
+
+      - name: A brand-new player can craft without an API key
+        env:
+          BASE_URL: http://127.0.0.1:8081/tycooncraft
+        run: pytest tests/test_live_api.py -q
+
+      - if: always()
+        run: docker logs t2 2>&1 | tail -40
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/tycooncraft
+            git fetch --all
+            git reset --hard origin/main
+            docker compose up -d --build
+            for i in $(seq 1 60); do
+              if docker compose exec -T app python -c "
+            import os,urllib.request,sys
+            b=os.environ.get('BASE_PATH','')
+            sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080'+b+'/health',timeout=3).status==200 else 1)"; then
+                # Refresh the front-page tile and blurb from the repo we pulled.
+                /opt/collab-canvas/deploy/publish-app.sh tycooncraft
+                docker image prune -f
+                exit 0
+              fi
+              sleep 2
+            done
+            docker compose logs --tail=60
+            exit 1

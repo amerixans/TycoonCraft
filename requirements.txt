@@ -1,0 +1,11 @@
+Flask==3.0.3
+gunicorn==22.0.0
+# The naming call. Pure-Python plus pydantic-core, which has manylinux wheels,
+# so no compiler toolchain is needed in the image.
+#
+# Do not pin this below 0.92: `output_config` (structured outputs) is not a
+# parameter on older SDKs, so every naming call raises TypeError and silently
+# falls back to a deterministic name. The game keeps working, which is exactly
+# what makes it a nasty regression -- nothing errors, the names just quietly stop
+# being invented. `tests/test_naming.py` pins this down.
+anthropic==0.120.2
