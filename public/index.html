@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TycoonCraft</title>
+<meta name="description" content="Combine two things to discover a third, then build the factories that make them.">
+
+<!-- Every URL here is relative. An absolute /src/style.css would resolve to the
+     domain root and 404 the moment this is mounted at /tycooncraft/ -- which is
+     the single most common way a microapp ships broken. -->
+<link rel="stylesheet" href="./src/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>%F0%9F%8F%AD</text></svg>">
+</head>
+<body>
+
+<!-- Sign-in. Name only: no password, matching whiteboard and poggle. The id we
+     get back is the credential, and it is handed back as a resume link. -->
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <h1 class="logo">Tycoon<span>Craft</span></h1>
+    <p class="tagline">Rub two things together. See what falls out.</p>
+    <form id="join-form" autocomplete="off">
+      <input id="join-name" type="text" maxlength="24" placeholder="What should we call you?"
+             aria-label="Your name" required>
+      <button type="submit" class="btn btn-primary">Start</button>
+    </form>
+    <p class="gate-note" id="gate-note">
+      No password. You'll get a link that brings you back here.
+    </p>
+  </div>
+</div>
+
+<div id="game" class="game" hidden>
+
+  <header class="topbar">
+    <div class="brand">Tycoon<span>Craft</span></div>
+
+    <div class="stat" title="Coins">
+      <span class="stat-icon">◉</span>
+      <span id="coins" class="stat-value num">0</span>
+    </div>
+
+    <div class="stat" title="Best-case income while every factory is fed">
+      <span class="stat-icon">↗</span>
+      <span id="income" class="stat-value num">0</span><span class="stat-unit">/hr</span>
+    </div>
+
+    <div class="stat" title="Your tier ceiling — how high a craft can reach">
+      <span class="stat-icon">▲</span>
+      <span id="tier" class="stat-value num">1</span>
+      <span class="stat-unit" id="tier-max">of 3</span>
+    </div>
+
+    <button id="unlock" class="btn btn-unlock" hidden></button>
+
+    <div class="spacer"></div>
+    <div class="who"><span id="who-name"></span></div>
+    <button id="menu-btn" class="btn btn-ghost" aria-label="Menu">☰</button>
+  </header>
+
+  <main class="columns">
+
+    <section class="col col-shelf" aria-label="Your shelf">
+      <div class="col-head">
+        <h2>Shelf</h2>
+        <input id="search" type="search" placeholder="Filter…" aria-label="Filter items">
+      </div>
+      <div id="trait-filters" class="trait-filters"></div>
+      <div id="shelf" class="shelf" role="list"></div>
+    </section>
+
+    <section class="col col-bench" aria-label="Workbench">
+      <div class="col-head">
+        <h2>Workbench</h2>
+        <button id="clear-bench" class="btn btn-ghost btn-sm">Clear</button>
+      </div>
+      <!-- The whole point of the interaction: drag items out here, then drag
+           one onto another. Two slots and a "Craft" button is a form, not a toy. -->
+      <div id="bench" class="bench">
+        <p class="bench-hint" id="bench-hint">
+          Drag two things here,<br>then drop one onto the other.
+        </p>
+      </div>
+      <div id="bench-msg" class="bench-msg" aria-live="polite"></div>
+    </section>
+
+    <section class="col col-yard" aria-label="Your yard">
+      <div class="col-head">
+        <h2>Yard</h2>
+        <span id="slots" class="slots num"></span>
+      </div>
+      <div id="yard" class="yard"></div>
+      <div class="col-head col-head-sub">
+        <h2>Just found</h2>
+      </div>
+      <div id="feed" class="feed"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Reveal card for a new discovery. Deliberately a moment: this is the reward
+     the whole loop is built around, so it gets the screen. -->
+<div id="reveal" class="reveal" hidden>
+  <div class="reveal-card" id="reveal-card">
+    <div class="reveal-banner" id="reveal-banner"></div>
+    <div class="reveal-emoji" id="reveal-emoji"></div>
+    <div class="reveal-name" id="reveal-name"></div>
+    <div class="reveal-traits" id="reveal-traits"></div>
+    <div class="reveal-flavor" id="reveal-flavor"></div>
+    <button class="btn btn-primary" id="reveal-ok">Good</button>
+  </div>
+</div>
+
+<div id="menu" class="sheet" hidden>
+  <div class="sheet-card">
+    <h3>Menu</h3>
+    <label class="field">
+      <span>Your resume link — bookmark it</span>
+      <input id="resume-link" type="text" readonly>
+    </label>
+    <button class="btn" id="copy-link">Copy link</button>
+    <hr>
+    <p class="fine" id="build-note"></p>
+    <button class="btn btn-ghost" id="menu-close">Close</button>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<canvas id="fx" class="fx" aria-hidden="true"></canvas>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
