@@ -105,19 +105,49 @@ jobs:
 
   deploy:
     needs: build
+    # workflow_dispatch is included so the API key below can be delivered by
+    # re-running this workflow from the Actions tab, without needing a commit.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: appleboy/ssh-action@v1.0.3
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
+          # Forward the key into the remote shell. Named here *and* in `env:`
+          # above -- ssh-action only passes across what this list mentions.
+          envs: ANTHROPIC_API_KEY
           script: |
             set -euo pipefail
             cd /opt/tycooncraft
             git fetch --all
             git reset --hard origin/main
+
+            # Sync the API key from the repo secret into the droplet's .env.
+            #
+            # Rebuild the file rather than sed-ing it: a key containing a `|` or
+            # `&` would corrupt a sed replacement, and this way BASE_PATH and
+            # HOST_PORT -- which add-app.sh owns and which the app cannot start
+            # without -- are preserved untouched.
+            #
+            # The empty-check is the important guard: if the secret is not set,
+            # leave whatever is already on the droplet alone. Without it, a repo
+            # with no secret would silently blank a working key on every deploy.
+            if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+              grep -v '^ANTHROPIC_API_KEY=' .env > .env.next || true
+              printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY" >> .env.next
+              mv .env.next .env
+              chmod 600 .env
+              echo "API key synced from the repo secret"
+            else
+              echo "no ANTHROPIC_API_KEY secret set; leaving .env as it is"
+            fi
+
             docker compose up -d --build
             for i in $(seq 1 60); do
               if docker compose exec -T app python -c "
@@ -127,6 +157,13 @@ jobs:
                 # Refresh the front-page tile and blurb from the repo we pulled.
                 /opt/collab-canvas/deploy/publish-app.sh tycooncraft
                 docker image prune -f
+                # Report whether the key actually took, so the workflow log
+                # answers "is it live?" without anyone having to go and curl.
+                # Prints "ready" or "unconfigured" -- never the key itself.
+                port=$(grep '^HOST_PORT' .env | cut -d= -f2)
+                base=$(grep '^BASE_PATH' .env | cut -d= -f2)
+                echo "naming: $(curl -fsS "http://127.0.0.1:${port}${base}/health" \
+                  | python3 -c 'import json,sys; print(json.load(sys.stdin)["llm"])')"
                 exit 0
               fi
               sleep 2

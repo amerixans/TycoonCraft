@@ -174,7 +174,8 @@ them) and what lets a factory work out its own inputs. `store.item_key_for` and
 
 **A missing API key is a supported state, not an outage.** Deploy first, add the
 key second. Items named while keyless are marked `is_fallback` and get upgraded
-the next time somebody makes them.
+the next time somebody makes them. Set `ANTHROPIC_API_KEY` as a repo secret and
+the deploy syncs it onto the droplet — see [`docs/DEPLOY.md`](docs/DEPLOY.md) §3.
 
 ## Deploying
 

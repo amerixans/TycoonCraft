@@ -38,31 +38,60 @@ the droplet, registers it on the repo, sets the three Actions secrets, clones to
 `/opt/tycooncraft`, allocates a free port, writes the nginx snippet, starts the
 container, waits for `/health`, and publishes the tile.
 
-### 3. Add the API key — the one manual step
+### 3. Add the API key
 
 **The game works without this.** Items get deterministic names built from their
 traits, `/health` reports `{"llm": "unconfigured"}`, and nothing errors. So
 deploy first, verify it works, then add the key.
 
+Either place works. **The GitHub secret is the better default** — it survives a
+droplet rebuild and rotating it means editing one field.
+
+#### Option A — a GitHub Actions secret (recommended)
+
+**Settings → Secrets and variables → Actions → New repository secret**, named
+exactly `ANTHROPIC_API_KEY`. Then **Actions → ci-and-deploy → Run workflow** to
+deliver it without needing a commit.
+
+The deploy job forwards the secret over the existing SSH connection and writes it
+into the droplet's `.env`. Two details in that script matter:
+
+- It **rebuilds** `.env` rather than `sed`-ing it, so a key containing `|` or `&`
+  cannot corrupt the file, and `BASE_PATH` / `HOST_PORT` — which `add-app.sh` owns
+  and the app cannot start without — are preserved.
+- It **does nothing if the secret is unset.** Without that guard, a repo with no
+  secret would silently blank a working key on every deploy.
+
+The workflow log ends with `naming: ready` or `naming: unconfigured`, so you can
+confirm it took without going and curling anything. It never prints the key.
+
+Note that Actions still never *calls* the API — it only delivers the key. The
+naming call happens on the droplet.
+
+#### Option B — straight onto the droplet
+
+Fine if you would rather the key never touch GitHub. Note `add-app.sh` already
+seeded `.env` from `.env.example`, so there is an **empty `ANTHROPIC_API_KEY=`
+line already there** — fill it in rather than appending a second one.
+
 ```bash
 ssh deploy@167.172.248.41
 cd /opt/tycooncraft
-# .env already exists -- add-app.sh wrote BASE_PATH and HOST_PORT into it.
-# Append the key; do not overwrite the file.
-echo 'ANTHROPIC_API_KEY=sk-ant-...' >> .env
+nano .env                     # fill in the ANTHROPIC_API_KEY= line
 docker compose up -d          # picks up the new environment
-curl -s http://127.0.0.1:$(grep HOST_PORT .env | cut -d= -f2)/tycooncraft/health | jq .llm
+curl -s "http://127.0.0.1:$(grep '^HOST_PORT' .env | cut -d= -f2)/tycooncraft/health" | jq .llm
 # -> "ready"
 ```
 
-**Why here and not in GitHub:**
+If you use Option B, leave the GitHub secret unset — otherwise the next deploy
+overwrites what you typed with the secret's value.
+
+#### Where it does *not* go
 
 | | |
 | --- | --- |
-| `/opt/tycooncraft/.env` on the droplet | ✅ where it goes. `.env` is gitignored, so it survives the `git reset --hard origin/main` that every deploy runs. |
-| A GitHub Actions secret | ❌ Actions never calls the API. It would put the key somewhere it is not needed. |
 | The DigitalOcean console | ❌ there is no DO configuration for a microapp. |
-| Committed to the repo | ❌ obviously, but worth saying: `.gitignore` blocks `.env` for this reason. |
+| Committed to the repo | ❌ `.gitignore` blocks `.env` for exactly this reason. |
 
 Get a key at <https://console.anthropic.com> → **Create Key**.
 
