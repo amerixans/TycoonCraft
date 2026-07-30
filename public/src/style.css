@@ -176,6 +176,20 @@ input::placeholder { color: var(--faint); }
 .stat-unit { color: var(--faint); font-size: .78rem; }
 #coins { color: var(--gold); }
 
+/* The topbar was wrapping the sound and menu buttons onto a line of their own,
+ * which reads as a mistake rather than as a layout. Coins and the unlock button
+ * are what matter, so income and the player name are the first things to go.
+ *
+ * 46rem, not 34: at the browser's default 15px root that is ~690px, and the
+ * wrap was still happening at 606px. Measured, not guessed. */
+@media (max-width: 46rem) {
+  .topbar { gap: .55rem; padding: .5rem .6rem; }
+  .stat[title^="Best-case"] { display: none; }
+  .who { display: none; }
+  .btn-unlock { font-size: .8rem; padding: .38rem .5rem; }
+  .brand { font-size: .95rem; }
+}
+
 /* Coins tick up constantly; a brief flash on change reads as income without
  * needing a separate animation for every sale. */
 #coins.bump { animation: bump .3s ease; }
@@ -265,6 +279,25 @@ input::placeholder { color: var(--faint); }
 .item:hover { transform: translateX(2px); border-color: var(--line-hi); box-shadow: var(--shadow); }
 .item:active { cursor: grabbing; }
 .item.out-of-stock { opacity: .42; }
+
+/* A held count that just changed. Cheap, and it makes an idle yard feel alive
+ * without a separate animation per producer. */
+.item-held.tick { animation: tick .45s ease; }
+@keyframes tick {
+  40% { color: var(--gold); transform: scale(1.25); }
+}
+
+/* Freshly discovered: a brief gold sweep across the card, so a new arrival is
+ * findable in a long shelf without having to sort by time. */
+.item.fresh { animation: fresh 1.5s ease; }
+@keyframes fresh {
+  0%   { box-shadow: 0 0 0 1px var(--gold), 0 0 22px rgba(232, 176, 75, .5); }
+  100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; }
+}
+
+/* Satisfiable: every ingredient for this recipe is in stock. A quiet nudge
+ * toward the thing you can actually do next. */
+.item.ready { border-color: rgba(232, 176, 75, .45); }
 
 .item-emoji { font-size: 1.4rem; line-height: 1; width: 1.6rem; text-align: center; }
 .item-body { min-width: 0; flex: 1; }

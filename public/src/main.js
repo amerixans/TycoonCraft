@@ -10,6 +10,7 @@
 
 import { ApiError, api, forgetPlayer, resumeLink, savedPlayer, setPlayer, storePlayer }
   from './api.js';
+import * as audio from './audio.js';
 import { Bench, dragFromShelf, isDragging, onDragEnd } from './bench.js';
 import { burst, centerOf, floatNumber, shake, tierColor, toast } from './fx.js';
 
@@ -20,6 +21,10 @@ const state = {
   player: null,
   data: null,
   itemsByKey: new Map(),
+  // Last-seen held counts, so a shelf rebuild can flash the ones that moved --
+  // otherwise a producer ticking over is completely invisible.
+  lastHeld: new Map(),
+  freshKeys: new Set(),
   search: '',
   traitFilter: new Set(),
   // Coins are interpolated between polls from the server's income figure, so
@@ -93,6 +98,10 @@ async function refresh() {
 
   // Trust the server on a jump (a sale, an unlock); only interpolate forward.
   if (Math.abs(data.coins - state.displayCoins) > 2) state.displayCoins = data.coins;
+
+  // The pad widens its chord as tiers unlock, so it has to know the tier even
+  // when the player arrives part-way through a run.
+  audio.setTier(data.ceiling);
 
   render();
   return data;
@@ -174,6 +183,28 @@ function renderTraitFilters() {
   }
 }
 
+/**
+ * Which shelf items could be automated right now -- i.e. you hold both
+ * ingredients. A quiet nudge toward the next useful move, which matters once
+ * the shelf is twenty items long and "what can I do" stops being obvious.
+ */
+function readyKeys() {
+  const stockByBucket = new Map();
+  for (const item of state.data.items) {
+    if (item.held > 0) stockByBucket.set(item.bucket, true);
+  }
+  const ready = new Set();
+  for (const item of state.data.items) {
+    if (!item.automatable) continue;
+    // The key encodes the two input buckets: `mud<clay+water`.
+    const inputs = item.key.split('<')[1];
+    if (!inputs) continue;
+    const [a, b] = inputs.split('+');
+    if (stockByBucket.get(a) && stockByBucket.get(b)) ready.add(item.key);
+  }
+  return ready;
+}
+
 function visibleItems() {
   const q = state.search.toLowerCase();
   return state.data.items.filter((i) => {
@@ -204,9 +235,17 @@ function renderShelf() {
   // usually the thing you want next.
   items.sort((a, b) => b.tier - a.tier || b.held - a.held || a.name.localeCompare(b.name));
 
+  const ready = readyKeys();
+
   for (const item of items) {
     const card = document.createElement('div');
-    card.className = `item${item.held ? '' : ' out-of-stock'}`;
+    const grew = (state.lastHeld.get(item.key) ?? item.held) < item.held;
+    card.className = [
+      'item',
+      item.held ? '' : 'out-of-stock',
+      state.freshKeys.has(item.key) ? 'fresh' : '',
+      ready.has(item.key) ? 'ready' : '',
+    ].filter(Boolean).join(' ');
     card.style.setProperty('--tier-color', tierColor(item.tier));
     card.setAttribute('role', 'listitem');
     card.title = item.flavor || '';
@@ -224,7 +263,9 @@ function renderShelf() {
     card.querySelector('.item-emoji').textContent = item.emoji || '?';
     card.querySelector('.item-name').textContent = item.name;
     card.querySelector('.traits').textContent = item.traits.join(' · ');
-    card.querySelector('.item-held').textContent = item.held ? `×${item.held}` : '—';
+    const heldEl = card.querySelector('.item-held');
+    heldEl.textContent = item.held ? `×${item.held}` : '—';
+    if (grew) heldEl.classList.add('tick');
 
     const actions = document.createElement('span');
     actions.className = 'place-actions';
@@ -237,6 +278,7 @@ function renderShelf() {
           if (res) {
             const at = centerOf(card);
             floatNumber(at.x, at.y, `+${res.coins}`);
+            audio.sale(res.coins);
             await refresh();
           }
         }));
@@ -246,7 +288,7 @@ function renderShelf() {
         async (e) => {
           e.stopPropagation();
           const res = await guard(() => api.placeProducer(item.key, false));
-          if (res) { toast(`${item.produces} built`); await refresh(); }
+          if (res) { audio.place(); toast(`${item.produces} built`); await refresh(); }
         }));
     }
     if (item.automatable) {
@@ -267,6 +309,10 @@ function renderShelf() {
 
     host.append(card);
   }
+
+  state.lastHeld = new Map(items.map((i) => [i.key, i.held]));
+  // One flash per discovery, not one per poll.
+  state.freshKeys.clear();
 }
 
 function button(label, title, onClick) {
@@ -402,14 +448,17 @@ async function onCombine(a, b, at) {
     // learns the system instead of just losing a click.
     msg.className = 'bench-msg warn';
     msg.textContent = res.reason;
+    audio.dud();
     bench.reject(a, b, at);
     return;
   }
 
   msg.textContent = `−${res.cost} · ${res.item.name}`;
+  audio.discovery(res.item.tier, res.first_in_world);
   bench.consume(a, b, res.item, at);
 
   if (res.new_to_you) {
+    state.freshKeys.add(res.item.key);
     showReveal(res.item, res.first_in_world);
     if (res.first_in_world) { shake(7); burst(at.x, at.y, { color: '#e8b04b', count: 44, power: 8 }); }
   }
@@ -421,12 +470,13 @@ async function handGather(place, ring) {
   void ring.offsetWidth;
   ring.classList.add('pop');
   const res = await guard(() => api.gather(place.id));
-  if (res) await refresh();
+  if (res) { audio.gather(); await refresh(); }
 }
 
 async function automate(item) {
   const res = await guard(() => api.placeFactory(item.key, true));
   if (res) {
+    audio.place();
     toast(`Automated ${item.name} — selling output`, 'gold');
     await refresh();
   }
@@ -435,6 +485,7 @@ async function automate(item) {
 $('unlock').addEventListener('click', async () => {
   const res = await guard(() => api.unlock());
   if (!res) return;
+  audio.unlockTier(res.ceiling);
   shake(9);
   const at = centerOf($('unlock'));
   burst(at.x, at.y, { color: '#e8b04b', count: 50, power: 9 });
@@ -446,6 +497,27 @@ $('unlock').addEventListener('click', async () => {
 
 function wireChrome() {
   onDragEnd(() => { if (shelfRenderPending) renderShelf(); });
+
+  // Browsers refuse to start audio before a gesture, so the context is created
+  // on the first interaction rather than at load. `once` because after that the
+  // context exists and unlock() is a no-op.
+  for (const event of ['pointerdown', 'keydown']) {
+    document.addEventListener(event, () => audio.unlock(), { once: true });
+  }
+
+  const soundBtn = $('sound');
+  const paintSound = () => {
+    const on = !audio.isMuted();
+    soundBtn.setAttribute('aria-pressed', String(on));
+    soundBtn.textContent = on ? '\u266a' : '\u2715';
+    soundBtn.title = on ? 'Sound on \u2014 click to mute' : 'Muted \u2014 click for sound';
+  };
+  paintSound();
+  soundBtn.addEventListener('click', () => {
+    audio.unlock();
+    audio.setMuted(!audio.isMuted());
+    paintSound();
+  });
 
   $('search').addEventListener('input', (e) => {
     state.search = e.target.value;

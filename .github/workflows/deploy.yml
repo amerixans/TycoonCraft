@@ -27,10 +27,32 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
 
-      - name: Unit tests -- traits, buckets, economy, balance
+      - name: Unit tests -- traits, buckets, economy, balance, naming
         run: |
           pip install -r requirements.txt pytest
           pytest tests -q -m "not live"
+
+      # Audio is the one part of the frontend with real arithmetic in it, and
+      # every mistake it can make is silent -- a zero-target exponential ramp
+      # throws, a NaN frequency plays nothing, an un-stopped oscillator leaks.
+      # None of that shows up in a screenshot.
+      - name: Audio harness (stubbed Web Audio)
+        run: node tests/audio.test.mjs
+
+      # Cheap guard against the mistake that breaks the app silently under a
+      # subpath mount: an absolute or upward-climbing import.
+      - name: No absolute or escaping asset URLs in the frontend
+        run: |
+          set -euo pipefail
+          if grep -rnE '''(src|href)="/[^/]''' public/*.html; then
+            echo "absolute asset URL in HTML -- resolves to the domain root under /tycooncraft/"
+            exit 1
+          fi
+          if grep -rnE "from ['\"]\.\./\.\./" public/src/; then
+            echo "an import climbs above the app root -- it will 404 when mounted"
+            exit 1
+          fi
+          echo "clean"
 
       - run: docker build -t tycooncraft:ci .
 
