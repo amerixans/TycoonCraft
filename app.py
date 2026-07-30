@@ -204,6 +204,7 @@ def api_state():
     for p in placements:
         out_key = p.output_item if p.kind == "factory" else (p.item_key or p.bucket_id)
         out = store.get_item(out_key)
+        out_bucket = BY_ID.get(out["bucket_id"]) if out else None
         yard.append(
             {
                 "id": p.id,
@@ -212,6 +213,8 @@ def api_state():
                 "output": out_key,
                 "output_name": out["name"] if out else out_key,
                 "output_emoji": out["emoji"] if out else "",
+                # So the yard card can wear the same tier stripe as the shelf card.
+                "output_tier": out_bucket.tier if out_bucket else 1,
                 "inputs": list(p.inputs),
                 "secs": p.secs_per_unit(),
                 "progress": round(p.progress, 2),

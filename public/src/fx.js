@@ -29,8 +29,22 @@ function resize() {
 resize();
 addEventListener('resize', resize);
 
-const TIER_COLORS = ['#8b8377', '#8b8377', '#a8724a', '#cd7038', '#6d92b5', '#9d7bc0', '#e8b04b'];
-export const tierColor = (tier) => TIER_COLORS[Math.max(0, Math.min(6, tier))];
+/* Tier colours come from --t1..--t6 in style.css rather than being listed again
+ * here. Two copies of a six-colour ramp is a drift waiting to happen -- the
+ * first version of this file did exactly that and went stale the moment the
+ * palette changed. Read once and memoised, since getComputedStyle forces a
+ * style recalculation and this is called for every card on every render. */
+const tierCache = new Map();
+
+export function tierColor(tier) {
+  const t = Math.max(1, Math.min(6, tier | 0));
+  if (!tierCache.has(t)) {
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue(`--t${t}`).trim();
+    tierCache.set(t, value || '#93a7bb');
+  }
+  return tierCache.get(t);
+}
 
 function loop() {
   if (!particles.length) { running = false; return; }
@@ -71,7 +85,7 @@ function start() {
 }
 
 /** A burst of sparks. Used on a discovery, scaled up for a world first. */
-export function burst(x, y, { color = '#cd7038', count = 26, power = 5 } = {}) {
+export function burst(x, y, { color = '#2ed3b0', count = 26, power = 5 } = {}) {
   if (REDUCED) return;
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
@@ -103,14 +117,14 @@ export function puff(x, y) {
       gravity: -0.012,
       life: 0.7 + Math.random() * 0.4,
       fade: 0.9,
-      color: 'rgba(150,136,122,0.5)',
+      color: 'rgba(140,158,180,0.5)',
     });
   }
   start();
 }
 
 /** A number that floats up and fades. The universal "you got paid" signal. */
-export function floatNumber(x, y, text, color = '#e8b04b') {
+export function floatNumber(x, y, text, color = '#ffd24a') {
   if (REDUCED) return;
   particles.push({
     x, y,

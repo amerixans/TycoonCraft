@@ -2,11 +2,16 @@
   "name": "tycooncraft",
   "title": "TycoonCraft",
   "blurb": "Combine two things to discover a third, then build the factories that make them. Every name is invented on the spot.",
-  "tagline": "A crafting tycoon. Rub two items together and something new comes out — named by a language model, so nobody has seen it before. Automate the ones that pay, sell the output, and buy your way up six tiers of industry.",
+  "tagline": "A crafting tycoon. Rub two items together and something new comes out \u2014 named by a language model, so nobody has seen it before. Automate the ones that pay, sell the output, and buy your way up six tiers of industry.",
   "tile": "public/tile.gif",
-  "accent": "#cd7038",
+  "accent": "#2ed3b0",
   "order": 60,
   "health": "/health",
   "path": "/tycooncraft",
-  "tags": ["game", "crafting", "tycoon", "idle"]
+  "tags": [
+    "game",
+    "crafting",
+    "tycoon",
+    "idle"
+  ]
 }

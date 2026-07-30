@@ -404,6 +404,7 @@ function renderYard() {
   for (const place of yard) {
     const row = document.createElement('div');
     row.className = `place${place.stalled ? ' stalled' : ''}`;
+    row.style.setProperty('--tier-color', tierColor(place.output_tier || 1));
 
     const ring = document.createElement('div');
     ring.className = `ring${place.kind === 'producer' ? ' clickable' : ''}`;
@@ -562,7 +563,7 @@ async function onCombine(a, b, at) {
   if (res.new_to_you) {
     state.freshKeys.add(res.item.key);
     showReveal(res.item, res.first_in_world);
-    if (res.first_in_world) { shake(7); burst(at.x, at.y, { color: '#e8b04b', count: 44, power: 8 }); }
+    if (res.first_in_world) { shake(7); burst(at.x, at.y, { color: '#ffd24a', count: 44, power: 8 }); }
   }
   await refresh();
 }
@@ -581,7 +582,7 @@ $('unlock').addEventListener('click', async () => {
   audio.unlockTier(res.ceiling);
   shake(9);
   const at = centerOf($('unlock'));
-  burst(at.x, at.y, { color: '#e8b04b', count: 50, power: 9 });
+  burst(at.x, at.y, { color: '#ffd24a', count: 50, power: 9 });
   toast(`Tier ${res.ceiling} open — try your old combinations again`, 'gold');
   await refresh();
 });

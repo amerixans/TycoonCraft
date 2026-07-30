@@ -42,20 +42,20 @@ W, H = 600, 300
 FRAMES = 48
 FRAME_MS = 60
 
-BG_TOP = (28, 23, 18)
-BG_BOT = (37, 30, 24)
-GRID = (255, 255, 255, 7)
-# Brighter than the app's own panel colour on purpose. The tile is seen at
-# thumbnail size against a dark page, and the first pass -- which used the app's
-# exact values -- read as grey smudges rather than as cards.
-PANEL = (62, 51, 42)
-PANEL_EDGE = (122, 97, 68)
-COPPER = (216, 122, 62)
-GOLD = (240, 186, 88)
-CLAY_C = (176, 112, 70)
-WATER_C = (108, 164, 210)
-TEXT = (246, 238, 228)
-DIM = (158, 140, 120)
+# Kept in step with :root in public/src/style.css -- the tile is the app's first
+# impression, so a tile in the old palette next to a repalletted app reads as a
+# stale cache rather than as a choice.
+BG_TOP = (16, 22, 31)
+BG_BOT = (23, 31, 43)
+GRID = (255, 255, 255, 8)
+PANEL = (39, 51, 66)
+PANEL_EDGE = (78, 97, 122)
+ACCENT = (46, 211, 176)          # verdigris
+GOLD = (255, 210, 74)
+CLAY_C = (245, 128, 60)          # tier 5 orange, warm against the cool base
+WATER_C = (75, 163, 245)         # tier 3 blue
+TEXT = (233, 239, 246)
+DIM = (147, 165, 186)
 
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                    "public", "tile.gif")
@@ -88,7 +88,7 @@ def background() -> Image.Image:
     # Kiln glow from below, echoing the app's background.
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
-    gd.ellipse([W * 0.15, H * 0.72, W * 0.85, H * 1.5], fill=(205, 112, 56, 46))
+    gd.ellipse([W * 0.15, H * 0.72, W * 0.85, H * 1.5], fill=(245, 128, 60, 44))
     glow = glow.filter(ImageFilter.GaussianBlur(34))
     base = Image.alpha_composite(base.convert("RGBA"), glow)
 
@@ -98,7 +98,7 @@ def background() -> Image.Image:
     vig = Image.new("L", (W, H), 0)
     ImageDraw.Draw(vig).ellipse([-150, -130, W + 150, H + 130], fill=255)
     vig = vig.filter(ImageFilter.GaussianBlur(46))
-    dark = Image.new("RGBA", (W, H), (14, 11, 9, 255))
+    dark = Image.new("RGBA", (W, H), (8, 11, 17, 255))
     base = Image.composite(base, dark, vig)
 
     return base.convert("RGB")
@@ -141,7 +141,7 @@ def card(layer: Image.Image, cx: float, cy: float, accent, glyph: str,
     else:  # the result: a fired brick
         cd.polygon([(gx - r, gy + r * 0.6), (gx + r * 0.55, gy + r * 0.6),
                     (gx + r, gy - r * 0.1), (gx - r * 0.55, gy - r * 0.1)],
-                   fill=(*COPPER, alpha))
+                   fill=(*ACCENT, alpha))
         cd.polygon([(gx - r * 0.55, gy - r * 0.1), (gx + r, gy - r * 0.1),
                     (gx + r, gy - r * 0.75), (gx - r * 0.55, gy - r * 0.75)],
                    fill=(226, 138, 77, alpha))
@@ -170,7 +170,7 @@ def sparks(layer: Image.Image, cx: float, cy: float, progress: float) -> None:
         y = cy + math.sin(angle) * dist * 0.7
         r = max(0.8, 5.0 * (1 - progress))
         a = int(255 * (1 - progress) ** 1.2)
-        colour = GOLD if i % 3 else COPPER
+        colour = GOLD if i % 3 else ACCENT
         d.ellipse([x - r, y - r, x + r, y + r], fill=(*colour, a))
 
 
@@ -205,7 +205,7 @@ def build() -> None:
             # result has settled.
             sparks(layer, W / 2, CY, 1 - result_alpha)
             pop = 0.74 + 0.26 * result_alpha     # scales up as it lands
-            card(layer, W / 2, CY, COPPER, "brick", pop, int(255 * result_alpha))
+            card(layer, W / 2, CY, ACCENT, "brick", pop, int(255 * result_alpha))
 
         frames.append(Image.alpha_composite(bg.convert("RGBA"), layer).convert("RGB"))
 
