@@ -21,6 +21,7 @@ const state = {
   player: null,
   data: null,
   itemsByKey: new Map(),
+  revealItem: null,
   // Last-seen held counts, so a shelf rebuild can flash the ones that moved --
   // otherwise a producer ticking over is completely invisible.
   lastHeld: new Map(),
@@ -238,17 +239,16 @@ function renderShelf() {
   const ready = readyKeys();
 
   for (const item of items) {
-    const card = document.createElement('div');
     const grew = (state.lastHeld.get(item.key) ?? item.held) < item.held;
+    const card = document.createElement('div');
     card.className = [
       'item',
-      item.held ? '' : 'out-of-stock',
+      item.held ? 'draggable' : 'out-of-stock',
       state.freshKeys.has(item.key) ? 'fresh' : '',
       ready.has(item.key) ? 'ready' : '',
     ].filter(Boolean).join(' ');
     card.style.setProperty('--tier-color', tierColor(item.tier));
     card.setAttribute('role', 'listitem');
-    card.title = item.flavor || '';
 
     card.innerHTML = `
       <span class="item-emoji"></span>
@@ -259,54 +259,25 @@ function renderShelf() {
           <span class="traits"></span>
         </span>
       </span>
-      <span class="item-held"></span>`;
+      <span class="item-held"></span>
+      <span class="item-actions"></span>`;
+    // textContent, not interpolation: names come from a language model and flow
+    // through the database, so they are never trusted as markup.
     card.querySelector('.item-emoji').textContent = item.emoji || '?';
     card.querySelector('.item-name').textContent = item.name;
-    card.querySelector('.traits').textContent = item.traits.join(' · ');
+    card.querySelector('.traits').textContent = item.traits.join(' \u00b7 ');
+    card.title = item.flavor || '';
+
     const heldEl = card.querySelector('.item-held');
-    heldEl.textContent = item.held ? `×${item.held}` : '—';
+    heldEl.textContent = item.held ? `\u00d7${item.held}` : '\u2014';
+    heldEl.classList.toggle('none', !item.held);
     if (grew) heldEl.classList.add('tick');
 
-    const actions = document.createElement('span');
-    actions.className = 'place-actions';
-
-    if (item.held > 0) {
-      actions.append(button('Sell', `Sell all ${item.held} for ${item.held * item.sells_for}`,
-        async (e) => {
-          e.stopPropagation();
-          const res = await guard(() => api.sellAll(item.key));
-          if (res) {
-            const at = centerOf(card);
-            floatNumber(at.x, at.y, `+${res.coins}`);
-            audio.sale(res.coins);
-            await refresh();
-          }
-        }));
-    }
-    if (item.produces) {
-      actions.append(button('Build', `Place a ${item.produces} — ${item.produce_cost}`,
-        async (e) => {
-          e.stopPropagation();
-          const res = await guard(() => api.placeProducer(item.key, false));
-          if (res) { audio.place(); toast(`${item.produces} built`); await refresh(); }
-        }));
-    }
-    if (item.automatable) {
-      actions.append(button('Auto', `Automate this recipe — ${item.factory_cost}`,
-        async (e) => {
-          e.stopPropagation();
-          await automate(item);
-        }));
-    }
-    if (actions.children.length) card.append(actions);
+    card.querySelector('.item-actions').append(...itemActions(item, card));
 
     if (item.held > 0) {
       dragFromShelf(card, item, bench, (payload, at) => bench.add(payload, at));
-    } else {
-      card.style.cursor = 'not-allowed';
-      card.title = 'None in stock — produce or craft more';
     }
-
     host.append(card);
   }
 
@@ -315,22 +286,118 @@ function renderShelf() {
   state.freshKeys.clear();
 }
 
-function button(label, title, onClick) {
+/**
+ * The actions an item can have. Both are ALWAYS rendered when they are
+ * conceptually applicable to the item, and DISABLED with a reason when you
+ * cannot act right now.
+ *
+ * Hiding them was the mistake. A control you have never seen cannot be learned,
+ * so the whole build/sell mechanic read as arbitrary -- buttons appeared and
+ * vanished as stock moved. And there is only one "Build" now: placing a Clay Pit
+ * and placing a factory that makes Mud are the same player action ("put a machine
+ * in the yard that makes this"), and giving them two labels -- Build and Auto --
+ * was most of the confusion.
+ */
+function itemActions(item, card) {
+  const out = [];
+  const coins = state.data.coins;
+
+  // --- Sell -----------------------------------------------------------------
+  const takings = item.held * item.sells_for;
+  out.push(action({
+    className: 'act act-sell',
+    label: 'Sell',
+    amount: item.held ? takings : null,
+    disabled: item.held < 1,
+    title: item.held
+      ? `Sell all ${item.held} for ${takings} coins`
+      : `Nothing to sell \u2014 you hold none. Each one is worth ${item.sells_for}.`,
+    onClick: async () => {
+      const res = await guard(() => api.sellAll(item.key));
+      if (!res) return;
+      const at = centerOf(card);
+      floatNumber(at.x, at.y, `+${res.coins}`);
+      audio.sale(res.coins);
+      await refresh();
+    },
+  }));
+
+  // --- Build ----------------------------------------------------------------
+  // A producer takes precedence over a factory: for a Kiln the interesting
+  // machine is the one that makes charcoal, not one that makes more Kilns.
+  const asProducer = Boolean(item.produces);
+  if (asProducer || item.automatable) {
+    const cost = asProducer ? item.produce_cost : item.factory_cost;
+    const full = state.data.yard_used >= state.data.yard_slots;
+    const broke = coins < cost;
+
+    let why;
+    if (full) {
+      why = `Your yard is full (${state.data.yard_slots} slots). Remove something, `
+          + `or unlock the next tier for more room.`;
+    } else if (broke) {
+      why = `Costs ${cost} coins \u2014 you have ${Math.floor(coins)}.`;
+    } else if (asProducer) {
+      why = `Build a ${item.produces}: makes ${item.name} on its own, forever.`;
+    } else {
+      why = `Build a machine that makes ${item.name} automatically, `
+          + `consuming its ingredients from your stock.`;
+    }
+
+    out.push(action({
+      className: 'act act-build',
+      label: 'Build',
+      amount: cost,
+      disabled: full || broke,
+      title: why,
+      onClick: () => build(item),
+    }));
+  }
+
+  return out;
+}
+
+function action({ className, label, amount, disabled, title, onClick }) {
   const b = document.createElement('button');
-  b.className = 'toggle';
-  b.textContent = label;
+  b.className = className;
+  b.disabled = Boolean(disabled);
   b.title = title;
-  b.addEventListener('pointerdown', (e) => e.stopPropagation());   // don't start a drag
-  b.addEventListener('click', onClick);
+  b.innerHTML = '<span></span><span class="n"></span>';
+  b.children[0].textContent = label;
+  // A zero cost renders as "Build 0", which reads like a bug rather than like
+  // "free". Show nothing instead.
+  b.children[1].textContent = (amount == null || amount === 0) ? '' : amount.toLocaleString();
+  // A button press must not start a card drag.
+  b.addEventListener('pointerdown', (e) => e.stopPropagation());
+  b.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
   return b;
 }
+
+/** One verb for "put a machine in the yard that makes this". */
+async function build(item) {
+  const res = item.produces
+    ? await guard(() => api.placeProducer(item.key, false))
+    : await guard(() => api.placeFactory(item.key, true));
+  if (!res) return;
+  audio.place();
+  toast(item.produces
+    ? `${item.produces} built \u2014 making ${item.name}`
+    : `Now making ${item.name} automatically, and selling it`, 'gold');
+  await refresh();
+}
+
 
 function renderYard() {
   const host = $('yard');
   host.innerHTML = '';
   const yard = state.data.yard;
   if (!yard.length) {
-    host.innerHTML = '<p class="yard-empty">Nothing running. Build a producer from the shelf.</p>';
+    // An empty state that says what to do, not just that nothing is here.
+    host.innerHTML =
+      '<p class="yard-empty">Nothing running yet.<br><br>'
+      + 'Press <b>Build</b> on any item in your shelf to put a machine here. '
+      + 'Machines keep making things while you are away \u2014 that is where the '
+      + 'money comes from.</p>';
     return;
   }
 
@@ -343,44 +410,79 @@ function renderYard() {
     ring.dataset.id = place.id;
     ring.style.setProperty('--p', (place.progress / place.secs).toFixed(3));
     ring.innerHTML = '<span></span>';
-    ring.querySelector('span').textContent = place.output_emoji || '⚙';
+    ring.querySelector('span').textContent = place.output_emoji || '\u2699';
     if (place.kind === 'producer') {
-      ring.title = 'Click to hand-gather';
+      ring.title = 'Click to hurry it along by hand';
       ring.addEventListener('click', () => handGather(place, ring));
     }
 
     const body = document.createElement('div');
     body.className = 'place-body';
+
     const name = document.createElement('div');
     name.className = 'place-name';
-    name.textContent = place.kind === 'producer' ? place.label : `→ ${place.output_name}`;
+    // Say what it MAKES, which is what the player cares about. The machine's own
+    // name is secondary and goes in the line below.
+    name.textContent = place.output_name;
+
     const sub = document.createElement('div');
     sub.className = 'place-sub';
-    sub.textContent = `${place.output_name} every ${place.secs}s`;
+    const per = place.secs >= 60
+      ? `${(place.secs / 60).toFixed(1)} min`
+      : `${place.secs}s`;
+    const what = place.kind === 'producer' ? place.label : 'Factory';
+    sub.textContent = `${what} \u00b7 one every ${per}`;
+
+    // What it is worth per hour. The actual question you ask of a machine, and
+    // the row had a wide empty gap to put the answer in.
+    const unit = state.itemsByKey.get(place.output)?.sells_for;
+    if (unit) {
+      const rate = document.createElement('span');
+      rate.className = 'place-rate';
+      const perHour = Math.round((3600 / place.secs) * unit);
+      rate.textContent = ` \u00b7 ${unit} each, ${perHour.toLocaleString()}/hr`;
+      rate.title = place.autosell
+        ? 'Being sold automatically, so this is real income'
+        : 'Stocking to your shelf. Turn on Auto-sell to earn this.';
+      sub.append(rate);
+    }
+
+    if (place.kind === 'factory' && place.inputs.length) {
+      const needs = document.createElement('span');
+      needs.className = 'needs';
+      const names = place.inputs
+        .map((k) => state.itemsByKey.get(k)?.name || k)
+        .join(' + ');
+      needs.textContent = ` \u00b7 needs ${names}`;
+      sub.append(needs);
+    }
     if (place.stalled) {
       const warn = document.createElement('span');
       warn.className = 'stall';
-      warn.textContent = ' — out of ingredients';
+      warn.textContent = ' \u00b7 out of ingredients';
       sub.append(warn);
     }
     body.append(name, sub);
 
     const actions = document.createElement('div');
     actions.className = 'place-actions';
+
     const sell = document.createElement('button');
-    sell.className = 'toggle';
-    sell.textContent = 'Sell';
-    sell.title = 'Sell output automatically instead of stocking it';
-    sell.setAttribute('aria-pressed', place.autosell);
+    sell.className = 'autosell';
+    sell.textContent = 'Auto-sell';
+    sell.setAttribute('aria-pressed', String(place.autosell));
+    sell.title = place.autosell
+      ? 'Selling the output as it is made. Click to stock it instead.'
+      : 'Adding the output to your shelf. Click to sell it automatically instead.';
     sell.addEventListener('click', async () => {
       await guard(() => api.autosell(place.id, !place.autosell));
       await refresh();
     });
 
     const remove = document.createElement('button');
-    remove.className = 'toggle';
-    remove.textContent = '✕';
-    remove.title = 'Remove — half your coins back';
+    remove.className = 'place-remove';
+    remove.textContent = '\u2715';
+    remove.title = 'Remove this machine \u2014 half your coins back';
     remove.addEventListener('click', async () => {
       const res = await guard(() => api.remove(place.id));
       if (res) { toast(`Removed, +${res.refund}`); await refresh(); }
@@ -473,15 +575,6 @@ async function handGather(place, ring) {
   if (res) { audio.gather(); await refresh(); }
 }
 
-async function automate(item) {
-  const res = await guard(() => api.placeFactory(item.key, true));
-  if (res) {
-    audio.place();
-    toast(`Automated ${item.name} — selling output`, 'gold');
-    await refresh();
-  }
-}
-
 $('unlock').addEventListener('click', async () => {
   const res = await guard(() => api.unlock());
   if (!res) return;
@@ -526,6 +619,10 @@ function wireChrome() {
   $('clear-bench').addEventListener('click', () => bench.clear());
 
   $('reveal-ok').addEventListener('click', () => { $('reveal').hidden = true; });
+  $('reveal-build').addEventListener('click', async () => {
+    $('reveal').hidden = true;
+    if (state.revealItem) await build(state.revealItem);
+  });
   $('reveal').addEventListener('click', (e) => {
     if (e.target === $('reveal')) $('reveal').hidden = true;
   });
@@ -569,6 +666,25 @@ function showReveal(item, firstInWorld) {
   $('reveal-emoji').textContent = item.emoji || '?';
   $('reveal-name').textContent = item.name;
   $('reveal-flavor').textContent = item.flavor || '';
+
+  // Offer to industrialise it on the spot. Discovering something and then
+  // immediately automating it is the whole loop in one gesture, and it teaches
+  // what Build means at the moment the player is most receptive to learning it.
+  state.revealItem = item;
+  const buildBtn = $('reveal-build');
+  const canBuild = Boolean(item.produces || item.automatable);
+  const cost = item.produces ? item.produce_cost : item.factory_cost;
+  const room = state.data && state.data.yard_used < state.data.yard_slots;
+  const affordable = state.data && state.data.coins >= cost;
+  buildBtn.hidden = !canBuild;
+  if (canBuild) {
+    buildBtn.disabled = !room || !affordable;
+    buildBtn.textContent = affordable
+      ? `Build one \u2014 ${cost.toLocaleString()}`
+      : `Build one (need ${cost.toLocaleString()})`;
+    if (!room) buildBtn.textContent = 'Yard is full';
+  }
+  $('reveal-ok').textContent = canBuild ? 'Later' : 'Good';
 
   const traits = $('reveal-traits');
   traits.innerHTML = '';

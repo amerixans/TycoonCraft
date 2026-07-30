@@ -184,7 +184,7 @@ input::placeholder { color: var(--faint); }
  * wrap was still happening at 606px. Measured, not guessed. */
 @media (max-width: 46rem) {
   .topbar { gap: .55rem; padding: .5rem .6rem; }
-  .stat[title^="Best-case"] { display: none; }
+  #stat-income { display: none; }
   .who { display: none; }
   .btn-unlock { font-size: .8rem; padding: .38rem .5rem; }
   .brand { font-size: .95rem; }
@@ -197,45 +197,56 @@ input::placeholder { color: var(--faint); }
 
 /* ------------------------------------------------------------- columns */
 
+/* Two columns, and the right one splits vertically.
+ *
+ * The bench used to take the whole centre column -- the largest panel on screen
+ * -- for something that holds two cards for three seconds. The yard, which is
+ * the state you actually sit and watch, got a cramped sidebar it had to share
+ * with the activity feed. That was backwards, so: bench is a short strip, yard
+ * gets everything under it. */
 .columns {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(15rem, 20rem) 1fr minmax(15rem, 19rem);
+  grid-template-columns: minmax(17rem, 23rem) 1fr;
   gap: 1px;
   background: var(--line);
 }
-/* overflow:hidden is load-bearing, not tidiness: the grid hands each column an
- * equal row, and a column whose content is taller than its row will otherwise
- * paint straight over its neighbour. That is exactly how the bench's status
- * line ended up drawn across the shelf's trait filters. */
 .col { background: var(--bg); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+
+.col-right {
+  display: grid;
+  /* Bench gets only what it needs. Wide and short reads as a workbench surface
+     anyway, and two cards side by side need width, not height. */
+  grid-template-rows: auto 1fr;
+  gap: 1px;
+  background: var(--line);
+}
+.pane { background: var(--bg); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+
 .col-head {
   display: flex;
   align-items: center;
   gap: .6rem;
-  padding: .7rem .85rem;
+  padding: .55rem .85rem;
   border-bottom: 1px solid var(--line);
+  flex: none;
 }
 .col-head h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); }
-.col-head-sub { border-top: 1px solid var(--line); }
 .col-head input { padding: .3rem .5rem; font-size: .85rem; }
+.head-hint { color: var(--faint); font-size: .74rem; }
 .slots { color: var(--faint); font-size: .82rem; margin-left: auto; }
+.col-head .btn-sm { margin-left: auto; }
 
-/* Narrow screens get one ordinary scrolling page rather than three stacked
- * panes each scrolling inside a third of the viewport, which is cramped and
- * makes the shelf almost unusable on a phone. Rows size to their content and
- * the whole column set scrolls. */
+/* Narrow screens get one ordinary scrolling page rather than panes each
+ * scrolling inside a fraction of the viewport. Yard first: it is what you came
+ * back to look at. */
 @media (max-width: 60rem) {
-  .columns {
-    grid-template-columns: 1fr;
-    grid-auto-rows: min-content;
-    overflow-y: auto;
-  }
-  .col { overflow: visible; }
-  .col-bench { order: -1; }
+  .columns { grid-template-columns: 1fr; grid-auto-rows: min-content; overflow-y: auto; }
+  .col, .pane { overflow: visible; }
+  .col-right { grid-template-rows: auto auto; }
   .shelf, .yard, .feed { overflow: visible; max-height: none; }
-  .bench { min-height: 14rem; }
+  .bench { min-height: 11rem; }
 }
 
 /* --------------------------------------------------------------- shelf */
@@ -244,8 +255,9 @@ input::placeholder { color: var(--faint); }
   display: flex;
   flex-wrap: wrap;
   gap: .25rem;
-  padding: .5rem .85rem;
+  padding: .45rem .85rem;
   border-bottom: 1px solid var(--line);
+  flex: none;
 }
 .trait-filters:empty { display: none; }
 .tfilter {
@@ -260,59 +272,39 @@ input::placeholder { color: var(--faint); }
 }
 .tfilter[aria-pressed="true"] { color: var(--ink); background: var(--accent); border-color: var(--accent); }
 
-.shelf { flex: 1; overflow-y: auto; padding: .6rem; display: flex; flex-direction: column; gap: .35rem; }
+.shelf { flex: 1; overflow-y: auto; padding: .5rem; display: flex; flex-direction: column; gap: .4rem; }
 
 .item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.9rem 1fr auto;
+  grid-template-areas: "emoji body held" ". actions actions";
   align-items: center;
-  gap: .6rem;
-  padding: .45rem .55rem;
+  gap: .15rem .55rem;
+  padding: .5rem .55rem;
   background: linear-gradient(var(--panel), #221b16);
   border: 1px solid var(--line);
   border-left: 3px solid var(--tier-color, var(--t1));
   border-radius: var(--r);
-  cursor: grab;
   user-select: none;
   touch-action: none;
-  transition: transform .1s ease, border-color .15s, box-shadow .15s;
+  transition: border-color .15s, box-shadow .15s;
 }
-.item:hover { transform: translateX(2px); border-color: var(--line-hi); box-shadow: var(--shadow); }
-.item:active { cursor: grabbing; }
-.item.out-of-stock { opacity: .42; }
+.item:hover { border-color: var(--line-hi); box-shadow: var(--shadow); }
+.item.draggable { cursor: grab; }
+.item.draggable:active { cursor: grabbing; }
 
-/* A held count that just changed. Cheap, and it makes an idle yard feel alive
- * without a separate animation per producer. */
-.item-held.tick { animation: tick .45s ease; }
-@keyframes tick {
-  40% { color: var(--gold); transform: scale(1.25); }
-}
+/* Out of stock is dimmed, not hidden, and its buttons stay put -- see the note
+ * on .act. Only the emoji and text fade; the controls keep full contrast so they
+ * remain legible and learnable. */
+.item.out-of-stock .item-emoji,
+.item.out-of-stock .item-body { opacity: .5; }
 
-/* Freshly discovered: a brief gold sweep across the card, so a new arrival is
- * findable in a long shelf without having to sort by time. */
-.item.fresh { animation: fresh 1.5s ease; }
-@keyframes fresh {
-  0%   { box-shadow: 0 0 0 1px var(--gold), 0 0 22px rgba(232, 176, 75, .5); }
-  100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; }
-}
-
-/* Satisfiable: every ingredient for this recipe is in stock. A quiet nudge
- * toward the thing you can actually do next. */
-.item.ready { border-color: rgba(232, 176, 75, .45); }
-
-.item-emoji { font-size: 1.4rem; line-height: 1; width: 1.6rem; text-align: center; }
-.item-body { min-width: 0; flex: 1; }
-.item-name { font-weight: 550; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-emoji { grid-area: emoji; font-size: 1.4rem; line-height: 1; text-align: center; }
+.item-body { grid-area: body; min-width: 0; }
+.item-name { font-weight: 550; font-size: .93rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-sub { color: var(--faint); font-size: .72rem; display: flex; gap: .35rem; }
-.item-held { font-family: var(--num); color: var(--dim); font-size: .85rem; }
-.item-new {
-  font-size: .6rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--ink);
-  background: var(--accent);
-  border-radius: 3px;
-  padding: .05rem .25rem;
-}
+.item-held { grid-area: held; font-family: var(--num); color: var(--dim); font-size: .88rem; }
+.item-held.none { color: var(--faint); }
 
 .chip {
   font-size: .66rem;
@@ -322,13 +314,100 @@ input::placeholder { color: var(--faint); }
   padding: .04rem .28rem;
 }
 
+/* A held count that just changed. Cheap, and it makes an idle yard feel alive
+ * without a separate animation per producer. */
+.item-held.tick { animation: tick .45s ease; }
+@keyframes tick { 40% { color: var(--gold); transform: scale(1.25); } }
+
+/* Freshly discovered: a brief gold sweep, so a new arrival is findable in a long
+ * shelf without having to sort by time. */
+.item.fresh { animation: fresh 1.5s ease; }
+@keyframes fresh {
+  0%   { box-shadow: 0 0 0 1px var(--gold), 0 0 22px rgba(232, 176, 75, .5); }
+  100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; }
+}
+
+/* Every ingredient for this recipe is in stock. A quiet nudge toward the thing
+ * you can actually do next. */
+.item.ready { border-color: rgba(232, 176, 75, .45); }
+
+/* ------------------------------------------------------- item actions */
+
+/* These used to be 0.64rem uppercase text in --faint (#6b5c4e) on a transparent
+ * background, and they were hidden whenever they were unavailable. Both were
+ * mistakes: the contrast was near-unreadable, and a control you have never seen
+ * cannot be learned -- so the mechanic read as arbitrary.
+ *
+ * Now: real buttons, always present, DISABLED rather than hidden when you cannot
+ * act, and each one states the number. Money out is copper, money in is gold,
+ * so the direction of a button is legible before you read the label. */
+.item-actions { grid-area: actions; display: flex; gap: .3rem; padding-top: .1rem; }
+
+.act {
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 550;
+  display: inline-flex;
+  align-items: baseline;
+  gap: .3rem;
+  padding: .26rem .5rem;
+  border-radius: 6px;
+  border: 1px solid;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .13s, border-color .13s, transform .09s;
+}
+.act:active:not(:disabled) { transform: translateY(1px); }
+.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.act .n { font-family: var(--num); font-size: .74rem; opacity: .95; }
+
+/* Money in. */
+.act-sell {
+  color: var(--gold);
+  border-color: rgba(232, 176, 75, .4);
+  background: rgba(232, 176, 75, .09);
+}
+.act-sell:hover:not(:disabled) { background: rgba(232, 176, 75, .2); border-color: var(--gold); }
+
+/* Money out. */
+.act-build {
+  color: #eda36a;
+  border-color: rgba(205, 112, 56, .45);
+  background: rgba(205, 112, 56, .12);
+}
+.act-build:hover:not(:disabled) { background: rgba(205, 112, 56, .26); border-color: var(--accent); }
+
+.act:disabled {
+  cursor: not-allowed;
+  color: var(--faint);
+  border-color: var(--line);
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- feed */
+
+.feed-wrap { flex: none; border-top: 1px solid var(--line); }
+.feed-wrap summary {
+  padding: .5rem .85rem;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--dim);
+  cursor: pointer;
+}
+.feed-wrap summary::marker { color: var(--faint); }
+.feed { max-height: 10rem; overflow-y: auto; padding: 0 .85rem .6rem; display: flex; flex-direction: column; gap: .25rem; }
+.feed-row { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--dim); }
+.feed-row b { color: var(--text); font-weight: 550; }
+.feed-empty { color: var(--faint); font-size: .8rem; padding: .3rem 0; }
+
 /* --------------------------------------------------------------- bench */
 
-.col-bench { position: relative; }
 .bench {
   position: relative;
-  flex: 1;
-  min-height: 16rem;
+  /* Short on purpose. Tall enough for two cards plus a little slack, no more --
+     see the note on .columns. */
+  height: 11.5rem;
   overflow: hidden;
   /* Faint grid so dragging has a sense of place, and so the surface reads as
    * a workbench rather than an empty div. */
@@ -344,9 +423,11 @@ input::placeholder { color: var(--faint); }
   place-content: center;
   text-align: center;
   color: var(--faint);
+  font-size: .88rem;
   line-height: 1.7;
   pointer-events: none;
   margin: 0;
+  transition: opacity .2s;
 }
 .bench.has-items .bench-hint { opacity: 0; }
 
@@ -392,37 +473,38 @@ input::placeholder { color: var(--faint); }
   from { transform: translate(-50%, -50%) scale(.2) rotate(-8deg); opacity: 0; }
 }
 
-.bench-msg { min-height: 1.6rem; padding: .35rem .85rem .6rem; color: var(--dim); font-size: .86rem; }
+.bench-msg { min-height: 1.5rem; flex: none; padding: .3rem .85rem .5rem; color: var(--dim); font-size: .86rem; }
 .bench-msg.warn { color: var(--gold); }
 .bench-msg.bad  { color: var(--bad); }
 
 /* ---------------------------------------------------------------- yard */
 
-.yard { flex: 1; overflow-y: auto; padding: .6rem; display: flex; flex-direction: column; gap: .4rem; }
-.yard-empty { color: var(--faint); font-size: .86rem; padding: .8rem; line-height: 1.6; }
+.yard { flex: 1; overflow-y: auto; padding: .5rem; display: flex; flex-direction: column; gap: .45rem; }
+.yard-empty { color: var(--faint); font-size: .88rem; padding: 1rem; line-height: 1.7; max-width: 30rem; }
+.yard-empty b { color: var(--dim); }
 
 .place {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2.6rem 1fr auto;
   align-items: center;
-  gap: .55rem;
-  padding: .45rem .55rem;
+  gap: .7rem;
+  padding: .55rem .65rem;
   background: linear-gradient(var(--panel), #221b16);
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
-.place.stalled { border-color: rgba(192, 91, 74, .5); }
+.place.stalled { border-color: rgba(192, 91, 74, .55); background: linear-gradient(#2c1f1b, #241a16); }
 
 /* Progress as a conic ring: one element, no layout thrash, reads at a glance. */
 .ring {
   position: relative;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2.6rem;
+  height: 2.6rem;
   flex: none;
   border-radius: 50%;
   background: conic-gradient(var(--accent) calc(var(--p, 0) * 1turn), rgba(255, 255, 255, .07) 0);
   display: grid;
   place-items: center;
-  cursor: pointer;
 }
 .ring::after {
   content: "";
@@ -433,37 +515,68 @@ input::placeholder { color: var(--faint); }
 }
 /* z-index, not just position: the ::after inner circle is generated content and
  * paints after the span, so without this it covers the emoji entirely. */
-.ring span { position: relative; z-index: 1; font-size: 1.05rem; }
-.ring.clickable:hover { filter: brightness(1.25); }
+.ring span { position: relative; z-index: 1; font-size: 1.2rem; }
+.ring.clickable { cursor: pointer; }
+.ring.clickable:hover { filter: brightness(1.3); }
 .ring.pop { animation: ringpop .3s ease; }
 @keyframes ringpop { 50% { transform: scale(1.16); } }
+.place.stalled .ring { background: conic-gradient(var(--bad) calc(var(--p, 0) * 1turn), rgba(255,255,255,.07) 0); }
 
-.place-body { flex: 1; min-width: 0; }
-.place-name { font-size: .88rem; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.place-sub { color: var(--faint); font-size: .71rem; }
-.place-sub .stall { color: var(--bad); }
-.place-actions { display: flex; gap: .2rem; }
+.place-body { min-width: 0; }
+.place-name { font-size: .95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.place-sub { color: var(--faint); font-size: .76rem; margin-top: .1rem; }
+.place-sub .needs { color: var(--dim); }
+.place-sub .stall { color: #e0917f; }
+.place-rate { color: var(--good); font-family: var(--num); font-size: .76rem; }
 
-.toggle {
+.place-actions { display: flex; align-items: center; gap: .35rem; }
+
+/* Auto-sell was labelled just "SELL", which collided with the shelf's Sell
+ * button and made two different things look like one. Spelled out, and it reads
+ * as a switch rather than as a command. */
+.autosell {
   font: inherit;
-  font-size: .64rem;
-  text-transform: uppercase;
-  letter-spacing: .05em;
+  font-size: .74rem;
+  font-weight: 550;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
   color: var(--faint);
   background: transparent;
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: .14rem .3rem;
+  border-radius: 6px;
+  padding: .26rem .45rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.autosell::before {
+  content: "";
+  width: .55rem;
+  height: .55rem;
+  border-radius: 50%;
+  background: var(--faint);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .04);
+}
+.autosell[aria-pressed="true"] {
+  color: var(--gold);
+  border-color: rgba(232, 176, 75, .5);
+  background: rgba(232, 176, 75, .1);
+}
+.autosell[aria-pressed="true"]::before { background: var(--gold); box-shadow: 0 0 7px var(--gold); }
+.autosell:hover { border-color: var(--line-hi); }
+
+.place-remove {
+  font: inherit;
+  font-size: .9rem;
+  line-height: 1;
+  color: var(--faint);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: .3rem .45rem;
   cursor: pointer;
 }
-.toggle[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); background: rgba(232, 176, 75, .1); }
-
-/* ---------------------------------------------------------------- feed */
-
-.feed { max-height: 11rem; overflow-y: auto; padding: .5rem .6rem; display: flex; flex-direction: column; gap: .25rem; }
-.feed-row { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--dim); }
-.feed-row b { color: var(--text); font-weight: 550; }
-.feed-empty { color: var(--faint); font-size: .8rem; padding: .3rem; }
+.place-remove:hover { color: #e0917f; border-color: rgba(192, 91, 74, .5); background: rgba(192, 91, 74, .1); }
 
 /* -------------------------------------------------------------- reveal */
 
@@ -573,5 +686,22 @@ input::placeholder { color: var(--faint); }
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+}
+
+/* Offer to automate straight from the reveal card. Discovering something and
+ * immediately being able to industrialise it is the loop in one gesture, and it
+ * teaches what Build means at the moment the player is most receptive. */
+.reveal-actions { display: flex; gap: .5rem; justify-content: center; }
+.reveal-actions .btn { flex: 0 1 auto; }
+
+/* On a wide screen a single column of machines wastes most of the yard -- which
+ * is the panel we just gave the room to. Two or three across, sized so a row
+ * still fits its name, rate and controls without wrapping. */
+@media (min-width: 78rem) {
+  .yard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(25rem, 1fr));
+    align-content: start;
   }
 }

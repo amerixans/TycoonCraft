@@ -41,7 +41,7 @@
       <span id="coins" class="stat-value num">0</span>
     </div>
 
-    <div class="stat" title="Best-case income while every factory is fed">
+    <div class="stat" id="stat-income" title="Coins per hour, while every machine is fed">
       <span class="stat-icon">↗</span>
       <span id="income" class="stat-value num">0</span><span class="stat-unit">/hr</span>
     </div>
@@ -56,11 +56,16 @@
 
     <div class="spacer"></div>
     <div class="who"><span id="who-name"></span></div>
-    <button id="sound" class="btn btn-ghost" aria-pressed="false"
-            title="Sound">♪</button>
+    <button id="sound" class="btn btn-ghost" aria-pressed="false" title="Sound">♪</button>
     <button id="menu-btn" class="btn btn-ghost" aria-label="Menu">☰</button>
   </header>
 
+  <!-- Two columns, not three. The shelf is a tall list; the right-hand side
+       stacks a SHORT workbench over a TALL yard.
+
+       The bench is transient -- it holds two cards for three seconds and then
+       they are gone -- so it does not deserve the biggest panel on screen. The
+       yard is the actual game state you sit and watch, so it gets the room. -->
   <main class="columns">
 
     <section class="col col-shelf" aria-label="Your shelf">
@@ -70,35 +75,38 @@
       </div>
       <div id="trait-filters" class="trait-filters"></div>
       <div id="shelf" class="shelf" role="list"></div>
+      <details class="feed-wrap">
+        <summary>Just found</summary>
+        <div id="feed" class="feed"></div>
+      </details>
     </section>
 
-    <section class="col col-bench" aria-label="Workbench">
-      <div class="col-head">
-        <h2>Workbench</h2>
-        <button id="clear-bench" class="btn btn-ghost btn-sm">Clear</button>
-      </div>
-      <!-- The whole point of the interaction: drag items out here, then drag
-           one onto another. Two slots and a "Craft" button is a form, not a toy. -->
-      <div id="bench" class="bench">
-        <p class="bench-hint" id="bench-hint">
-          Drag two things here,<br>then drop one onto the other.
-        </p>
-      </div>
-      <div id="bench-msg" class="bench-msg" aria-live="polite"></div>
-    </section>
+    <div class="col col-right">
 
-    <section class="col col-yard" aria-label="Your yard">
-      <div class="col-head">
-        <h2>Yard</h2>
-        <span id="slots" class="slots num"></span>
-      </div>
-      <div id="yard" class="yard"></div>
-      <div class="col-head col-head-sub">
-        <h2>Just found</h2>
-      </div>
-      <div id="feed" class="feed"></div>
-    </section>
+      <section class="pane pane-bench" aria-label="Workbench">
+        <div class="col-head">
+          <h2>Workbench</h2>
+          <span class="head-hint">drag two things together</span>
+          <button id="clear-bench" class="btn btn-ghost btn-sm">Clear</button>
+        </div>
+        <div id="bench" class="bench">
+          <p class="bench-hint" id="bench-hint">
+            Drag two things from the shelf, then drop one onto the other
+          </p>
+        </div>
+        <div id="bench-msg" class="bench-msg" aria-live="polite"></div>
+      </section>
 
+      <section class="pane pane-yard" aria-label="Your yard">
+        <div class="col-head">
+          <h2>Yard</h2>
+          <span class="head-hint">machines that run while you're away</span>
+          <span id="slots" class="slots num"></span>
+        </div>
+        <div id="yard" class="yard"></div>
+      </section>
+
+    </div>
   </main>
 </div>
 
@@ -111,7 +119,10 @@
     <div class="reveal-name" id="reveal-name"></div>
     <div class="reveal-traits" id="reveal-traits"></div>
     <div class="reveal-flavor" id="reveal-flavor"></div>
-    <button class="btn btn-primary" id="reveal-ok">Good</button>
+    <div class="reveal-actions">
+      <button class="btn btn-primary" id="reveal-build"></button>
+      <button class="btn" id="reveal-ok">Later</button>
+    </div>
   </div>
 </div>
 
@@ -123,6 +134,18 @@
       <input id="resume-link" type="text" readonly>
     </label>
     <button class="btn" id="copy-link">Copy link</button>
+    <hr>
+    <h3>How it works</h3>
+    <ul class="help">
+      <li><b>Combine</b> two things on the workbench to discover a third. If they
+          don't react it costs nothing — that's how you learn what does.</li>
+      <li><b>Build</b> puts a machine in your yard that makes that item, over and
+          over, even while you're away.</li>
+      <li><b>Sell</b> turns what you're holding into coins. Machines can sell
+          their own output automatically.</li>
+      <li>Crafting only reaches as high as your <b>tier</b>. When everything
+          starts coming back "nothing new", buy the next one.</li>
+    </ul>
     <hr>
     <p class="fine" id="build-note"></p>
     <button class="btn btn-ghost" id="menu-close">Close</button>
