@@ -114,7 +114,13 @@ jobs:
     steps:
       - uses: appleboy/ssh-action@v1.0.3
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Accept either secret name. The env var the app reads is
+          # ANTHROPIC_API_KEY -- that is the Anthropic SDK's standard name and
+          # should not change -- but the *secret* name is arbitrary, and GitHub
+          # secrets cannot be renamed (you have to delete and re-paste). So take
+          # whichever is set rather than making anyone re-enter a key over a
+          # naming preference.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || secrets.ANTHROPIC_KEY }}
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
