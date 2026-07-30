@@ -99,11 +99,34 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
+## Sound
+
+Web Audio only — no files, nothing to download. `public/src/audio.js`.
+
+The music is **generative rather than a loop**, for a specific reason: this is an
+idle game, so the tab stays open for hours, and a loop that is pleasant for three
+minutes is unbearable for two hours — you start hearing the seam. So it is a slow
+pad over a four-chord walk with a sparse bell line on top, and none of it is
+quantised tightly enough to form a hook.
+
+**The pad's chord widens as you unlock tiers.** Tier 1 is a bare open fifth:
+industrial, unresolved, slightly bleak. By tier 6 it is a major ninth. The music
+brightens as you get richer, which is the arc of the whole game expressed in the
+one channel that costs no screen space.
+
+Discovery borrows Poggle's trick outright, because it works: each consecutive find
+steps up a major pentatonic, so a run plays a rising phrase, and from the third a
+quiet fifth joins on top. Pentatonic because every interval in it is consonant, so
+a lucky eight-discovery streak cannot land on a sour note. A dud breaks the run.
+
+There's a ♪ button in the top bar and the choice is remembered in `localStorage`.
+
 ## Tests
 
 ```bash
-pytest -m "not live"        # traits, buckets, economy, balance, API
+pytest -m "not live"        # traits, buckets, economy, balance, naming, API
 pytest -s -k resolution     # prints what every combination resolves to
+node tests/audio.test.mjs   # drives audio.js under a stubbed AudioContext
 ```
 
 `tests/test_traits.py::test_resolution_table` is the one to read after editing
@@ -131,7 +154,11 @@ game/economy.py        production, offline accrual, selling — pure, no I/O
 game/naming.py         the one model call, plus its fallback
 game/store.py          SQLite; one connection behind one lock
 content/recipes.json   pre-generated names, baked into the image
-public/                index.html + ES modules, served as-is
+public/index.html      one page, relative URLs only
+public/src/main.js     state, polling, the three columns
+public/src/bench.js    the drag-one-thing-onto-another surface
+public/src/audio.js    generative music and SFX, Web Audio only
+public/src/fx.js       particles, toasts, floating numbers, shake
 ```
 
 `traits.py`, `buckets.py` and `economy.py` have no I/O on purpose — that is what
