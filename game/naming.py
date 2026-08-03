@@ -22,6 +22,9 @@ from __future__ import annotations
 import logging
 import os
 import re
+import threading
+import time
+from collections import deque
 from typing import Optional, Tuple
 
 from .traits import TRAIT_ORDER, Bucket, fallback_name
@@ -29,6 +32,51 @@ from .traits import TRAIT_ORDER, Bucket, fallback_name
 log = logging.getLogger("tycooncraft.naming")
 
 MODEL = "claude-sonnet-5"
+
+# A ceiling on API calls per rolling 24 hours.
+#
+# Only a never-before-seen combination costs anything, and the set of
+# combinations is finite, so the total bill has an upper bound with or without
+# this. What it does not have is a bound per *day*: anyone can mint players
+# freely, and someone walking the combination space can spend that whole
+# ceiling in an afternoon. This converts a surprise invoice into a slow day.
+#
+# Being over budget behaves exactly like having no key configured, which the
+# game already handles -- it writes a deterministic fallback name, and a later
+# craft of the same pair upgrades it once there is budget again.
+#
+# The window is in memory, so a restart forgives it. That is the right trade
+# for a circuit breaker on a toy: the failure mode of a persisted counter is a
+# game stuck on fallback names with nobody knowing why.
+DAILY_CALL_BUDGET = int(os.getenv("NAMING_DAILY_BUDGET", "400"))
+
+_budget_lock = threading.Lock()
+_recent_calls: deque = deque()
+_budget_warned = False
+
+
+def _claim_call() -> bool:
+    """Take one call from the rolling budget, or report that there is none."""
+    global _budget_warned
+    if DAILY_CALL_BUDGET <= 0:
+        return False
+    now = time.time()
+    with _budget_lock:
+        cutoff = now - 86_400
+        while _recent_calls and _recent_calls[0] < cutoff:
+            _recent_calls.popleft()
+        if len(_recent_calls) >= DAILY_CALL_BUDGET:
+            if not _budget_warned:
+                log.warning(
+                    "naming budget of %d calls/day is spent; "
+                    "falling back to deterministic names",
+                    DAILY_CALL_BUDGET,
+                )
+                _budget_warned = True
+            return False
+        _recent_calls.append(now)
+        _budget_warned = False
+        return True
 
 # The response is ~60 tokens, but adaptive thinking shares this budget, so it
 # needs headroom -- max_tokens caps thinking plus text together. We are only
@@ -159,8 +207,10 @@ def name_discovery(
     upgrade it once a key is configured, which is what makes "deploy first,
     add the key second" safe.
     """
+    # Short-circuits left to right, so an unconfigured app never touches the
+    # budget and a spent budget never builds a client.
     client = _get_client() if configured() else None
-    if client is None:
+    if client is None or not _claim_call():
         name, emoji = fallback_name(a_name, b_name, bucket)
         return name, emoji, bucket.describe(), True
 

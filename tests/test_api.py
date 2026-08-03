@@ -327,11 +327,21 @@ def test_removing_a_placement_refunds_half(client):
     assert store.get_player(pid)["coins"] == before + placed["cost"] // 2
 
 
-def test_resume_link_works(client):
-    """No passwords: the id is the credential, handed back as ?p= so a player
-    can come back on another device."""
+def test_the_id_is_only_accepted_as_a_header(client):
+    """No passwords: the id is the credential, so it travels in a header only.
+
+    It used to also be read from ?p=, which put a working credential into the
+    nginx access log, into browser history and into the Referer of any outbound
+    link. The resume link now carries it in the URL fragment, which the browser
+    keeps to itself -- the client reads it there and sends the header from then
+    on. A query parameter must not authenticate anyone.
+    """
     pid = new_player(client)
+
     res = client.get(f"/api/state?p={pid}")
+    assert res.status_code == 401
+
+    res = client.get("/api/state", headers={"X-Player": pid})
     assert res.status_code == 200
     assert res.get_json()["ceiling"] == 1
 

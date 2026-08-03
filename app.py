@@ -13,10 +13,13 @@ Two things here are load-bearing for the platform contract:
   `{"llm": "unconfigured"}`. That is what makes it safe to deploy first and add
   the key second.
 
-Auth is a player id in an `X-Player` header, kept in the browser's localStorage
-and also accepted as `?p=` for the resume link. No cookies at all, which means
-no CSRF surface to get wrong -- a custom header cannot be set by a cross-origin
-form post.
+Auth is a player id in an `X-Player` header, kept in the browser's localStorage.
+No cookies at all, which means no CSRF surface to get wrong -- a custom header
+cannot be set by a cross-origin form post.
+
+The header is the *only* way to present it. The id is the whole credential, so
+it must not travel anywhere that logs URLs; the resume link carries it in the
+fragment, which the browser never sends to a server.
 """
 
 from __future__ import annotations
@@ -68,7 +71,13 @@ app.wsgi_app = StripBasePath(app.wsgi_app, BASE_PATH)
 # --------------------------------------------------------------------------
 
 def current_player() -> Optional[str]:
-    pid = request.headers.get("X-Player") or request.args.get("p")
+    # Header only. This id *is* the credential -- there is no password behind
+    # it -- so it must not travel anywhere that logs URLs. It used to also be
+    # accepted as ?p=, which put it in the nginx access log, in browser history
+    # and in the Referer of any outbound link: three places a credential is
+    # readable long after the request. The resume link now carries it in the
+    # fragment, which never leaves the browser.
+    pid = request.headers.get("X-Player")
     if not pid:
         return None
     return pid if store.get_player(pid) else None
@@ -141,8 +150,12 @@ def health():
             "uptime_secs": round(time.time() - STARTED_AT, 1),
             # "unconfigured" is a normal state: the game plays with fallback
             # names. This is how you tell the key never made it into .env.
+            #
+            # The model name is deliberately not published. /health is open to
+            # the internet, and naming which model sits behind an endpoint is
+            # an advertisement that there is a funded API key here to burn.
+            # "ready" is all an operator needs to answer "did the key land".
             "llm": "ready" if naming.configured() else "unconfigured",
-            "model": naming.MODEL,
             "tiers_available": buckets.MAX_AUTHORED_TIER,
             "buckets": len(ALL),
             **counts,

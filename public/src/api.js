@@ -27,18 +27,27 @@ function computeBase() {
 export const BASE = computeBase();
 
 export function resumeLink(id) {
-  return `${BASE}?p=${encodeURIComponent(id)}`;
+  // The id goes in the fragment, not the query string. A fragment is never
+  // sent to the server, so it stays out of the nginx access log and out of the
+  // Referer header on any link the page later opens -- which matters because
+  // this id is the whole credential, not a hint about one.
+  return `${BASE}#p=${encodeURIComponent(id)}`;
 }
 
 export function savedPlayer() {
-  // A ?p= link wins over whatever is stored, so opening your own resume link on
-  // a device that already has a game switches to the linked one rather than
+  // A resume link wins over whatever is stored, so opening your own link on a
+  // device that already has a game switches to the linked one rather than
   // silently ignoring the link.
-  const fromLink = new URL(location.href).searchParams.get('p');
+  //
+  // ?p= is still read because links minted before the move to a fragment are
+  // out there in people's bookmarks, and breaking them would strand a save.
+  const url = new URL(location.href);
+  const fromHash = new URLSearchParams(url.hash.replace(/^#/, '')).get('p');
+  const fromLink = fromHash || url.searchParams.get('p');
   if (fromLink) {
     localStorage.setItem(STORAGE_KEY, fromLink);
-    // Drop ?p= from the address bar so the id is not left sitting in history
-    // or leaked in a screenshot of the URL.
+    // Drop it from the address bar either way, so the id is not left sitting in
+    // history or in a screenshot of the URL.
     history.replaceState({}, '', BASE);
     return fromLink;
   }
