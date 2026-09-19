@@ -13,9 +13,9 @@ Two players are simulated, because a single "optimal" number is misleading:
     This is closer to how the game will actually be played, and it is the number
     that has to land inside the target.
 
-Target: the full six-tier run in 6-10 hours of play. Tiers 4-6 are not authored
-yet (phase 2), so those are projected from the cost and value curves, which are
-authored for all six.
+Target: the full nine-tier run in 10-16 hours of casual play -- the same
+~1.5h-per-tier cadence the original 6-10h/six-tier target set, carried through
+the three extra tiers.
 
     python3 tools/simulate.py
     python3 tools/simulate.py --verbose
@@ -34,7 +34,10 @@ from game.buckets import BY_ID, PRODUCERS               # noqa: E402
 from game.economy import Placement                      # noqa: E402
 
 STEP = 1.0
-MAX_HOURS = 24
+MAX_HOURS = 96
+
+# The last tier anyone can buy -- the run is over when the sim reaches it.
+TOP_TIER = max(buckets.TIER_UNLOCK_COST)
 
 
 class Sim:
@@ -63,10 +66,10 @@ class Sim:
         self.next_id += 1
         return p
 
-    def _factory(self, out: str, a: str, b: str) -> Placement:
+    def _factory(self, out: str, a: str, b: str, autosell: bool = True) -> Placement:
         p = Placement(
             id=self.next_id, kind="factory", bucket_id=out,
-            inputs=(a, b), output_item=out, autosell=True,
+            inputs=(a, b), output_item=out, autosell=autosell,
         )
         self.next_id += 1
         return p
@@ -148,17 +151,42 @@ class Sim:
             if not self._can_feed(a) or not self._can_feed(b):
                 continue
             self.coins -= place_cost
-            self.placements.append(self._factory(bucket.id, a, b))
+            # Sell the top of the chain, stock the intermediates. This is how
+            # a person runs a yard, and it is what lets factories feed each
+            # other -- with everything on autosell no chain can ever form and
+            # income flatlines at whatever producers alone can carry.
+            autosell = bucket.tier >= self.ceiling
+            self.placements.append(self._factory(bucket.id, a, b, autosell))
             return
 
-        # 3. Otherwise add raw supply.
-        for bucket_id, producer in sorted(PRODUCERS.items(), key=lambda kv: kv[1].place_cost):
+        # 3. Otherwise add raw supply -- the best upgrade affordable, not the
+        # cheapest thing on the menu. A player with 60,000 coins buys the
+        # Blast Furnace, not a fourth free Clay Pit; sorting cheap-first had
+        # the sim tiling the whole yard with starter producers.
+        for bucket_id, producer in sorted(PRODUCERS.items(), key=lambda kv: -kv[1].place_cost):
             if BY_ID[bucket_id].tier > self.ceiling:
                 continue
-            if self.slots_free <= 0 or self.coins < producer.place_cost:
+            if self.coins < producer.place_cost:
                 continue
-            self.coins -= producer.place_cost
-            self.placements.append(self._producer(bucket_id))
+            if self.slots_free > 0:
+                self.coins -= producer.place_cost
+                self.placements.append(self._producer(bucket_id))
+                return
+            # Yard full: replace the weakest producer, but only for a real
+            # upgrade (4x the cost), not a sidegrade. The game refunds half
+            # the placement cost on removal, and so does the sim. Without
+            # this the sharp player wedges: deciding every 20 seconds means
+            # never having enough banked for anything but cheap producers,
+            # and the yard fills with them irreversibly.
+            victims = [p for p in self.placements
+                       if p.kind == "producer"
+                       and PRODUCERS[p.bucket_id].place_cost * 4 <= producer.place_cost]
+            if victims:
+                victim = min(victims, key=lambda p: PRODUCERS[p.bucket_id].place_cost)
+                self.placements.remove(victim)
+                self.coins += PRODUCERS[victim.bucket_id].place_cost // 2
+                self.coins -= producer.place_cost
+                self.placements.append(self._producer(bucket_id))
             return
 
     def _recipe_for(self, bucket) -> tuple[str, str] | None:
@@ -215,15 +243,15 @@ class Sim:
 
 
 def project_remaining(income_per_hour: float) -> dict[int, float]:
-    """Extrapolate tiers 4-6 from the authored cost curve.
+    """Extrapolate any priced-but-unauthored tiers from the cost curve.
 
     Assumes income scales with the tier's value ratio each time -- optimistic on
     setup time, pessimistic on how much a player will automate. Good enough to
-    tell 8 hours from 80.
+    tell 8 hours from 80. Empty once every priced tier is authored.
     """
     out: dict[int, float] = {}
     income = max(income_per_hour, 1.0)
-    for tier in range(buckets.MAX_AUTHORED_TIER + 1, 7):
+    for tier in range(buckets.MAX_AUTHORED_TIER + 1, TOP_TIER + 1):
         cost = buckets.TIER_UNLOCK_COST.get(tier)
         if cost is None:
             continue
@@ -255,7 +283,7 @@ def main() -> int:
         reached = max(unlocked)
         income = sim.realised_income_per_hour
         elapsed = unlocked.get(reached, sim.t) / 3600
-        if reached < 6:
+        if reached < TOP_TIER:
             projected = project_remaining(income)
             for tier, hours in projected.items():
                 elapsed += hours
@@ -264,10 +292,10 @@ def main() -> int:
         print(f"    -> full run ~{elapsed:.1f}h   "
               f"(income at tier {reached}: {income:,.0f}/hr)\n")
 
-    low, high = 6.0, 10.0
+    low, high = 10.0, 16.0
     casual = total_hours["casual"]
     verdict = "OK" if low <= casual <= high else "OUT OF TARGET"
-    print(f"Target 6-10h for a casual run. Casual: {casual:.1f}h  [{verdict}]")
+    print(f"Target {low:.0f}-{high:.0f}h for a casual run. Casual: {casual:.1f}h  [{verdict}]")
     if verdict != "OK":
         # Unlock cost is the lever: it is the dominant sink, so it moves the run
         # length almost linearly. Raising sell value to *lengthen* a run is
@@ -275,7 +303,7 @@ def main() -> int:
         direction = "up" if casual < low else "down"
         factor = (low + high) / 2 / casual
         print(f"  Adjust TIER_UNLOCK_COST in game/buckets.py {direction} "
-              f"(roughly x{factor:.2f} on tiers 4-6).")
+              f"(roughly x{factor:.2f} on tiers 4-9).")
     return 0 if verdict == "OK" else 1
 
 

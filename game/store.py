@@ -139,7 +139,7 @@ def _seed_recipe_pack(conn: sqlite3.Connection) -> None:
 
     Seeding rather than special-casing the craft path means there is exactly one
     way a name is looked up, and the API is only ever called for a combination
-    nobody anticipated. After a full pack, tiers 1-3 need no runtime API calls
+    nobody anticipated. After a full pack, the authored tiers need no runtime API calls
     at all -- which is the real answer to "the first players just wait".
 
     `first_by` stays NULL, so being the first player to actually *make* one is

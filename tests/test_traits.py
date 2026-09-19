@@ -78,7 +78,7 @@ def test_combine_is_commutative():
     """A + B and B + A must be the same craft. Players expect it, and it halves
     the recipe cache."""
     for a, b in itertools.combinations_with_replacement(ALL, 2):
-        for ceiling in (1, 2, 3):
+        for ceiling in range(1, buckets.MAX_AUTHORED_TIER + 1):
             ab = combine(a, b, ceiling, ALL)
             ba = combine(b, a, ceiling, ALL)
             a_id = ab.id if isinstance(ab, Bucket) else None
@@ -95,7 +95,7 @@ def test_self_combination_is_always_a_dud():
     catches it.
     """
     for b in ALL:
-        for ceiling in (1, 2, 3):
+        for ceiling in range(1, buckets.MAX_AUTHORED_TIER + 1):
             result = combine(b, b, ceiling, ALL)
             assert isinstance(result, Dud), (
                 f"{b.id} + {b.id} produced {result.id if isinstance(result, Bucket) else result}"
@@ -104,7 +104,7 @@ def test_self_combination_is_always_a_dud():
 
 def test_never_exceeds_ceiling():
     for a, b in itertools.combinations_with_replacement(ALL, 2):
-        for ceiling in (1, 2, 3):
+        for ceiling in range(1, buckets.MAX_AUTHORED_TIER + 1):
             result = combine(a, b, ceiling, ALL)
             if isinstance(result, Bucket):
                 assert result.tier <= ceiling, (
@@ -140,7 +140,7 @@ def test_raising_the_ceiling_unlocks_strictly_more():
     """The core progression promise: buying a tier must never take anything
     away, and must always add something."""
     prev = reachable(1)
-    for ceiling in (2, 3):
+    for ceiling in range(2, buckets.MAX_AUTHORED_TIER + 1):
         now = reachable(ceiling)
         assert prev < now, f"ceiling {ceiling} added nothing over {ceiling - 1}"
         prev = now
@@ -153,7 +153,7 @@ def test_at_the_ceiling_the_space_runs_dry():
     tells the player to go buy the next tier. If some combination kept
     producing new things forever we would be back to v1's endless drift.
     """
-    for ceiling in (2, 3):
+    for ceiling in range(2, buckets.MAX_AUTHORED_TIER + 1):
         held = reachable(ceiling)
         for a_id, b_id in itertools.combinations_with_replacement(sorted(held), 2):
             result = combine(BY_ID[a_id], BY_ID[b_id], ceiling, ALL)

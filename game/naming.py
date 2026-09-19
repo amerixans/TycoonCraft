@@ -27,7 +27,7 @@ import time
 from collections import deque
 from typing import Optional, Tuple
 
-from .traits import TRAIT_ORDER, Bucket, fallback_name
+from .traits import MAX_TIER, TRAIT_ORDER, Bucket, fallback_name
 
 log = logging.getLogger("tycooncraft.naming")
 
@@ -156,7 +156,7 @@ def build_prompt(a_name: str, b_name: str, bucket: Bucket) -> str:
         f"Inputs: {a_name} + {b_name}\n"
         f"Result category: {bucket.kind}\n"
         f"Result properties: {traits}\n"
-        f"Result tier: {bucket.tier} of 6\n\n"
+        f"Result tier: {bucket.tier} of {MAX_TIER}\n\n"
         f"Name this result."
     )
 

@@ -1,7 +1,7 @@
 # TycoonCraft
 
 Rub two things together and see what falls out. Then build the factories that
-make them, sell the output, and buy your way up six tiers of industry.
+make them, sell the output, and buy your way up nine tiers of industry.
 
 Live at **<https://collabcanvas.org/tycooncraft/>**.
 
@@ -110,7 +110,8 @@ pad over a four-chord walk with a sparse bell line on top, and none of it is
 quantised tightly enough to form a hook.
 
 **The pad's chord widens as you unlock tiers.** Tier 1 is a bare open fifth:
-industrial, unresolved, slightly bleak. By tier 6 it is a major ninth. The music
+industrial, unresolved, slightly bleak. By tier 9 it is a full major
+thirteenth. The music
 brightens as you get richer, which is the arc of the whole game expressed in the
 one channel that costs no screen space.
 
@@ -141,7 +142,7 @@ stops landing in 6–10 hours. Tune with `tools/simulate.py`.
 | | |
 | --- | --- |
 | `tools/simulate.py` | Plays the game at ~4000x speed and reports time-to-each-tier for a sharp and a casual player. The tuning instrument for `TIER_UNLOCK_COST`. |
-| `tools/build_recipes.py` | Pre-generates every item name offline via the Batch API at half price into `content/recipes.json`. **102 names for about $0.14**, after which tiers 1–3 need no API calls at all. `--dry-run` to see the plan. |
+| `tools/build_recipes.py` | Pre-generates every item name offline via the Batch API at half price into `content/recipes.json`, after which the authored tiers need no API calls at all. A few hundred names for well under a dollar; `--dry-run` to see the plan. |
 | `tools/build_tile.py` | Draws `public/tile.gif` — 600×300, 48 frames, ~100 KB. Stays small by keeping the background bit-identical between frames and sharing one palette; see the comments. |
 
 ## Where things live

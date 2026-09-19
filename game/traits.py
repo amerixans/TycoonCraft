@@ -62,7 +62,7 @@ KINDS: FrozenSet[str] = frozenset({
 MAX_TRAITS = 3
 
 MIN_TIER = 1
-MAX_TIER = 6
+MAX_TIER = 9
 
 
 @dataclass(frozen=True, slots=True)

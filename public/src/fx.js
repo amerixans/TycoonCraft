@@ -37,7 +37,7 @@ addEventListener('resize', resize);
 const tierCache = new Map();
 
 export function tierColor(tier) {
-  const t = Math.max(1, Math.min(6, tier | 0));
+  const t = Math.max(1, Math.min(9, tier | 0));
   if (!tierCache.has(t)) {
     const value = getComputedStyle(document.documentElement)
       .getPropertyValue(`--t${t}`).trim();

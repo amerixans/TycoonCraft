@@ -8,7 +8,7 @@ This is the real answer to the loudest complaint about the first version of the
 game: *"if you are one of the first players you just wait a while for stuff to
 generate."* Every combination reachable in the authored tiers is named here,
 ahead of time, and baked into `content/recipes.json`. After a full run the game
-makes **no API calls at all** for tiers 1-3 -- a discovery is a dict lookup, so
+makes **no API calls at all** for the authored tiers -- a discovery is a dict lookup, so
 the first player has exactly the same instant experience as the hundredth.
 
 Two reasons this is a separate offline tool rather than a warm-up on boot:

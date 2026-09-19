@@ -12,7 +12,8 @@
  * top, and none of it is quantised tightly enough to form a hook that sticks.
  *
  * **The chord set widens as you unlock tiers.** Tier 1 is a bare open fifth:
- * industrial, unresolved, a bit bleak. By tier 6 it is a major ninth. So the
+ * industrial, unresolved, a bit bleak. By tier 9 it is a full major
+ * thirteenth. So the
  * music brightens as you get richer, which is the whole arc of the game
  * expressed in the one channel that does not need any screen space.
  *
@@ -48,8 +49,9 @@ const ROOT = 110;                                    // A2
 const PENT = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31, 33];
 
 // The pad's chord, per unlocked tier. Deliberately a widening sequence: bare
-// fifth -> minor seventh -> minor ninth -> major seventh -> ninth -> major
-// ninth. Getting richer sounds like getting richer.
+// fifth -> minor seventh -> minor ninth -> major seventh -> ninth, then the
+// lydian colours stack one at a time until tier 9 holds the full major
+// thirteenth. Getting richer sounds like getting richer.
 const CHORDS = {
   1: [0, 7, 12],
   2: [0, 3, 7, 10],
@@ -57,6 +59,9 @@ const CHORDS = {
   4: [0, 4, 7, 11],
   5: [0, 4, 7, 11, 14],
   6: [0, 4, 7, 11, 18],
+  7: [0, 4, 7, 11, 14, 18],
+  8: [0, 4, 7, 11, 14, 21],
+  9: [0, 4, 7, 11, 14, 18, 21],
 };
 
 // Where the root walks. Four bars, minor-ish, resolving back — slow enough
@@ -111,7 +116,7 @@ export function setMuted(value) {
 }
 
 export function setTier(value) {
-  tier = Math.max(1, Math.min(6, value | 0));
+  tier = Math.max(1, Math.min(9, value | 0));
 }
 
 /* ------------------------------------------------------------------- music */

@@ -43,13 +43,18 @@
   /* Tier ramp on the loot-rarity convention: grey, green, blue, violet, orange,
    * gold. Anyone who has played anything reads that as ascending value without
    * being told, and the hues are far enough apart to tell at a glance in a long
-   * shelf. */
+   * shelf. Tiers 7-9 run past the convention -- mythic red, radiant magenta,
+   * then starlight, because the top of the ladder should look like nothing
+   * below it. */
   --t1: #93a7bb;
   --t2: #7bc96f;
   --t3: #4ba3f5;
   --t4: #a97cf5;
   --t5: #f5803c;
   --t6: #ffd24a;
+  --t7: #ff6257;
+  --t8: #ff7ae0;
+  --t9: #eef4ff;
 
   --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --num: ui-monospace, "SF Mono", Menlo, Consolas, monospace;

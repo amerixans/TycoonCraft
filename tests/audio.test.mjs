@@ -137,7 +137,7 @@ test('unlock is idempotent', () => {
   assert.equal(created.osc, before, 'a second unlock built a second graph');
 });
 
-test('a tier-1 chord is sparser than a tier-6 chord', () => {
+test('a tier-1 chord is sparser than a tier-9 chord', () => {
   // Chord width is the whole "the music brightens as you get richer" idea, so
   // it is worth asserting rather than trusting.
   const count = () => {
@@ -147,9 +147,9 @@ test('a tier-1 chord is sparser than a tier-6 chord', () => {
   };
   audio.setTier(1);
   const thin = count();
-  audio.setTier(6);
+  audio.setTier(9);
   const wide = count();
-  assert.ok(wide > thin, `tier 6 (${wide}) should use more voices than tier 1 (${thin})`);
+  assert.ok(wide > thin, `tier 9 (${wide}) should use more voices than tier 1 (${thin})`);
 });
 
 test('a discovery run climbs and then plateaus safely', () => {

@@ -206,7 +206,7 @@ def yard_slots(ceiling: int) -> int:
 
 def unlock_cost(tier: int) -> Optional[int]:
     """Coins to raise the ceiling to `tier`, or None if there is no such tier
-    (yet -- tiers 4-6 land in phase 2)."""
+    -- the ladder tops out at MAX_AUTHORED_TIER."""
     if tier > buckets.MAX_AUTHORED_TIER:
         return None
     return buckets.TIER_UNLOCK_COST.get(tier)

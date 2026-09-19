@@ -21,8 +21,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 from game import buckets                       # noqa: E402
 from simulate import Sim, project_remaining     # noqa: E402
 
-TARGET_LOW_HOURS = 6.0
-TARGET_HIGH_HOURS = 10.0
+# The original six-tier game targeted 6-10h; nine tiers at the same
+# ~1.5h-per-tier cadence is 10-16h.
+TARGET_LOW_HOURS = 10.0
+TARGET_HIGH_HOURS = 16.0
 
 
 def full_run_hours(decide_every: float) -> tuple[float, dict[int, float]]:

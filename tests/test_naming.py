@@ -157,4 +157,4 @@ def test_prompt_mentions_the_result_properties():
     assert "Clay" in prompt and "Ember" in prompt
     assert "mineral" in prompt and "heavy" in prompt
     assert "material" in prompt
-    assert "Result tier: 2 of 6" in prompt
+    assert "Result tier: 2 of 9" in prompt

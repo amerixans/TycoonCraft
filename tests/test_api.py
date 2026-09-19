@@ -51,7 +51,8 @@ def test_health_works_without_an_api_key(client):
     assert body["ok"] is True
     # The whole point: no key is a reported state, not a failure.
     assert body["llm"] == "unconfigured"
-    assert body["tiers_available"] == 3
+    from game import buckets
+    assert body["tiers_available"] == buckets.MAX_AUTHORED_TIER == 9
 
 
 def test_unknown_player_is_rejected(client):
@@ -304,9 +305,11 @@ def test_yard_slots_are_enforced(client):
 def test_unlock_stops_at_authored_content(client):
     from game import store
 
+    from game import buckets
+
     pid = new_player(client)
-    unlock_to(client, pid, 3)
-    store.set_coins(pid, 10_000_000)
+    unlock_to(client, pid, buckets.MAX_AUTHORED_TIER)
+    store.set_coins(pid, 10_000_000_000)
     res = client.post("/api/unlock", headers={"X-Player": pid})
     assert res.status_code == 400
     assert res.get_json()["kind"] == "max"
