@@ -166,7 +166,7 @@ jobs:
             sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080'+b+'/health',timeout=3).status==200 else 1)"; then
                 # Refresh the front-page tile and blurb from the repo we pulled.
                 /opt/collab-canvas/deploy/publish-app.sh tycooncraft
-                docker image prune -f
+                docker image prune -f || true   # another deploy may be pruning at the same moment
                 # Report whether the key actually took, so the workflow log
                 # answers "is it live?" without anyone having to go and curl.
                 # Prints "ready" or "unconfigured" -- never the key itself.
