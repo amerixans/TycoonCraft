@@ -4,6 +4,12 @@
 # 961 MB box shared with every other app.
 FROM python:3.12-slim
 
+# busybox only for its wget: the healthcheck runs every 30 s, and spawning a
+# Python interpreter for it can time out on the memory-starved droplet.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends busybox \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY requirements.txt .
@@ -29,12 +35,8 @@ ENV PORT=8080 \
 
 EXPOSE 8080
 
-# BASE_PATH-aware: the healthcheck runs inside the container, where the app
-# answers on the prefix it was configured with.
-HEALTHCHECK --interval=30s --timeout=4s --start-period=5s --retries=3 \
-  CMD python -c "import os,urllib.request,sys; \
-b=os.environ.get('BASE_PATH',''); \
-sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080'+b+'/health',timeout=3).status==200 else 1)" \
-  || exit 1
+# Bare /health: the app strips BASE_PATH when present and answers either way.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD ["busybox", "wget", "-qO-", "http://127.0.0.1:8080/health"]
 
 CMD ["gunicorn", "-c", "gunicorn_config.py", "app:app"]

@@ -87,6 +87,9 @@ jobs:
           curl -fsS http://127.0.0.1:8081/tycooncraft/health \
             | jq -e '.llm == "unconfigured"'
 
+          # The container's own HEALTHCHECK command must work inside the image.
+          docker exec t2 busybox wget -qO- http://127.0.0.1:8080/health >/dev/null
+
       # A hardcoded list of URLs to curl will happily pass while the app is
       # broken, because it checks paths you wrote rather than the ones the
       # browser derives. This walks the real module graph from the entry point.

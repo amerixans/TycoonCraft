@@ -28,14 +28,14 @@ services:
       # every player losing their save on redeploy.
       - tycooncraft-data:/app/data
     healthcheck:
-      test:
-        - CMD-SHELL
-        - >-
-          python -c "import os,urllib.request,sys;
-          b=os.environ.get('BASE_PATH','');
-          sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080'+b+'/health',timeout=3).status==200 else 1)"
+      # busybox wget, not `python -c urllib`: starting Python and importing
+      # urllib can take longer than the timeout on the swapping droplet, which
+      # marks a healthy container "unhealthy" (seen on whiteboard-collab).
+      # /health without the prefix: the app strips BASE_PATH when present and
+      # answers bare paths either way (nginx sends them stripped).
+      test: ["CMD", "busybox", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 30s
-      timeout: 4s
+      timeout: 10s
       retries: 3
       start_period: 10s
     logging:
