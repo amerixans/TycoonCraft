@@ -19,6 +19,7 @@ combinations cost nothing at all -- they are a dict lookup.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -45,14 +46,60 @@ MODEL = "claude-sonnet-5"
 # game already handles -- it writes a deterministic fallback name, and a later
 # craft of the same pair upgrades it once there is budget again.
 #
-# The window is in memory, so a restart forgives it. That is the right trade
-# for a circuit breaker on a toy: the failure mode of a persisted counter is a
-# game stuck on fallback names with nobody knowing why.
+# The window's timestamps are kept in DATA_DIR. The platform stops an app
+# after an hour with no visitors, so an in-memory window would be forgiven
+# every time someone paused for an hour -- 400 calls an hour rather than a
+# day. A persisted window cannot get stuck: every entry ages out after 24 h,
+# exactly as it would in memory. A missing, old-format or corrupt file is
+# logged and treated as an empty window.
 DAILY_CALL_BUDGET = int(os.getenv("NAMING_DAILY_BUDGET", "400"))
+_BUDGET_FILE_VERSION = 1
 
 _budget_lock = threading.Lock()
 _recent_calls: deque = deque()
 _budget_warned = False
+_budget_loaded = False
+
+
+def _budget_path() -> str:
+    return os.path.join(os.environ.get("DATA_DIR", "data"), "naming_budget.json")
+
+
+def _load_budget() -> None:
+    """Fill the window from disk, once. Caller holds _budget_lock."""
+    global _budget_loaded
+    _budget_loaded = True
+    try:
+        with open(_budget_path()) as f:
+            doc = json.load(f)
+    except FileNotFoundError:
+        return
+    except Exception as e:  # unreadable or not JSON
+        log.warning("naming budget file unreadable (%s); starting empty", e)
+        return
+    if not isinstance(doc, dict) or doc.get("v") != _BUDGET_FILE_VERSION:
+        log.warning("naming budget file has an unknown format; starting empty")
+        return
+    cutoff = time.time() - 86_400
+    calls = sorted(
+        float(t) for t in doc.get("calls", []) if isinstance(t, (int, float)) and t >= cutoff
+    )
+    _recent_calls.extend(calls[-max(DAILY_CALL_BUDGET, 0):] if DAILY_CALL_BUDGET > 0 else [])
+
+
+def _save_budget() -> None:
+    """Atomic write of the window. Caller holds _budget_lock. Never raises."""
+    path = _budget_path()
+    tmp = f"{path}.tmp"
+    try:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        with open(tmp, "w") as f:
+            json.dump({"v": _BUDGET_FILE_VERSION, "calls": list(_recent_calls)}, f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except Exception as e:
+        log.warning("could not save the naming budget (%s)", e)
 
 
 def _claim_call() -> bool:
@@ -62,6 +109,8 @@ def _claim_call() -> bool:
         return False
     now = time.time()
     with _budget_lock:
+        if not _budget_loaded:
+            _load_budget()
         cutoff = now - 86_400
         while _recent_calls and _recent_calls[0] < cutoff:
             _recent_calls.popleft()
@@ -76,6 +125,9 @@ def _claim_call() -> bool:
             return False
         _recent_calls.append(now)
         _budget_warned = False
+        # One small write per paid API call (at most DAILY_CALL_BUDGET a day),
+        # so the window is on disk before the call it counts is even made.
+        _save_budget()
         return True
 
 # The response is ~60 tokens, but adaptive thinking shares this budget, so it

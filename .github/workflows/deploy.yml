@@ -125,6 +125,7 @@ jobs:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
+          command_timeout: 30m
           # Forward the key into the remote shell. Named here *and* in `env:`
           # above -- ssh-action only passes across what this list mentions.
           envs: ANTHROPIC_API_KEY

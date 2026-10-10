@@ -22,5 +22,11 @@ worker_class = "gthread"
 timeout = 60
 keepalive = 65
 
+# `docker stop` (deploys, and the platform putting an idle app to sleep) sends
+# SIGTERM and SIGKILLs 25 s later. gunicorn waits this long for in-flight
+# requests -- at most a 20 s naming call -- so keep it inside that. Every write
+# is its own committed SQLite transaction, so nothing else needs flushing.
+graceful_timeout = 20
+
 accesslog = "-"
 errorlog = "-"
