@@ -106,12 +106,93 @@ jobs:
       - if: always()
         run: docker logs t2 2>&1 | tail -40
 
-  # Built here on the runner and shipped as an image; the droplet only swaps
-  # it in, checks /health and rolls back on failure. See collab-canvas
-  # .github/workflows/ship.yml and deploy/ship-app.sh.
+  # A copy of collab-canvas .github/workflows/ship.yml, inlined because this
+  # repo is public and GitHub won't let a public repo call a workflow in a
+  # private one. Built here on the runner and shipped as an image; the droplet
+  # (deploy/ship-app.sh) only swaps it in, checks /health and rolls back on
+  # failure. If ship.yml changes, copy the change here.
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    uses: amerixans/collab-canvas/.github/workflows/ship.yml@main
-    with: { app: tycooncraft }
-    secrets: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP: tycooncraft
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check this is the app it says it is
+        run: |
+          [[ "$APP" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "::error::bad app name '$APP'"; exit 1; }
+          name=$(jq -r .name app.json)
+          [[ "$name" == "$APP" ]] || { echo "::error::app.json says '$name', the workflow says '$APP'"; exit 1; }
+
+      # The droplet's Docker keeps images in the containerd store. With the
+      # runner on the classic store, `docker save` writes every layer
+      # uncompressed and under a new digest, so each shipped image took ~3x
+      # the disk there and shared nothing with the base layers already on the
+      # box. On the containerd store the save carries the original compressed
+      # blobs, and the base layers dedupe against what the droplet has.
+      - name: Use the containerd image store, as the droplet does
+        run: |
+          f=/etc/docker/daemon.json
+          cur=$(sudo cat "$f" 2>/dev/null || echo '{}')
+          jq '.features["containerd-snapshotter"] = true' <<<"$cur" | sudo tee "$f" >/dev/null
+          sudo systemctl restart docker
+          docker info -f '{{.DriverStatus}}' | grep -q containerd.snapshotter \
+            || { echo "::error::containerd image store did not come up"; exit 1; }
+
+      # Docker Hub's auth endpoint has failed GitHub runners for a quarter of an
+      # hour at a time while its status page said all was well. Pull each base
+      # image with retries, then from Google's mirror of Hub, so the build that
+      # follows needs no registry at all.
+      - name: Pull base images
+        run: |
+          stages=$(awk 'toupper($1)=="FROM" && toupper($(NF-1))=="AS" {print tolower($NF)}' Dockerfile)
+          bases=$(awk 'toupper($1)=="FROM" { for (i = 2; i <= NF; i++) if ($i !~ /^--/) { print $i; break } }' Dockerfile | sort -u)
+          for img in $bases; do
+            grep -qxF "$(tr 'A-Z' 'a-z' <<<"$img")" <<<"$stages" && continue   # an earlier build stage
+            [[ "$img" == scratch || "$img" == *'$'* ]] && continue
+            for i in 1 2 3; do docker pull -q "$img" && continue 2; sleep $((i * 10)); done
+            case "$img" in */*) mirror="mirror.gcr.io/$img" ;; *) mirror="mirror.gcr.io/library/$img" ;; esac
+            echo "::warning::Docker Hub failed for $img; using $mirror"
+            docker pull -q "$mirror" && docker tag "$mirror" "$img" || { echo "::error::could not pull $img"; exit 1; }
+          done
+
+      # Through compose, not plain `docker build`, so build args and the image
+      # name come from the same docker-compose.yml the droplet runs.
+      - name: Build
+        run: |
+          export GIT_SHA="$GITHUB_SHA" BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export BASE_PATH="/$APP" HOST_PORT=8080      # only for compose's interpolation
+          docker compose -p "$APP" build
+          img=$(docker compose -p "$APP" config --images)
+          [[ $(wc -l <<<"$img") == 1 ]] || { echo "::error::expected one image, got: $img"; exit 1; }
+          echo "IMG=$img" >> "$GITHUB_ENV"
+          docker image ls "$img"
+
+      - name: Ship
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DROPLET_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Pinned, not scanned: the droplet's host key, as seen from a trusted
+          # machine on 2026-10-12. If the droplet is ever rebuilt, update this.
+          echo "$DROPLET_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOQOeC/zAVq8UqOuO508NdLw9o/zDIAAWUevm/JckZYd" > ~/.ssh/known_hosts
+
+          set -o pipefail
+          docker save "$IMG" | gzip -1 \
+            | ssh -o StrictHostKeyChecking=yes -o ServerAliveInterval=20 -o ServerAliveCountMax=9 \
+                  "$DROPLET_USER@$DROPLET_HOST" \
+                  /opt/collab-canvas/deploy/ship-app.sh "$APP" "$GITHUB_SHA"
+
+      - name: Live check
+        run: |
+          path=$(jq -r '.path // empty' app.json); path="${path:-/$APP}"
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "https://collabcanvas.org${path%/}/")
+          echo "https://collabcanvas.org${path%/}/ -> $code"
+          [[ "$code" =~ ^(2|3) ]]
