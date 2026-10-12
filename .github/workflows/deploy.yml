@@ -111,7 +111,7 @@ jobs:
   # .github/workflows/ship.yml and deploy/ship-app.sh.
   deploy:
     needs: build
-    if: >-
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     uses: amerixans/collab-canvas/.github/workflows/ship.yml@main
     with: { app: tycooncraft }
     secrets: inherit
